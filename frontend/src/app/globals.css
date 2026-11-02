@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Phase 2 will turn these into the full design system.
+ * Palette: ledger navy for text and structure, turmeric for the one accent,
+ * cool neutrals for surfaces.
+ */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #f3f5f9;
+  --foreground: #14213d;
+  --muted: #4a5568;
+  --border: #d6dce8;
+  --accent: #f2a900;
+  --accent-foreground: #14213d;
+  --success: #1e7b4f;
+  --danger: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --background: #0f1626;
+    --surface: #18223a;
+    --foreground: #eef1f7;
+    --muted: #a8b3c7;
+    --border: #2c3a57;
+    --accent: #f5b82e;
+    --accent-foreground: #0f1626;
+    --success: #4cc38a;
+    --danger: #f2827b;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  /* Noto families cover Latin, Telugu and Devanagari with matching metrics. */
+  --font-sans: "Noto Sans", "Noto Sans Telugu", "Noto Sans Devanagari",
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html {
+  /* Larger base size: many users read on small phones, often outdoors. */
+  font-size: 112.5%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

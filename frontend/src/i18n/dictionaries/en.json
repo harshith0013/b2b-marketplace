@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "title": "B2B Marketplace",
+    "description": "Wholesale and clearance stock from verified businesses near you."
+  },
+  "home": {
+    "tagline": "Wholesale and clearance stock from verified businesses near you.",
+    "comingSoon": "We are getting things ready. Buying and selling will open soon."
+  },
+  "language": {
+    "label": "Language"
+  },
+  "status": {
+    "heading": "System status",
+    "website": "Website",
+    "server": "Server",
+    "checking": "Checking…",
+    "working": "Working",
+    "unavailable": "Not available right now"
+  }
+}

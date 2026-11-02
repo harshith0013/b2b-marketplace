@@ -1,0 +1,5 @@
+# Deployed environments: structured JSON logs for CloudWatch.
+logging:
+  structured:
+    format:
+      console: ecs
