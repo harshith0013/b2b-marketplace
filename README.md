@@ -47,5 +47,16 @@ Verified locally on 2026-11-02 (Spring Boot 4.1.1, JDK 21, Node 24):
   as Working.
 - Telugu and Hindi strings need review by a native speaker.
 
+## Phase 2 status
+Done on 2026-11-02: design tokens (contrast-checked in light and dark by a unit test),
+self-hosted Noto fonts for Latin, Telugu and Devanagari, core UI components in
+`frontend/src/components/ui`, and shells for the buyer home (`/[lang]`), seller home
+(`/[lang]/sell`), listing wizard (`/[lang]/sell/new`) and system status (`/[lang]/status`).
+- 80 unit tests and 40 Playwright tests pass (every shell in en/te/hi on mobile and desktop,
+  each with an axe WCAG 2.2 AA scan).
+- Lighthouse accessibility on the buyer home: 100 in all three languages, mobile and desktop.
+- Nothing is saved and there are no API calls yet; all offers shown are marked as sample data.
+- The Docker image build downloads the fonts, so it needs internet access.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

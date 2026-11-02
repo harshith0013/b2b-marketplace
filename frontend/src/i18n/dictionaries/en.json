@@ -3,9 +3,29 @@
     "title": "B2B Marketplace",
     "description": "Wholesale and clearance stock from verified businesses near you."
   },
-  "home": {
-    "tagline": "Wholesale and clearance stock from verified businesses near you.",
-    "comingSoon": "We are getting things ready. Buying and selling will open soon."
+  "nav": {
+    "skipToContent": "Skip to main content",
+    "mainMenu": "Main menu",
+    "buy": "Buy",
+    "sell": "Sell"
+  },
+  "footer": {
+    "sampleNotice": "This is an early preview. Products shown are sample data, not real offers.",
+    "status": "System status"
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "sampleData": "Sample data",
+    "close": "Close",
+    "dismiss": "Dismiss message",
+    "back": "Back",
+    "next": "Next",
+    "stepOf": "Step {current} of {total}"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "This page could not be shown. Please try again.",
+    "retry": "Try again"
   },
   "language": {
     "label": "Language"
@@ -17,5 +37,115 @@
     "checking": "Checking…",
     "working": "Working",
     "unavailable": "Not available right now"
+  },
+  "home": {
+    "tagline": "Wholesale and clearance stock from verified businesses near you.",
+    "searchLabel": "Search products",
+    "searchPlaceholder": "For example: soap, rice, notebooks",
+    "searchButton": "Search",
+    "searchComingSoon": "Search opens soon. We are adding products now.",
+    "assistant": {
+      "open": "Ask the assistant",
+      "title": "Shopping assistant",
+      "body": "Soon you can ask in English, Telugu or Hindi, for example \"20 boxes of detergent near Vijayawada\", and the assistant will find matching offers from verified sellers.",
+      "note": "The assistant only shows real offers from sellers. It never makes up products, prices or stock."
+    },
+    "tilesHeading": "What would you like to do?",
+    "tiles": {
+      "buy": { "title": "Buy", "description": "Order stock for your shop" },
+      "sell": { "title": "Sell", "description": "List your surplus stock" },
+      "wholesale": { "title": "Wholesale deals", "description": "Bulk prices from suppliers" },
+      "clearance": { "title": "Clearance offers", "description": "Surplus stock at lower prices" },
+      "categories": { "title": "Categories", "description": "Browse by product type" },
+      "nearby": { "title": "Nearby suppliers", "description": "Verified businesses near you" },
+      "orders": { "title": "My orders", "description": "Track what you bought" }
+    },
+    "offersHeading": "Clearance offers",
+    "offersIntro": "A preview of how offers will look. These are not real products.",
+    "offers": {
+      "first": {
+        "name": "Bath soap, 100 g bars",
+        "detail": "Expiry in 8 months · Minimum 10 boxes",
+        "seller": "Sample wholesaler, Guntur"
+      },
+      "second": {
+        "name": "Ruled notebooks, 200 pages",
+        "detail": "No expiry · Minimum 50 pieces",
+        "seller": "Sample distributor, Hyderabad"
+      },
+      "third": {
+        "name": "Dishwash liquid, 500 ml",
+        "detail": "Expiry in 5 months · Minimum 12 boxes",
+        "seller": "Sample manufacturer, Vijayawada"
+      }
+    }
+  },
+  "sell": {
+    "title": "Sell your stock",
+    "intro": "List surplus or clearance stock and reach verified buyers.",
+    "newListing": "List new stock",
+    "listingsHeading": "My listings",
+    "emptyTitle": "No listings yet",
+    "emptyDescription": "Stock you list will appear here.",
+    "toolsHeading": "More for sellers",
+    "tiles": {
+      "orders": { "title": "Orders received", "description": "See and confirm buyer orders" },
+      "payouts": { "title": "Payments", "description": "Track money owed to you" },
+      "verification": { "title": "Business verification", "description": "Add your GST and licences" }
+    }
+  },
+  "wizard": {
+    "title": "List new stock",
+    "intro": "Answer a few short questions. You can go back at any time.",
+    "progressLabel": "Listing steps",
+    "steps": {
+      "product": "Product",
+      "batch": "Batch and expiry",
+      "quantity": "Quantity and price",
+      "photos": "Photos",
+      "review": "Review"
+    },
+    "fields": {
+      "productName": "Product name",
+      "productNameHint": "As printed on the pack",
+      "brand": "Brand",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "batchNumber": "Batch number",
+      "dateType": "Date printed on the pack",
+      "dateTypePlaceholder": "Choose one",
+      "date": "Date",
+      "dateHint": "Copy it exactly from the label. It will be checked against your photos.",
+      "quantity": "Quantity available",
+      "unit": "Unit",
+      "unitPlaceholder": "Choose a unit",
+      "pricePerUnit": "Price per unit (₹)",
+      "pricePerUnitHint": "Before GST",
+      "minimumOrder": "Minimum order quantity"
+    },
+    "categories": {
+      "personalCare": "Personal care",
+      "homeCare": "Home care",
+      "packagedFood": "Packaged food",
+      "beverages": "Beverages",
+      "stationery": "Stationery"
+    },
+    "dateTypes": {
+      "expiry": "Expiry date",
+      "useBy": "Use by",
+      "bestBefore": "Best before"
+    },
+    "units": {
+      "pieces": "Pieces",
+      "boxes": "Boxes",
+      "kg": "Kilograms",
+      "litres": "Litres"
+    },
+    "photosTitle": "Photo upload is coming soon",
+    "photosDescription": "You will add clear photos of the pack, the label and the expiry date.",
+    "reviewHint": "Check your answers before you submit.",
+    "notProvided": "Not filled in",
+    "submit": "Submit listing",
+    "submitNote": "Saving listings is not available yet. Nothing you enter here is stored."
   }
 }

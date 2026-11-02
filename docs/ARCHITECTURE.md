@@ -61,7 +61,7 @@ ArchUnit) tests so boundary violations fail the build.
 | Phase | Scope | Notes |
 | --- | --- | --- |
 | 1 | Monorepo, Spring Boot + Next.js, PostgreSQL, Flyway, Docker Compose, health checks, tests, CI | **Done** (see README) |
-| 2 | Design system and simple responsive UI shells | Buyer home tiles, seller home, empty/loading/error states, fonts for Telugu and Hindi |
+| 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
 | 3 | Authentication, business accounts, access control | Cognito JWT resource server, phone OTP, business memberships and roles, object-level authorization, module boundary tests |
 | 4 | Database, catalogue, inventory | Core tables, categories, products, warehouses, listings, price tiers |
 | 5 | Seller dashboard and stock uploads | Step-by-step listing, photos to private S3, baseline eligibility checks, minimal admin approval queue |

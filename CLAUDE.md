@@ -48,6 +48,7 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phase 1 is verified (backend, frontend, e2e and Docker Compose all pass; see README).
-Next: Phase 2, `docs/prompts/phase-02.md`, only when explicitly asked. On this machine run Maven
+Phases 1 and 2 are done (see README). Next: Phase 3 (authentication, business accounts, access
+control), only when explicitly asked; there is no prompt file for it yet.
+Playwright reuses any server already on port 3000: stop `docker compose` before `npm run test:e2e`. On this machine run Maven
 with `JAVA_HOME=/opt/homebrew/opt/openjdk@21` (the Homebrew default JDK is 27).
