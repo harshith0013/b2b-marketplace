@@ -1,5 +1,6 @@
 package com.b2bmarket.platform.web;
 
+import com.b2bmarket.platform.RequestIds;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class RequestIdFilter extends OncePerRequestFilter {
 
   public static final String HEADER = "X-Request-Id";
-  public static final String MDC_KEY = "requestId";
 
   private static final Pattern UUID_PATTERN =
       Pattern.compile(
@@ -35,12 +35,12 @@ public class RequestIdFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain chain)
       throws ServletException, IOException {
     String requestId = resolveRequestId(request.getHeader(HEADER));
-    MDC.put(MDC_KEY, requestId);
+    MDC.put(RequestIds.MDC_KEY, requestId);
     response.setHeader(HEADER, requestId);
     try {
       chain.doFilter(request, response);
     } finally {
-      MDC.remove(MDC_KEY);
+      MDC.remove(RequestIds.MDC_KEY);
     }
   }
 

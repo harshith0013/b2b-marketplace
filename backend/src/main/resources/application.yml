@@ -51,3 +51,9 @@ management:
 
 app:
   version: "@project.version@"
+  auth:
+    # Which access tokens are accepted. No defaults: they come from the environment
+    # (Cognito in deployed environments, application-local.yml locally).
+    issuer-uri: ${AUTH_ISSUER_URI}
+    jwk-set-uri: ${AUTH_JWK_SET_URI:}
+    audience: ${AUTH_AUDIENCE}

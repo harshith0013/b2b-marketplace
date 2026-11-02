@@ -18,6 +18,16 @@ services:
       timeout: 3s
       retries: 10
 
+  # Local stand-in for Amazon Cognito: issues signed tokens for any email. Never deployed.
+  mock-oauth2:
+    image: ghcr.io/navikt/mock-oauth2-server:6.1.2
+    environment:
+      JSON_CONFIG_PATH: /config/config.json
+    volumes:
+      - ./backend/src/test/resources/mock-oauth2/config.json:/config/config.json:ro
+    ports:
+      - "127.0.0.1:8090:8080" # Bound to localhost only.
+
   backend:
     build: ./backend
     environment:
@@ -25,11 +35,17 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/b2b_marketplace
       DB_USERNAME: ${POSTGRES_USER:-b2b_app}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_only}
+      # Tokens name the issuer as seen from the host; keys are fetched over the Compose network.
+      AUTH_ISSUER_URI: http://localhost:8090/default
+      AUTH_JWK_SET_URI: http://mock-oauth2:8080/default/jwks
+      AUTH_AUDIENCE: b2b-marketplace-api
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      mock-oauth2:
+        condition: service_started
 
   frontend:
     build: ./frontend

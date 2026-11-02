@@ -2,6 +2,7 @@ package com.b2bmarket.platform.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.b2bmarket.platform.RequestIds;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
@@ -18,7 +19,7 @@ class GlobalExceptionHandlerTest {
 
   @Test
   void hidesInternalDetailsAndIncludesTheRequestId() {
-    MDC.put(RequestIdFilter.MDC_KEY, "req-123");
+    MDC.put(RequestIds.MDC_KEY, "req-123");
 
     ProblemDetail problem =
         handler.handleUnexpected(

@@ -58,5 +58,22 @@ self-hosted Noto fonts for Latin, Telugu and Devanagari, core UI components in
 - Nothing is saved and there are no API calls yet; all offers shown are marked as sample data.
 - The Docker image build downloads the fonts, so it needs internet access.
 
+## Phase 3a status
+Done on 2026-11-02 (backend only): sign-in with access tokens (Cognito-compatible; locally a mock
+OAuth2 server in Docker), users created on first sign-in by verified email, businesses with
+OWNER / MANAGER / STAFF roles, an append-only audit log, and a Spring Modulith test that fails the
+build on module boundary violations.
+- `mvn verify`: 31 unit tests and 19 integration tests pass, including real signed tokens proving
+  one business cannot read, change or list the members of another (it gets a 404).
+- API: `GET/PATCH /api/v1/me`, `POST /api/v1/businesses`, `GET/PATCH /api/v1/businesses/{id}`,
+  `GET /api/v1/businesses/{id}/members`.
+- Try it locally after `docker compose up --build`:
+  ```bash
+  TOKEN=$(curl -s localhost:8090/default/token -d grant_type=client_credentials -d client_id=dev \
+    -d client_secret=x -d user_sub=asha -d email=asha@gmail.com | jq -r .access_token)
+  curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/v1/me
+  ```
+- Real Cognito (email one-time code): see `docs/cognito-setup.md`.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

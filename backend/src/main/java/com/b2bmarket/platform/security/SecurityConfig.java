@@ -4,17 +4,17 @@ import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Deny-by-default security. Phase 1 exposes only health and system information. Phase 3 adds the
- * OAuth 2.0 resource server (Amazon Cognito JWTs) and per-endpoint authorization rules.
+ * Deny-by-default security. Health and system information are public; every {@code /api/v1/**}
+ * endpoint needs a valid access token (see {@link JwtDecoderConfig}); everything else is refused.
+ * Which business a caller may act on is checked in the services, per request.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
@@ -35,23 +35,17 @@ public class SecurityConfig {
             h ->
                 h.contentSecurityPolicy(
                     csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'")))
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .authorizeHttpRequests(
             auth ->
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                     .permitAll()
+                    .requestMatchers("/api/v1/**")
+                    .authenticated()
                     .anyRequest()
                     .denyAll());
     return http.build();
-  }
-
-  /**
-   * An empty user store. Prevents Spring Boot from generating a default user and logging its
-   * password. Removed in Phase 3 when JWT authentication is configured.
-   */
-  @Bean
-  UserDetailsService noLocalUsers() {
-    return new InMemoryUserDetailsManager();
   }
 }

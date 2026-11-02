@@ -48,7 +48,10 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1 and 2 are done (see README). Next: Phase 3 (authentication, business accounts, access
-control), only when explicitly asked; there is no prompt file for it yet.
+Phases 1, 2 and 3a (backend auth, businesses, roles, audit) are done (see README). Next: Phase 3b
+(login UI with email one-time code, server-side session, business onboarding, member invites by
+email), only when explicitly asked. Sign-in is by verified email for now; phone OTP waits for TRAI
+DLT. Row-Level Security is deferred to Phase 4. Modules keep entities, repositories and
+controllers in an `internal` subpackage; `ModuleStructureTest` enforces boundaries.
 Playwright reuses any server already on port 3000: stop `docker compose` before `npm run test:e2e`. On this machine run Maven
 with `JAVA_HOME=/opt/homebrew/opt/openjdk@21` (the Homebrew default JDK is 27).

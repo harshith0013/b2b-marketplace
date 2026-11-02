@@ -62,7 +62,7 @@ ArchUnit) tests so boundary violations fail the build.
 | --- | --- | --- |
 | 1 | Monorepo, Spring Boot + Next.js, PostgreSQL, Flyway, Docker Compose, health checks, tests, CI | **Done** (see README) |
 | 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
-| 3 | Authentication, business accounts, access control | Cognito JWT resource server, phone OTP, business memberships and roles, object-level authorization, module boundary tests |
+| 3 | Authentication, business accounts, access control | **3a done** (backend: JWT resource server, users, businesses, memberships and roles, tenant isolation tests, append-only audit log, Spring Modulith boundary test). 3b: login UI, session, onboarding, member invites. Email one-time code for now; phone OTP after TRAI DLT |
 | 4 | Database, catalogue, inventory | Core tables, categories, products, warehouses, listings, price tiers |
 | 5 | Seller dashboard and stock uploads | Step-by-step listing, photos to private S3, baseline eligibility checks, minimal admin approval queue |
 | 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
@@ -85,7 +85,7 @@ These affect later phases and should be settled before the phase that needs them
    logistics partner.
 3. **Payment model** (before Phase 9): marketplace split settlement through a licensed payment
    aggregator; whether COD and buyer credit are supported at launch.
-4. **Row-Level Security** (Phase 3): implement it as defense in depth with a per-transaction
+4. **Row-Level Security** (deferred from Phase 3 to Phase 4): implement it as defense in depth with a per-transaction
    `SET LOCAL app.business_id`, or defer and rely on application-level authorization plus
    cross-tenant leak tests.
 5. **Confidential Deal Mode disclosure matrix** (before Phase 10): exactly which identity fields

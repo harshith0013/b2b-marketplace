@@ -2,6 +2,7 @@ package com.b2bmarket.platform.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.b2bmarket.platform.RequestIds;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class RequestIdFilterTest {
           @Override
           public void doFilter(
               jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
-            seenInMdc.set(MDC.get(RequestIdFilter.MDC_KEY));
+            seenInMdc.set(MDC.get(RequestIds.MDC_KEY));
           }
         };
 
@@ -48,6 +49,6 @@ class RequestIdFilterTest {
     String header = response.getHeader(RequestIdFilter.HEADER);
     assertThat(header).isNotBlank();
     assertThat(seenInMdc.get()).isEqualTo(header);
-    assertThat(MDC.get(RequestIdFilter.MDC_KEY)).isNull();
+    assertThat(MDC.get(RequestIds.MDC_KEY)).isNull();
   }
 }
