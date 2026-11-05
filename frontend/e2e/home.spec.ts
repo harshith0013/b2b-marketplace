@@ -7,9 +7,9 @@ test("root redirects to a language and shows the home page", async ({ page }) =>
 });
 
 test("switching to Telugu changes the page language and keeps the page", async ({ page }) => {
-  await page.goto("/en/sell");
+  await page.goto("/en/status");
   await page.getByRole("link", { name: "తెలుగు" }).click();
-  await expect(page).toHaveURL(/\/te\/sell$/);
+  await expect(page).toHaveURL(/\/te\/status$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "te");
 });
 

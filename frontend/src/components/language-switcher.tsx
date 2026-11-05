@@ -17,9 +17,7 @@ export function pathForLocale(pathname: string | null, current: Locale, target: 
   return `/${target}${pathname.slice(prefix.length)}`;
 }
 
-export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
-  const pathname = usePathname();
-
+function LanguageLinks({ current, label, hrefFor }: LanguageSwitcherProps & { hrefFor: (locale: Locale) => string }) {
   return (
     <nav aria-label={label}>
       <ul className="flex flex-wrap gap-2">
@@ -28,7 +26,7 @@ export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
           return (
             <li key={locale}>
               <Link
-                href={pathForLocale(pathname, current, locale)}
+                href={hrefFor(locale)}
                 lang={locale}
                 hrefLang={locale}
                 aria-current={active ? "page" : undefined}
@@ -47,4 +45,21 @@ export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
       </ul>
     </nav>
   );
+}
+
+/** Switches language and stays on the same page. */
+export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
+  const pathname = usePathname();
+  return (
+    <LanguageLinks
+      current={current}
+      label={label}
+      hrefFor={(locale) => pathForLocale(pathname, current, locale)}
+    />
+  );
+}
+
+/** Shown until the current path is known: links to each language's home page. */
+export function StaticLanguageLinks({ current, label }: LanguageSwitcherProps) {
+  return <LanguageLinks current={current} label={label} hrefFor={(locale) => `/${locale}`} />;
 }

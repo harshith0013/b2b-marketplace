@@ -52,13 +52,34 @@
     },
     "tilesHeading": "What would you like to do?",
     "tiles": {
-      "buy": { "title": "Buy", "description": "Order stock for your shop" },
-      "sell": { "title": "Sell", "description": "List your surplus stock" },
-      "wholesale": { "title": "Wholesale deals", "description": "Bulk prices from suppliers" },
-      "clearance": { "title": "Clearance offers", "description": "Surplus stock at lower prices" },
-      "categories": { "title": "Categories", "description": "Browse by product type" },
-      "nearby": { "title": "Nearby suppliers", "description": "Verified businesses near you" },
-      "orders": { "title": "My orders", "description": "Track what you bought" }
+      "buy": {
+        "title": "Buy",
+        "description": "Order stock for your shop"
+      },
+      "sell": {
+        "title": "Sell",
+        "description": "List your surplus stock"
+      },
+      "wholesale": {
+        "title": "Wholesale deals",
+        "description": "Bulk prices from suppliers"
+      },
+      "clearance": {
+        "title": "Clearance offers",
+        "description": "Surplus stock at lower prices"
+      },
+      "categories": {
+        "title": "Categories",
+        "description": "Browse by product type"
+      },
+      "nearby": {
+        "title": "Nearby suppliers",
+        "description": "Verified businesses near you"
+      },
+      "orders": {
+        "title": "My orders",
+        "description": "Track what you bought"
+      }
     },
     "offersHeading": "Clearance offers",
     "offersIntro": "A preview of how offers will look. These are not real products.",
@@ -89,9 +110,18 @@
     "emptyDescription": "Stock you list will appear here.",
     "toolsHeading": "More for sellers",
     "tiles": {
-      "orders": { "title": "Orders received", "description": "See and confirm buyer orders" },
-      "payouts": { "title": "Payments", "description": "Track money owed to you" },
-      "verification": { "title": "Business verification", "description": "Add your GST and licences" }
+      "orders": {
+        "title": "Orders received",
+        "description": "See and confirm buyer orders"
+      },
+      "payouts": {
+        "title": "Payments",
+        "description": "Track money owed to you"
+      },
+      "verification": {
+        "title": "Business verification",
+        "description": "Add your GST and licences"
+      }
     }
   },
   "wizard": {
@@ -147,5 +177,94 @@
     "notProvided": "Not filled in",
     "submit": "Submit listing",
     "submitNote": "Saving listings is not available yet. Nothing you enter here is stored."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "account": "My account",
+    "signOut": "Sign out",
+    "loginTitle": "Sign in to continue",
+    "loginIntro": "Use your Google account. We only receive your name and your verified email address.",
+    "continueWithGoogle": "Continue with Google",
+    "privacyNote": "We never see your Google password.",
+    "errors": {
+      "expired": "Sign-in took too long. Please try again.",
+      "cancelled": "Sign-in was cancelled.",
+      "failed": "We could not sign you in. Please try again.",
+      "unavailable": "Sign-in is not available right now. Please try again in a few minutes."
+    }
+  },
+  "account": {
+    "title": "My account",
+    "profileHeading": "Profile",
+    "email": "Email",
+    "displayName": "Your name",
+    "language": "Preferred language",
+    "save": "Save",
+    "saved": "Saved",
+    "businessesHeading": "My businesses",
+    "noBusinesses": "You are not part of any business yet.",
+    "createBusiness": "Create a business",
+    "invitationsHeading": "Invitations for you",
+    "invitationText": "{business} invited you to join as {role}.",
+    "accept": "Accept",
+    "roles": {
+      "OWNER": "Owner",
+      "MANAGER": "Manager",
+      "STAFF": "Staff"
+    }
+  },
+  "business": {
+    "createTitle": "Create your business",
+    "createIntro": "Tell us about your business. You can add verification documents later.",
+    "fields": {
+      "legalName": "Legal name",
+      "legalNameHint": "As on your GST certificate or shop licence",
+      "tradeName": "Shop or trade name (optional)",
+      "businessType": "Type of business",
+      "businessTypePlaceholder": "Choose one",
+      "gstin": "GSTIN (optional)",
+      "gstinHint": "15 characters, as printed on your GST certificate",
+      "city": "City or town",
+      "state": "State",
+      "pincode": "PIN code"
+    },
+    "types": {
+      "KIRANA": "Kirana shop",
+      "WHOLESALER": "Wholesaler",
+      "DISTRIBUTOR": "Distributor",
+      "MANUFACTURER": "Manufacturer",
+      "RETAILER": "Retailer",
+      "OTHER": "Other"
+    },
+    "create": "Create business",
+    "save": "Save changes",
+    "saved": "Changes saved",
+    "detailsHeading": "Business details",
+    "verification": "Verification",
+    "statuses": {
+      "UNVERIFIED": "Not verified yet",
+      "PENDING": "Being checked",
+      "VERIFIED": "Verified",
+      "REJECTED": "Not accepted"
+    },
+    "yourRole": "Your role",
+    "membersHeading": "Members",
+    "invitationsHeading": "Open invitations",
+    "noInvitations": "No open invitations.",
+    "inviteHeading": "Invite someone",
+    "inviteEmail": "Their Google email address",
+    "inviteHint": "They accept the invitation after signing in with this email.",
+    "inviteRole": "Role",
+    "invite": "Create invitation",
+    "invited": "Invitation created. Ask them to sign in with this email to accept it.",
+    "revoke": "Revoke",
+    "expires": "Expires {date}",
+    "errors": {
+      "invalid": "Please check the details and try again.",
+      "gstinTaken": "Another business already uses this GSTIN.",
+      "alreadyInvited": "This person already has an open invitation or is already a member.",
+      "notAllowed": "Your role does not allow this.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

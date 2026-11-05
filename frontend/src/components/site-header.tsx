@@ -1,11 +1,13 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { AuthLink } from "@/components/auth/auth-link";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
-import { LanguageSwitcher } from "./language-switcher";
+import { LanguageSwitcher, StaticLanguageLinks } from "./language-switcher";
 
 interface SiteHeaderProps {
   lang: Locale;
-  dict: Pick<Dictionary, "meta" | "nav" | "language">;
+  dict: Pick<Dictionary, "meta" | "nav" | "language" | "auth">;
 }
 
 const navLinkClassName =
@@ -34,7 +36,16 @@ export function SiteHeader({ lang, dict }: SiteHeaderProps) {
             </ul>
           </nav>
         </div>
-        <LanguageSwitcher current={lang} label={dict.language.label} />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* The switcher reads the current path, which is per request on some pages. */}
+          <Suspense fallback={<StaticLanguageLinks current={lang} label={dict.language.label} />}>
+            <LanguageSwitcher current={lang} label={dict.language.label} />
+          </Suspense>
+          {/* The rest of the header is static; only this part depends on who is signed in. */}
+          <Suspense fallback={<span aria-hidden="true" className="inline-flex min-h-12 w-28" />}>
+            <AuthLink lang={lang} labels={dict.auth} />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

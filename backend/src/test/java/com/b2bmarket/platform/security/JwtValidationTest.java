@@ -15,11 +15,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 class JwtValidationTest {
 
   static final String ISSUER = "https://issuer.example/pool";
-  static final String AUDIENCE = "b2b-marketplace-api";
+  static final String AUDIENCE = "b2b-marketplace-web";
   static final Instant NOW = Instant.parse("2026-11-02T06:00:00Z");
 
   final OAuth2TokenValidator<Jwt> validator =
-      JwtValidation.validator(ISSUER, AUDIENCE, Clock.fixed(NOW, ZoneOffset.UTC));
+      JwtValidation.validator(List.of(ISSUER), AUDIENCE, Clock.fixed(NOW, ZoneOffset.UTC));
 
   static Jwt token(Consumer<Jwt.Builder> customize) {
     Jwt.Builder builder =
@@ -62,13 +62,22 @@ class JwtValidationTest {
   }
 
   @Test
-  void acceptsACognitoAccessTokenThatNamesTheClientInsteadOfTheAudience() {
-    Jwt cognito = token(b -> b.claims(c -> c.remove("aud")).claim("client_id", AUDIENCE));
-    assertThat(validator.validate(cognito).hasErrors()).isFalse();
+  void acceptsAnyConfiguredSpellingOfTheIssuer() {
+    OAuth2TokenValidator<Jwt> google =
+        JwtValidation.validator(
+            List.of("https://accounts.google.com", "accounts.google.com"),
+            AUDIENCE,
+            Clock.fixed(NOW, ZoneOffset.UTC));
+
+    assertThat(google.validate(token(b -> b.issuer("accounts.google.com"))).hasErrors()).isFalse();
+    assertThat(google.validate(token(b -> b.issuer("https://accounts.google.com"))).hasErrors())
+        .isFalse();
+    assertThat(google.validate(token(b -> b.issuer("https://accounts.google.co"))).hasErrors())
+        .isTrue();
   }
 
   @Test
-  void rejectsATokenWithNeitherAudienceNorClient() {
+  void rejectsATokenWithoutAudience() {
     Jwt none = token(b -> b.claims(c -> c.remove("aud")));
     assertThat(validator.validate(none).hasErrors()).isTrue();
   }

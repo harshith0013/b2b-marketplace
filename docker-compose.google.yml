@@ -1,0 +1,20 @@
+# Opt-in: sign in with real Google accounts instead of the local mock.
+#   docker compose -f docker-compose.yml -f docker-compose.google.yml up --build
+# Needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env (git-ignored). See
+# docs/google-signin-setup.md. The mock-oauth2 service still starts but is not used.
+
+services:
+  backend:
+    environment:
+      AUTH_ISSUER_URI: https://accounts.google.com
+      AUTH_ISSUER_ALIASES: accounts.google.com
+      AUTH_JWK_SET_URI: "" # Discovered from Google.
+      AUTH_AUDIENCE: ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID in .env}
+
+  frontend:
+    environment:
+      AUTH_ISSUER: https://accounts.google.com
+      AUTH_ISSUER_INTERNAL_URL: "" # Only for the local mock.
+      AUTH_ALLOW_HTTP_ISSUER: "false"
+      AUTH_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID in .env}
+      AUTH_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET in .env}

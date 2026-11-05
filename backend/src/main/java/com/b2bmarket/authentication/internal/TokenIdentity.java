@@ -4,11 +4,8 @@ import com.b2bmarket.platform.ApiException;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 /**
- * Who a verified access token says the caller is. People are identified by email for now (email
- * one-time-code sign-in); the email must be verified by the identity provider.
- *
- * <p>Amazon Cognito access tokens carry {@code email} and {@code email_verified} only when a
- * pre-token-generation trigger adds them; see docs/cognito-setup.md.
+ * Who a verified token says the caller is. People are identified by their email (Google sign-in);
+ * the email must be verified by the sign-in provider.
  */
 record TokenIdentity(String subject, String email) {
 

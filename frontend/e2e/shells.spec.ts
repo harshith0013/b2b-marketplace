@@ -7,10 +7,10 @@ import te from "../src/i18n/dictionaries/te.json";
 const dictionaries = { en, te, hi };
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
+// Public pages. Signed-in pages (sell, account, business) are covered by e2e-stack/.
 const shells = [
   { path: "", heading: (d: typeof en) => d.home.tagline },
-  { path: "/sell", heading: (d: typeof en) => d.sell.title },
-  { path: "/sell/new", heading: (d: typeof en) => d.wizard.title },
+  { path: "/login", heading: (d: typeof en) => d.auth.loginTitle },
   { path: "/status", heading: (d: typeof en) => d.status.heading },
 ];
 
@@ -62,25 +62,28 @@ test("buyer home: every sample offer is labelled as sample data", async ({ page 
   }
 });
 
-test("seller can go from home to the listing wizard and reach the review step", async ({ page }) => {
-  await page.goto("/en");
-  await page
-    .getByRole("main")
-    .getByRole("link", { name: new RegExp(en.home.tiles.sell.title) })
-    .click();
-  await expect(page).toHaveURL(/\/en\/sell$/);
-  await page.getByRole("link", { name: en.sell.newListing }).click();
-  await expect(page).toHaveURL(/\/en\/sell\/new$/);
+for (const path of ["/sell", "/sell/new", "/account", "/onboarding"]) {
+  test(`${path} sends signed-out visitors to sign in and remembers where they were going`, async ({
+    page,
+  }) => {
+    await page.goto(`/te${path}`);
+    await expect(page).toHaveURL(`/te/login?returnTo=${encodeURIComponent(`/te${path}`)}`);
+    await expect(page.getByRole("link", { name: te.auth.continueWithGoogle })).toHaveAttribute(
+      "href",
+      `/api/auth/login?lang=te&returnTo=${encodeURIComponent(`/te${path}`)}`,
+    );
+  });
+}
 
-  await page.getByLabel(en.wizard.fields.productName).fill("Bath soap");
-  for (let step = 1; step < 5; step++) {
-    await page.getByRole("button", { name: en.common.next }).click();
-  }
+test("a crafted return address cannot send people to another website", async ({ page }) => {
+  await page.goto("/en/login?returnTo=https%3A%2F%2Fevil.example");
+  await expect(page.getByRole("link", { name: en.auth.continueWithGoogle })).toHaveAttribute(
+    "href",
+    `/api/auth/login?lang=en&returnTo=${encodeURIComponent("/en/account")}`,
+  );
+});
 
-  await expect(page.getByRole("heading", { level: 2, name: en.wizard.steps.review })).toBeFocused();
-  await expect(page.getByRole("definition").getByText("Bath soap", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: en.wizard.submit })).toBeDisabled();
-
-  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-  expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+test("pages send a Content-Security-Policy that forbids framing", async ({ request }) => {
+  const response = await request.get("/en");
+  expect(response.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
 });

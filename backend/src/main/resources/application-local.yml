@@ -10,8 +10,8 @@ management:
     health:
       show-details: always
 
-# Local mock OAuth2 server from docker-compose.yml (sign-in with a fixed dev code, no AWS).
+# Local mock OAuth2 server from docker-compose.yml: a stand-in for Google sign-in.
 app:
   auth:
     issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8090/default}
-    audience: ${AUTH_AUDIENCE:b2b-marketplace-api}
+    audience: ${AUTH_AUDIENCE:b2b-marketplace-web}

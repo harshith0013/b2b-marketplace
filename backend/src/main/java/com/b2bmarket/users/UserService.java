@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -95,6 +96,12 @@ public class UserService {
     return users.findAllById(userIds).stream()
         .map(UserEntity::toProfile)
         .collect(Collectors.toUnmodifiableMap(UserProfile::id, Function.identity()));
+  }
+
+  /** The account signed in with this email, if there is one. */
+  @Transactional(readOnly = true)
+  public Optional<UUID> findIdByEmail(String email) {
+    return users.findByEmail(email.trim().toLowerCase(Locale.ROOT)).map(UserEntity::id);
   }
 
   private UserEntity find(UUID userId) {

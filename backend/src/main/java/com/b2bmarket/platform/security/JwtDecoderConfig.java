@@ -9,8 +9,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.SupplierJwtDecoder;
 
 /**
- * Verifies access tokens from the configured identity provider: Amazon Cognito in deployed
- * environments, the mock OAuth2 server locally and in tests.
+ * Verifies tokens from the configured sign-in provider: Google in deployed environments, the mock
+ * OAuth2 server locally and in tests.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(AuthProperties.class)
@@ -27,7 +27,7 @@ public class JwtDecoderConfig {
                   ? NimbusJwtDecoder.withIssuerLocation(auth.issuerUri()).build()
                   : NimbusJwtDecoder.withJwkSetUri(auth.jwkSetUri()).build();
           decoder.setJwtValidator(
-              JwtValidation.validator(auth.issuerUri(), auth.audience(), clock));
+              JwtValidation.validator(auth.acceptedIssuers(), auth.audience(), clock));
           return decoder;
         });
   }

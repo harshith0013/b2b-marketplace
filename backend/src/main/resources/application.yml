@@ -52,8 +52,10 @@ management:
 app:
   version: "@project.version@"
   auth:
-    # Which access tokens are accepted. No defaults: they come from the environment
-    # (Cognito in deployed environments, application-local.yml locally).
+    # Which tokens are accepted. No defaults: they come from the environment
+    # (Google in deployed environments: issuer https://accounts.google.com, alias
+    # accounts.google.com, audience = the Google OAuth client id; application-local.yml locally).
     issuer-uri: ${AUTH_ISSUER_URI}
+    issuer-aliases: ${AUTH_ISSUER_ALIASES:}
     jwk-set-uri: ${AUTH_JWK_SET_URI:}
     audience: ${AUTH_AUDIENCE}

@@ -10,14 +10,17 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:stack": "playwright test --config playwright.stack.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "1.5.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "iron-session": "9.0.1",
     "lucide-react": "1.59.0",
     "next": "16.4.2",
+    "openid-client": "6.8.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tailwind-merge": "3.7.0"

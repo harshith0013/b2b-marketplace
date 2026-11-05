@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class IntegrationTestSupport {
 
-  public static final String AUDIENCE = "b2b-marketplace-api";
+  public static final String AUDIENCE = "b2b-marketplace-web";
 
   static final PostgreSQLContainer POSTGRES =
       new PostgreSQLContainer(

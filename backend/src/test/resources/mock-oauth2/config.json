@@ -1,5 +1,5 @@
 {
-  "interactiveLogin": false,
+  "interactiveLogin": true,
   "tokenCallbacks": [
     {
       "issuerId": "default",
@@ -12,7 +12,7 @@
             "sub": "${user_sub}",
             "email": "${email}",
             "email_verified": false,
-            "aud": ["b2b-marketplace-api"]
+            "aud": ["b2b-marketplace-web"]
           }
         },
         {
@@ -22,7 +22,16 @@
             "sub": "${user_sub}",
             "email": "${email}",
             "email_verified": true,
-            "aud": ["b2b-marketplace-api"]
+            "aud": ["b2b-marketplace-web"]
+          }
+        },
+        {
+          "requestParam": "subject",
+          "match": ".*",
+          "claims": {
+            "email": "${subject}",
+            "email_verified": true,
+            "aud": ["b2b-marketplace-web"]
           }
         }
       ]

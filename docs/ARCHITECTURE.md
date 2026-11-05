@@ -10,7 +10,7 @@
  │ Next.js (App Router)    │  HTTP  │ Spring Boot modular monolith  │
  │ - pages, i18n, proxy    │ ─────► │ - REST API /api/v1/**         │
  │ - BFF route handlers    │ server │ - Spring Security (deny-all   │
- │   (/api/**)             │  only  │   default; Cognito JWT, Ph 3) │
+ │   (/api/**)             │  only  │   default; Google ID token)   │
  └─────────────────────────┘        │ - Flyway-owned schema         │
                                     └──────────────┬────────────────┘
                                                    ▼
@@ -20,6 +20,22 @@
 The browser never calls the Spring Boot API directly. Next.js route handlers act as a
 backend-for-frontend, which keeps tokens server-side, avoids CORS entirely and lets us shape
 responses for small screens.
+
+## Sign-in (Phase 3)
+
+1. `/[lang]/login` → `/api/auth/login` starts an OpenID Connect authorization-code flow with
+   Google (PKCE, state, nonce), using `openid-client`.
+2. Google redirects to `/api/auth/callback`; the server exchanges the code, verifies the ID token
+   and requires a verified email, then stores the ID token in an encrypted httpOnly cookie
+   (`iron-session`). The browser never sees a token.
+3. Server Components and Server Actions send that ID token to the API as a bearer token. The API
+   checks signature, issuer, audience (the Google client id), expiry and `email_verified`, then
+   maps the person to a `users` row by `identity_subject`.
+4. `src/proxy.ts` sends signed-out visitors of protected pages to the login page, and sends an
+   expired session straight back through Google, which re-signs the person in silently.
+
+Locally and in CI the "Google" is `mock-oauth2-server` in Docker Compose (any email works).
+Setup for real Google: `docs/google-signin-setup.md`.
 
 ## Backend: modular monolith
 
@@ -62,7 +78,7 @@ ArchUnit) tests so boundary violations fail the build.
 | --- | --- | --- |
 | 1 | Monorepo, Spring Boot + Next.js, PostgreSQL, Flyway, Docker Compose, health checks, tests, CI | **Done** (see README) |
 | 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
-| 3 | Authentication, business accounts, access control | **3a done** (backend: JWT resource server, users, businesses, memberships and roles, tenant isolation tests, append-only audit log, Spring Modulith boundary test). 3b: login UI, session, onboarding, member invites. Email one-time code for now; phone OTP after TRAI DLT |
+| 3 | Authentication, business accounts, access control | **Done.** Sign in with Google (OIDC, server-side session in an encrypted cookie), users, businesses, OWNER/MANAGER/STAFF roles, invitations by email, tenant isolation tests, append-only audit log, Spring Modulith boundary test. Email or phone OTP can be added later |
 | 4 | Database, catalogue, inventory | Core tables, categories, products, warehouses, listings, price tiers |
 | 5 | Seller dashboard and stock uploads | Step-by-step listing, photos to private S3, baseline eligibility checks, minimal admin approval queue |
 | 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
@@ -114,7 +130,7 @@ Created incrementally from Phase 3 onwards. All primary keys are UUIDs; every ta
 
 | Table | Purpose and key columns |
 | --- | --- |
-| users | `cognito_sub` (unique), phone, display name, preferred locale, status |
+| users | `identity_subject` (sign-in provider's user id, unique), email (unique, verified), phone, display name, preferred locale, status |
 | businesses | legal name, trade name, type (kirana, wholesaler, manufacturer…), GSTIN (unique), city, state, pincode, verification status |
 | business_memberships | user_id, business_id, role (owner, manager, staff); unique (user_id, business_id) |
 | roles | platform roles (buyer, seller, admin, reviewer) |
