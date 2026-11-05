@@ -73,5 +73,21 @@ Done on 2026-11-02: **Sign in with Google**, business accounts and access contro
 - Real Google accounts: see `docs/google-signin-setup.md`.
 - Stop `docker compose` before `npm run test:e2e` (it reuses whatever runs on port 3000).
 
+## Phase 4 status
+Done on 2026-11-05: **database, catalogue and inventory** (pilot category: non-food FMCG).
+- Migrations V4–V6: categories (seeded in en/te/hi), products and pack variants with GS1 barcode
+  checks, warehouses, stock batches, draft listings and quantity price tiers (paise, excluding GST).
+- **Row-Level Security** on warehouses, batches, listings and price tiers: each request's
+  transaction is switched to its business (`TenantScope`), so even an unfiltered query returns
+  only that business's rows. It guards against application bugs, not SQL injection.
+- Approved batch dates can only change by going back to review (enforced by a database trigger,
+  recorded in the audit log). Expired stock cannot be added or listed.
+- New products are visible only to the business that added them until approved (Phase 5).
+- Website: `/[lang]/business/[id]/warehouses` (list, add, switch off). Batches and listings have
+  an API only; their screens come in Phase 5.
+- Backend: 70 unit and 46 integration tests. Frontend: 117 unit tests, 44 Playwright tests and 14
+  full-stack Playwright tests.
+- Category names and new Telugu/Hindi strings need native-speaker review.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

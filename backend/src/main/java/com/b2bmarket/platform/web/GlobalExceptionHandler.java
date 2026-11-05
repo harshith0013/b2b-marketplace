@@ -4,6 +4,7 @@ import com.b2bmarket.platform.ApiException;
 import com.b2bmarket.platform.RequestIds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,6 +28,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
   static final String ACCESS_DENIED_DETAIL = "You do not have permission to do this.";
 
+  static final String CONFLICT_DETAIL =
+      "This clashes with something that was saved at the same time. Refresh and try again.";
+
   @ExceptionHandler(ApiException.class)
   public ProblemDetail handleApiException(ApiException ex) {
     return withRequestId(ProblemDetail.forStatusAndDetail(ex.status(), ex.getMessage()));
@@ -37,6 +41,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
     return withRequestId(
         ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ACCESS_DENIED_DETAIL));
+  }
+
+  /**
+   * A database constraint caught what the service checks missed, usually two requests racing (the
+   * same barcode saved twice at once). The constraint name is logged, never returned.
+   */
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+    log.warn("Constraint violation: {}", ex.getMostSpecificCause().getMessage());
+    return withRequestId(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, CONFLICT_DETAIL));
   }
 
   @ExceptionHandler(Exception.class)

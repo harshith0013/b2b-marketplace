@@ -48,8 +48,10 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1, 2 and 3 are done (see README). Next: Phase 4 (database, catalogue, inventory), only when
-explicitly asked; settle the pilot category and Row-Level Security (deferred from Phase 3) first.
+Phases 1-4 are done (see README). Next: Phase 5 (seller dashboard and stock uploads), only when
+explicitly asked. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
+touching warehouses, batches, listings or price tiers must call `TenantAccess.enter(...)` inside its
+transaction before querying them; new seller tables need a policy in a new migration and an RLS test.
 Sign-in is "Sign in with Google" (OIDC on the Next.js server, encrypted cookie session); locally
 `mock-oauth2-server` stands in for Google. Modules keep entities, repositories and controllers in
 an `internal` subpackage; `ModuleStructureTest` enforces boundaries. Pages that read the session

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { Warehouse } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BusinessForm } from "@/components/business/business-form";
 import { InviteForm } from "@/components/business/invite-form";
@@ -82,6 +84,12 @@ async function BusinessContent({ params }: { params: PageProps<"/[lang]/business
               business.verificationStatus}
           </Badge>
         </div>
+        <Button asChild variant="outline" className="self-start">
+          <Link href={`/${lang}/business/${id}/warehouses`}>
+            <Warehouse aria-hidden="true" className="size-5" />
+            {labels.warehousesLink}
+          </Link>
+        </Button>
       </div>
 
       <section aria-labelledby="details-heading" className="flex flex-col gap-3">

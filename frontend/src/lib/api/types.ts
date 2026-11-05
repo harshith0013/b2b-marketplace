@@ -65,3 +65,13 @@ export interface ReceivedInvitation {
   role: BusinessRole;
   expiresAt: string;
 }
+
+export interface Warehouse {
+  id: string;
+  name: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  active: boolean;
+}

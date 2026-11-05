@@ -264,7 +264,32 @@
       "gstinTaken": "Another business already uses this GSTIN.",
       "alreadyInvited": "This person already has an open invitation or is already a member.",
       "notAllowed": "Your role does not allow this.",
-      "generic": "Something went wrong. Please try again."
-    }
+      "generic": "Something went wrong. Please try again.",
+      "warehouseNameTaken": "You already have a warehouse with this name."
+    },
+    "warehousesLink": "Warehouses"
+  },
+  "warehouses": {
+    "title": "Warehouses",
+    "intro": "The places where your stock is kept. Each stock batch belongs to one warehouse.",
+    "back": "Back to business",
+    "listHeading": "Your warehouses",
+    "none": "No warehouses yet. Add the place where your stock is kept.",
+    "addHeading": "Add a warehouse",
+    "fields": {
+      "name": "Warehouse name",
+      "nameHint": "A short name you will recognise, such as Main godown",
+      "addressLine": "Address",
+      "city": "City or town",
+      "state": "State",
+      "pincode": "PIN code"
+    },
+    "add": "Add warehouse",
+    "added": "Warehouse added",
+    "active": "In use",
+    "inactive": "Not in use",
+    "deactivate": "Stop using",
+    "activate": "Use again",
+    "readOnly": "Only owners and managers can add or change warehouses."
   }
 }

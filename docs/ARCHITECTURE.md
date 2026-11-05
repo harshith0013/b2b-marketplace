@@ -42,7 +42,7 @@ Setup for real Google: `docs/google-signin-setup.md`.
 One deployable, with one package per business module under `com.b2bmarket`:
 
 authentication, users, businesses, businessverification, catalog, products, inventory, batches,
-sellers, buyers, search, ai, recommendations, compliance, orders, quotations, payments,
+listings, sellers, buyers, search, ai, recommendations, compliance, orders, quotations, payments,
 settlements, shipping, notifications, disputes, privacy, auditing, administration.
 
 Cross-cutting infrastructure (security config, error handling, request ids, clock) lives in
@@ -57,8 +57,21 @@ Rules every module follows:
 - Schema changes only through new Flyway migrations. Applied migrations are never edited.
 - Time comes from the injected `Clock`, never `Instant.now()` directly, so expiry rules are testable.
 
-Module boundaries are documentation only in Phase 1. In Phase 3, add Spring Modulith (or
-ArchUnit) tests so boundary violations fail the build.
+`ModuleStructureTest` (Spring Modulith) fails the build on boundary violations or cycles. Seller
+modules depend in one direction: listings → batches → inventory (warehouses) and products →
+catalog; all of them go through `businesses.TenantAccess` for membership checks.
+
+## Tenant isolation (Phase 4)
+
+Two layers. First, every service method checks membership and role (`TenantAccess`: 404 for
+non-members, 403 for the wrong role) and every repository query names the business. Second,
+PostgreSQL Row-Level Security on `warehouses`, `inventory_batches`, `listings` and `price_tiers`:
+after the check, the transaction runs `set_config('app.business_id', …, true)` and
+`SET LOCAL ROLE marketplace_tenant`, so the database itself returns and accepts only that
+business's rows. Both settings end with the transaction. Composite foreign keys
+`(id, business_id)` stop a row of one business pointing at another's. RLS guards against
+application bugs, not SQL injection (injected SQL could reset the role); a separate non-owner
+login for the application is planned for Phase 12.
 
 ## Frontend
 
@@ -79,7 +92,7 @@ ArchUnit) tests so boundary violations fail the build.
 | 1 | Monorepo, Spring Boot + Next.js, PostgreSQL, Flyway, Docker Compose, health checks, tests, CI | **Done** (see README) |
 | 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
 | 3 | Authentication, business accounts, access control | **Done.** Sign in with Google (OIDC, server-side session in an encrypted cookie), users, businesses, OWNER/MANAGER/STAFF roles, invitations by email, tenant isolation tests, append-only audit log, Spring Modulith boundary test. Email or phone OTP can be added later |
-| 4 | Database, catalogue, inventory | Core tables, categories, products, warehouses, listings, price tiers |
+| 4 | Database, catalogue, inventory | **Done.** Non-food FMCG categories, products and variants, warehouses, batches, draft listings, price tiers; Row-Level Security on seller tables; warehouses page |
 | 5 | Seller dashboard and stock uploads | Step-by-step listing, photos to private S3, baseline eligibility checks, minimal admin approval queue |
 | 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
 | 7 | AI search and recommendations | Spring AI added here; strict tool calling; evaluation set of real queries in en/te/hi and mixed language |
@@ -95,15 +108,14 @@ Security and baseline eligibility are built into every phase, not postponed to P
 
 These affect later phases and should be settled before the phase that needs them:
 
-1. **Pilot category** (before Phase 4): starting with non-food FMCG, or packaged food above a
-   minimum remaining shelf life, greatly reduces FSSAI compliance load at launch.
+1. **Pilot category**: settled 2026-11-05: non-food FMCG (personal care, home care, household,
+   stationery). Regulated categories wait for the compliance engine (Phase 8).
 2. **Pilot city and delivery model** (before Phase 9): seller-delivered, buyer pickup or a
    logistics partner.
 3. **Payment model** (before Phase 9): marketplace split settlement through a licensed payment
    aggregator; whether COD and buyer credit are supported at launch.
-4. **Row-Level Security** (deferred from Phase 3 to Phase 4): implement it as defense in depth with a per-transaction
-   `SET LOCAL app.business_id`, or defer and rely on application-level authorization plus
-   cross-tenant leak tests.
+4. **Row-Level Security**: settled 2026-11-05: on seller tables, as defense in depth (see
+   "Tenant isolation").
 5. **Confidential Deal Mode disclosure matrix** (before Phase 10): exactly which identity fields
    are visible to whom before quotation, after order and on the GST invoice.
 6. **Product name and domain**: replace the `B2B Marketplace` working name and `com.b2bmarket`
@@ -123,9 +135,11 @@ These affect later phases and should be settled before the phase that needs them
 | Low digital literacy of users | Poor adoption | Large touch targets, three languages, minimal steps, WhatsApp notifications later |
 | AWS cost before revenue | Burn | Single small RDS and Fargate service for pilot; no Redis until measured need |
 
-## Proposed initial data model (not yet migrated)
+## Data model
 
-Created incrementally from Phase 3 onwards. All primary keys are UUIDs; every table has
+Migrated so far: users, businesses, business_memberships, business_invitations, audit_events
+(Phase 3); categories, products, product_variants, warehouses, inventory_batches, listings,
+price_tiers (Phase 4). The rest is still a proposal, created incrementally. All primary keys are UUIDs; every table has
 `created_at`/`updated_at` (timestamptz, UTC); business-owned tables carry `business_id`.
 
 | Table | Purpose and key columns |

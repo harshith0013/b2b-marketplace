@@ -6,6 +6,7 @@ import com.b2bmarket.platform.RequestIds;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ProblemDetail;
 
 class GlobalExceptionHandlerTest {
@@ -29,5 +30,17 @@ class GlobalExceptionHandlerTest {
     assertThat(problem.getDetail()).isEqualTo(GlobalExceptionHandler.GENERIC_DETAIL);
     assertThat(problem.getDetail()).doesNotContain("jdbc", "secret");
     assertThat(problem.getProperties()).containsEntry("requestId", "req-123");
+  }
+
+  @Test
+  void constraintViolationsBecomeConflictsWithoutTheConstraintName() {
+    ProblemDetail problem =
+        handler.handleDataIntegrity(
+            new DataIntegrityViolationException(
+                "duplicate key value violates unique constraint \"product_variants_gtin_key\""));
+
+    assertThat(problem.getStatus()).isEqualTo(409);
+    assertThat(problem.getDetail()).isEqualTo(GlobalExceptionHandler.CONFLICT_DETAIL);
+    assertThat(problem.getDetail()).doesNotContain("product_variants");
   }
 }

@@ -129,3 +129,44 @@ test("sign-in and the account page work in Telugu", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: te.account.title })).toBeVisible();
   await expectNoA11yViolations(page);
 });
+
+/** Fills the add-warehouse form. Scoped to its section: Next.js keeps earlier pages hidden in the DOM. */
+async function addWarehouse(page: Page, name: string) {
+  const form = page.getByRole("region", { name: en.warehouses.addHeading });
+  const fields = en.warehouses.fields;
+  await form.getByLabel(fields.name, { exact: true }).fill(name);
+  await form.getByLabel(fields.addressLine, { exact: true }).fill("12-3 Main Road");
+  await form.getByLabel(fields.city, { exact: true }).fill("Guntur");
+  await form.getByLabel(fields.state, { exact: true }).fill("Andhra Pradesh");
+  await form.getByLabel(fields.pincode, { exact: true }).fill("522002");
+  await form.getByRole("button", { name: en.warehouses.add }).click();
+}
+
+test("owners add and switch off warehouses; strangers get nothing", async ({ browser }) => {
+  const owner = await newSignedInPage(browser, uniqueEmail("owner"));
+  const businessPath = await createBusiness(owner, "Godown Traders");
+
+  await owner.getByRole("link", { name: en.business.warehousesLink }).click();
+  await expect(owner).toHaveURL(new RegExp(`${businessPath}/warehouses$`));
+  await expect(owner.getByText(en.warehouses.none)).toBeVisible();
+  await expectNoA11yViolations(owner);
+
+  await addWarehouse(owner, "Guntur depot");
+  await expect(owner.getByRole("status").filter({ hasText: en.warehouses.added })).toBeVisible();
+  await expect(owner.getByText("Guntur depot", { exact: true })).toBeVisible();
+  await expectNoA11yViolations(owner);
+
+  // The same name again (in any letter case) is refused.
+  await addWarehouse(owner, "guntur DEPOT");
+  await expect(
+    owner.getByRole("alert").filter({ hasText: en.business.errors.warehouseNameTaken }),
+  ).toBeVisible();
+
+  await owner.getByRole("button", { name: new RegExp(en.warehouses.deactivate) }).click();
+  await expect(owner.getByText(en.warehouses.inactive)).toBeVisible();
+
+  const stranger = await newSignedInPage(browser, uniqueEmail("stranger"));
+  await stranger.goto(`${businessPath}/warehouses`);
+  await expect(stranger.getByText(/could not be found/i)).toBeVisible();
+  await expect(stranger.getByText("Guntur depot", { exact: true })).toHaveCount(0);
+});
