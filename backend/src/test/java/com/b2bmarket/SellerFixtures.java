@@ -154,6 +154,47 @@ public abstract class SellerFixtures extends IntegrationTestSupport {
         .asString();
   }
 
+  protected String uploadPhoto(String token, String businessId, String batchId, String kind) {
+    return created(
+            upload(
+                "/api/v1/businesses/" + businessId + "/batches/" + batchId + "/photos",
+                token,
+                Map.of("kind", kind),
+                com.b2bmarket.batches.TestImages.encode(tinted(kind.hashCode()), "jpeg"),
+                "image/jpeg"))
+        .get("id")
+        .asString();
+  }
+
+  /** A distinct image per call, so the same-photo-twice check does not trip. */
+  private static java.awt.image.BufferedImage tinted(int seed) {
+    java.awt.image.BufferedImage image = com.b2bmarket.batches.TestImages.halves();
+    int rgb = (seed ^ (int) System.nanoTime()) & 0xFFFFFF;
+    image.setRGB(0, 0, rgb);
+    image.setRGB(1, 1, rgb);
+    return image;
+  }
+
+  /** Makes this person a platform admin directly (the documented SQL, as in admin-setup.md). */
+  protected void makeAdmin(String token) {
+    jdbc.update(
+        "insert into platform_roles (user_id, role, granted_at) values (?, 'ADMIN', now())",
+        userIdOf(token));
+  }
+
+  /** A batch with both required photos and a draft listing that passes every check. */
+  protected String readyListing(String token, String businessId) {
+    String batchId = createBatch(token, businessId);
+    uploadPhoto(token, businessId, batchId, "PACK_FRONT");
+    uploadPhoto(token, businessId, batchId, "LABEL_DATE");
+    return createListing(token, businessId, batchId);
+  }
+
+  protected String batchOfListing(String listingId) {
+    return jdbc.queryForObject(
+        "select batch_id::text from listings where id = ?::uuid", String.class, listingId);
+  }
+
   protected static JsonNode created(HttpResponse<String> response) {
     assertThat(response.statusCode()).as(response.body()).isEqualTo(201);
     return json(response);

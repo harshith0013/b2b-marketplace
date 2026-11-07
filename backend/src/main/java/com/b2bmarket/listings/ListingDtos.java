@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,7 +64,11 @@ public final class ListingDtos {
       int gstRateBp,
       String notes,
       List<PriceTier> priceTiers,
-      BatchSummary batch) {
+      BatchSummary batch,
+      Instant submittedAt,
+      Instant reviewedAt,
+      /** Why a reviewer sent it back; null unless the last review was a rejection. */
+      String rejectionReason) {
 
     public Listing {
       priceTiers = List.copyOf(priceTiers);

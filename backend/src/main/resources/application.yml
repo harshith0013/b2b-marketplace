@@ -25,6 +25,11 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  servlet:
+    multipart:
+      # Photos: 5 MB each (checked again in the service), one per request.
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   shutdown: graceful
@@ -59,3 +64,16 @@ app:
     issuer-aliases: ${AUTH_ISSUER_ALIASES:}
     jwk-set-uri: ${AUTH_JWK_SET_URI:}
     audience: ${AUTH_AUDIENCE}
+  # Private photo storage. On AWS: STORAGE_BUCKET only (credentials come from the IAM role).
+  storage:
+    endpoint: ${STORAGE_ENDPOINT:}
+    region: ${STORAGE_REGION:ap-south-1}
+    bucket: ${STORAGE_BUCKET}
+    access-key: ${STORAGE_ACCESS_KEY:}
+    secret-key: ${STORAGE_SECRET_KEY:}
+    path-style: ${STORAGE_PATH_STYLE:false}
+    create-bucket: ${STORAGE_CREATE_BUCKET:false}
+  admin:
+    # Local development only: this email becomes a platform admin when it signs in. Never set it
+    # in a deployed environment; grant admins there as described in docs/admin-setup.md.
+    bootstrap-email: ${BOOTSTRAP_ADMIN_EMAIL:}

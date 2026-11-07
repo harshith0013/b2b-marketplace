@@ -1,16 +1,14 @@
 package com.b2bmarket.batches;
 
 import com.b2bmarket.platform.ApiException;
+import com.b2bmarket.platform.IndiaTime;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.regex.Pattern;
 
 /** Validation of batch details. Dates are judged by the calendar in India. */
 final class BatchRules {
-
-  static final ZoneId INDIA = ZoneId.of("Asia/Kolkata");
 
   /** Longer than any non-food FMCG shelf life; catches a mistyped year. */
   static final int MAX_YEARS_AHEAD = 10;
@@ -20,7 +18,7 @@ final class BatchRules {
   private BatchRules() {}
 
   static LocalDate today(Clock clock) {
-    return LocalDate.now(clock.withZone(INDIA));
+    return IndiaTime.today(clock);
   }
 
   static long daysUntil(LocalDate date, Clock clock) {

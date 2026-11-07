@@ -177,6 +177,15 @@ public class ProductService {
         .collect(Collectors.toMap(VariantEntity::id, v -> summary(v, byId.get(v.productId()))));
   }
 
+  /**
+   * A reviewer approved a listing of this product: an unreviewed product becomes approved, visible
+   * to everyone. Review scope only.
+   */
+  @Transactional
+  public void approveIfUnreviewed(UUID productId) {
+    products.approveIfUnreviewed(productId, Instant.now(clock));
+  }
+
   private Set<UUID> businessIdsOf(CurrentUser caller) {
     return businesses.membershipsOf(caller.userId()).stream()
         .map(Membership::businessId)
@@ -199,6 +208,7 @@ public class ProductService {
     return new VariantSummary(
         variant.id(),
         product.id(),
+        product.categoryId(),
         product.brand(),
         product.name(),
         dto.packSize(),

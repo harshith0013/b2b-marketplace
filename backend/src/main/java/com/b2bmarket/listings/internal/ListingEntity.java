@@ -49,6 +49,15 @@ public class ListingEntity {
 
   private String notes;
 
+  @Column(name = "submitted_at")
+  private Instant submittedAt;
+
+  @Column(name = "reviewed_at")
+  private Instant reviewedAt;
+
+  @Column(name = "rejection_reason")
+  private String rejectionReason;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
@@ -87,6 +96,20 @@ public class ListingEntity {
     updatedAt = now;
   }
 
+  /** Seller sends a draft for review; an earlier rejection reason is cleared. */
+  public void submit(Instant now) {
+    status = ListingStatus.PENDING_REVIEW;
+    submittedAt = now;
+    rejectionReason = null;
+    updatedAt = now;
+  }
+
+  /** Seller moves the listing to a state that needs no review (withdraw, pause, resume, close). */
+  public void moveTo(ListingStatus next, Instant now) {
+    status = next;
+    updatedAt = now;
+  }
+
   /** Records that something else about the listing (its price tiers) changed. */
   public void touch(Instant now) {
     updatedAt = now;
@@ -98,6 +121,22 @@ public class ListingEntity {
 
   public UUID id() {
     return id;
+  }
+
+  public UUID businessId() {
+    return businessId;
+  }
+
+  public Instant submittedAt() {
+    return submittedAt;
+  }
+
+  public Instant reviewedAt() {
+    return reviewedAt;
+  }
+
+  public String rejectionReason() {
+    return rejectionReason;
   }
 
   public UUID batchId() {

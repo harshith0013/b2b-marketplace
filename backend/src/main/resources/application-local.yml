@@ -15,3 +15,11 @@ app:
   auth:
     issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8090/default}
     audience: ${AUTH_AUDIENCE:b2b-marketplace-web}
+  # SeaweedFS from docker-compose.yml, an S3-compatible stand-in for AWS S3.
+  storage:
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:8333}
+    bucket: ${STORAGE_BUCKET:b2b-photos}
+    access-key: ${STORAGE_ACCESS_KEY:local_dev_key}
+    secret-key: ${STORAGE_SECRET_KEY:local_dev_secret_only}
+    path-style: true
+    create-bucket: true

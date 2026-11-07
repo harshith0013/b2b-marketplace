@@ -52,7 +52,8 @@ jobs:
       - name: End-to-end tests
         run: npm run test:e2e
 
-  # Builds the real images and runs them together (website, backend, PostgreSQL, mock sign-in),
+  # Builds the real images and runs them together (website, backend, PostgreSQL, mock sign-in,
+  # SeaweedFS photo storage),
   # then signs in through the browser. Replaces a build-only check of the images.
   e2e-stack:
     runs-on: ubuntu-latest

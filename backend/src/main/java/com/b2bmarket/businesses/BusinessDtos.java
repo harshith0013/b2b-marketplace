@@ -48,6 +48,9 @@ public final class BusinessDtos {
 
   public record Member(UUID userId, String email, String displayName, BusinessRole role) {}
 
+  /** What a platform reviewer sees about the seller. */
+  public record BusinessSummary(UUID id, String name, String verificationStatus) {}
+
   /** One business the signed-in person belongs to. */
   public record Membership(UUID businessId, String name, BusinessRole role) {}
 }

@@ -28,6 +28,22 @@ services:
     ports:
       - "127.0.0.1:8090:8080" # Bound to localhost only.
 
+  # Local stand-in for AWS S3 (stock photos). Private: every request needs the key in
+  # infra/seaweedfs/s3.json (local-only credentials). The bucket is created by the backend.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    command: ["server", "-s3", "-s3.config=/etc/seaweedfs/s3.json", "-dir=/data"]
+    volumes:
+      - ./infra/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - photo-data:/data
+    ports:
+      - "127.0.0.1:8333:8333" # Bound to localhost only.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   backend:
     build: ./backend
     environment:
@@ -39,10 +55,15 @@ services:
       AUTH_ISSUER_URI: http://localhost:8090/default
       AUTH_JWK_SET_URI: http://mock-oauth2:8080/default/jwks
       AUTH_AUDIENCE: b2b-marketplace-web
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      # Local only: this email becomes a platform admin on sign-in (see docs/admin-setup.md).
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      seaweedfs:
         condition: service_healthy
       mock-oauth2:
         condition: service_started
@@ -67,3 +88,4 @@ services:
 
 volumes:
   postgres-data:
+  photo-data:

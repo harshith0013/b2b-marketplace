@@ -157,4 +157,87 @@ class RowLevelSecurityIT extends SellerFixtures {
         batch);
     jdbc.update("update inventory_batches set quantity = 1 where id = ?", batch); // not a date
   }
+
+  @Test
+  void theReviewerRoleReadsEveryBusinessButCannotCreateSellerData() {
+    List<UUID> owners =
+        tx.execute(
+            s -> {
+              tenantScope.enterReview();
+              return jdbc.queryForList("select distinct business_id from listings", UUID.class);
+            });
+    assertThat(owners).contains(alice, bob);
+
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enterReview();
+                      jdbc.update(
+                          "insert into warehouses (id, business_id, name, address_line, city, state,"
+                              + " pincode, created_at, updated_at) values (?, ?, 'Reviewer', 'x', 'x',"
+                              + " 'x', '522001', now(), now())",
+                          UUID.randomUUID(),
+                          alice);
+                    }))
+        .isInstanceOf(DataAccessException.class)
+        .rootCause()
+        .hasMessageContaining("permission denied");
+
+    // Only review columns can change: not a price, not a quantity.
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enterReview();
+                      jdbc.update(
+                          "update inventory_batches set quantity = 1 where business_id = ?", alice);
+                    }))
+        .rootCause()
+        .hasMessageContaining("permission denied");
+  }
+
+  @Test
+  void aSellerTransactionCannotPublishItsOwnListing() {
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enter(alice);
+                      jdbc.update(
+                          "update listings set status = 'PUBLISHED' where business_id = ?", alice);
+                    }))
+        .rootCause()
+        .hasMessageContaining("cannot publish");
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enter(alice);
+                      jdbc.update(
+                          "update inventory_batches set status = 'APPROVED' where business_id = ?",
+                          alice);
+                    }))
+        .rootCause()
+        .hasMessageContaining("review result");
+  }
+
+  @Test
+  void photosAreScopedToo() {
+    String token = newPerson("photos");
+    UUID business = UUID.fromString(createBusiness(token, "Photo RLS"));
+    String batchId = createBatch(token, business.toString());
+    uploadPhoto(token, business.toString(), batchId, "PACK_FRONT");
+
+    Integer seenByAlice =
+        tx.execute(
+            s -> {
+              tenantScope.enter(alice);
+              return jdbc.queryForObject(
+                  "select count(*) from batch_photos where business_id = ?",
+                  Integer.class,
+                  business);
+            });
+    assertThat(seenByAlice).isZero();
+  }
 }

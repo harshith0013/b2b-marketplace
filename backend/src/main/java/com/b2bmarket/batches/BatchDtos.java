@@ -70,5 +70,6 @@ public final class BatchDtos {
       long quantity,
       StockUnit quantityUnit,
       Integer packsPerCase,
+      Long mrpPaise,
       BatchStatus status) {}
 }

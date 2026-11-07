@@ -1,6 +1,10 @@
 package com.b2bmarket.users;
 
+import com.b2bmarket.auditing.AuditEntry;
+import com.b2bmarket.auditing.AuditService;
 import com.b2bmarket.platform.ApiException;
+import com.b2bmarket.users.internal.PlatformRoleEntity;
+import com.b2bmarket.users.internal.PlatformRoleRepository;
 import com.b2bmarket.users.internal.UserEntity;
 import com.b2bmarket.users.internal.UserRepository;
 import java.time.Clock;
@@ -13,6 +17,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,14 +31,30 @@ public class UserService {
 
   static final Set<String> SUPPORTED_LOCALES = Set.of("en", "te", "hi");
 
+  private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
   private final UserRepository users;
+  private final PlatformRoleRepository platformRoles;
+  private final AuditService audit;
   private final Clock clock;
   private final TransactionTemplate transaction;
 
-  UserService(UserRepository users, Clock clock, PlatformTransactionManager transactionManager) {
+  /** Local development only; blank everywhere else. */
+  private final String bootstrapAdminEmail;
+
+  UserService(
+      UserRepository users,
+      PlatformRoleRepository platformRoles,
+      AuditService audit,
+      Clock clock,
+      PlatformTransactionManager transactionManager,
+      @Value("${app.admin.bootstrap-email:}") String bootstrapAdminEmail) {
     this.users = users;
+    this.platformRoles = platformRoles;
+    this.audit = audit;
     this.clock = clock;
     this.transaction = new TransactionTemplate(transactionManager);
+    this.bootstrapAdminEmail = bootstrapAdminEmail.trim().toLowerCase(Locale.ROOT);
   }
 
   /**
@@ -64,7 +87,29 @@ public class UserService {
       rejectIfEmailTaken(email);
       user.changeEmail(email, now);
     }
+    grantBootstrapAdminIfConfigured(user, now);
     return new CurrentUser(user.id(), user.email());
+  }
+
+  /** Local development convenience: makes the configured email an admin on sign-in. */
+  private void grantBootstrapAdminIfConfigured(UserEntity user, Instant now) {
+    if (bootstrapAdminEmail.isEmpty() || !bootstrapAdminEmail.equals(user.email())) {
+      return;
+    }
+    PlatformRoleEntity.Key key = new PlatformRoleEntity.Key(user.id(), PlatformRole.ADMIN);
+    if (platformRoles.existsById(key)) {
+      return;
+    }
+    platformRoles.save(PlatformRoleEntity.grant(user.id(), PlatformRole.ADMIN, null, now));
+    audit.record(
+        new AuditEntry(
+            "platform_role.granted",
+            null,
+            null,
+            "user",
+            user.id(),
+            Map.of("role", PlatformRole.ADMIN.name(), "source", "bootstrap-email")));
+    log.warn("Granted ADMIN to the bootstrap admin email. Never configure this outside local use.");
   }
 
   private void rejectIfEmailTaken(String email) {

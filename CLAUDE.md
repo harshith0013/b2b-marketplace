@@ -48,8 +48,9 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1-4 are done (see README). Next: Phase 5 (seller dashboard and stock uploads), only when
-explicitly asked. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
+Phases 1-4 and 5a (photos, eligibility, review queue API) are done (see README). Next: Phase 5b
+(seller dashboard, listing wizard with photo upload, admin review screens), only when explicitly
+asked. Review code must call `PlatformRoles.requireReviewer` then `TenantScope.enterReview()`. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
 touching warehouses, batches, listings or price tiers must call `TenantAccess.enter(...)` inside its
 transaction before querying them; new seller tables need a policy in a new migration and an RLS test.
 Sign-in is "Sign in with Google" (OIDC on the Next.js server, encrypted cookie session); locally

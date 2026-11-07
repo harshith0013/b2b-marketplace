@@ -70,6 +70,10 @@ public class ProductEntity {
     return id;
   }
 
+  public UUID categoryId() {
+    return categoryId;
+  }
+
   public String brand() {
     return brand;
   }

@@ -89,5 +89,24 @@ Done on 2026-11-05: **database, catalogue and inventory** (pilot category: non-f
   full-stack Playwright tests.
 - Category names and new Telugu/Hindi strings need native-speaker review.
 
+## Phase 5a status
+Done on 2026-11-05: **backend for stock photos, eligibility checks and the review queue.**
+- Photos: `POST /api/v1/businesses/{id}/batches/{batchId}/photos` (JPEG or PNG, up to 5 MB, 6 per
+  batch). Every photo is re-encoded, which removes camera metadata such as **GPS location**, and
+  phone rotation is applied first. Stored privately (SeaweedFS locally, AWS S3 later) and served
+  only through the API to the business's members and to reviewers.
+- Eligibility checks, run on submit and again on approval: at least 30 days of shelf life, a
+  pack-front and a label-date photo, MRP entered, price with GST not above MRP, unregulated
+  category, enough stock for the minimum order. All failures are reported together as codes.
+- Sellers submit, withdraw, pause, resume and close listings. Platform admins and reviewers
+  (`platform_roles`, see `docs/admin-setup.md`) approve or reject in `/api/v1/admin/reviews`;
+  approval publishes the listing and approves its batch and product. Reviewers cannot decide on
+  their own business, and a seller's transaction can never publish its own listing (database
+  trigger). Review transactions use a separate `marketplace_reviewer` database role.
+- Backend: 83 unit and 63 integration tests (real PostgreSQL, SeaweedFS and signed tokens).
+- Screens for all of this come in Phase 5b. Locally, set `BOOTSTRAP_ADMIN_EMAIL` in `.env` to try
+  the queue.
+- MinIO no longer publishes Docker images, so SeaweedFS (S3-compatible) is the local store.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

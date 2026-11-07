@@ -51,6 +51,7 @@ public final class ProductDtos {
   public record VariantSummary(
       UUID variantId,
       UUID productId,
+      UUID categoryId,
       String brand,
       String productName,
       BigDecimal packSize,

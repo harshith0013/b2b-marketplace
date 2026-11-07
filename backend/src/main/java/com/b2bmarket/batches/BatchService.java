@@ -143,6 +143,10 @@ public class BatchService {
       warehouses.requireActive(businessId, after.warehouseId());
     }
     boolean printedChanged = after.printedDetailsDifferFrom(before);
+    if (printedChanged && batch.status() == BatchStatus.PENDING_REVIEW) {
+      throw ApiException.conflict(
+          "This batch is being reviewed. Withdraw the listing to change its dates or number.");
+    }
     if (printedChanged) {
       BatchRules.requireDates(after.manufacturedOn(), after.expiresOn(), clock);
       if (!after.batchNumber().equalsIgnoreCase(before.batchNumber())
@@ -242,7 +246,39 @@ public class BatchService {
         f.quantity(),
         batch.quantityUnit(),
         batch.packsPerCase(),
+        f.mrpPaise(),
         batch.status());
+  }
+
+  // --- Review states (used by the listings module) --------------------------------------------
+
+  /** A listing of this batch was submitted: a draft batch goes into review too. Seller scope. */
+  @Transactional
+  public void markSubmitted(UUID businessId, UUID batchId) {
+    batches.changeStatus(
+        businessId, batchId, List.of(BatchStatus.DRAFT), BatchStatus.PENDING_REVIEW, now());
+  }
+
+  /** The listing was withdrawn or rejected: the batch can be edited again. Either scope. */
+  @Transactional
+  public void returnToDraft(UUID businessId, UUID batchId) {
+    batches.changeStatus(
+        businessId, batchId, List.of(BatchStatus.PENDING_REVIEW), BatchStatus.DRAFT, now());
+  }
+
+  /** A reviewer approved the listing. Review scope only (the database refuses sellers). */
+  @Transactional
+  public void approve(UUID businessId, UUID batchId) {
+    batches.changeStatus(
+        businessId,
+        batchId,
+        List.of(BatchStatus.DRAFT, BatchStatus.PENDING_REVIEW),
+        BatchStatus.APPROVED,
+        now());
+  }
+
+  private Instant now() {
+    return Instant.now(clock);
   }
 
   private static Fields merge(Fields current, UpdateBatchRequest request) {

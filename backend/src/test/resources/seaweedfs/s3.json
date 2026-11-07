@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "b2b-backend-local",
+      "credentials": [
+        { "accessKey": "local_dev_key", "secretKey": "local_dev_secret_only" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

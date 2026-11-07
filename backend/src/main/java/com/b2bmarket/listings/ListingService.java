@@ -23,12 +23,10 @@ import com.b2bmarket.users.CurrentUser;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -47,6 +45,7 @@ public class ListingService {
 
   private final ListingRepository listings;
   private final PriceTierRepository tiers;
+  private final ListingViews views;
   private final BatchService batches;
   private final TenantAccess tenants;
   private final AuditService audit;
@@ -55,12 +54,14 @@ public class ListingService {
   ListingService(
       ListingRepository listings,
       PriceTierRepository tiers,
+      ListingViews views,
       BatchService batches,
       TenantAccess tenants,
       AuditService audit,
       Clock clock) {
     this.listings = listings;
     this.tiers = tiers;
+    this.views = views;
     this.batches = batches;
     this.tenants = tenants;
     this.audit = audit;
@@ -72,20 +73,14 @@ public class ListingService {
     tenants.enter(caller, businessId, BusinessRole.ANY);
     Page<ListingEntity> found =
         listings.findByBusinessId(businessId, PageResult.request(page, size, LIST_ORDER));
-    List<UUID> ids = found.getContent().stream().map(ListingEntity::id).toList();
-    Map<UUID, List<PriceTier>> tiersById = tiersOf(businessId, ids);
-    Map<UUID, BatchSummary> batchesById =
-        batches.summaries(
-            businessId, found.getContent().stream().map(ListingEntity::batchId).toList());
-    return PageResult.of(
-        found,
-        l -> toDto(l, tiersById.getOrDefault(l.id(), List.of()), batchesById.get(l.batchId())));
+    List<Listing> items = views.views(found.getContent());
+    return new PageResult<>(items, found.getNumber(), found.getSize(), found.hasNext());
   }
 
   @Transactional(readOnly = true)
   public Listing get(CurrentUser caller, UUID businessId, UUID listingId) {
     tenants.enter(caller, businessId, BusinessRole.ANY);
-    return reload(businessId, load(businessId, listingId));
+    return views.view(load(businessId, listingId));
   }
 
   @Transactional
@@ -122,7 +117,7 @@ public class ListingService {
                 "batchId", batch.id().toString(),
                 "visibility", fields.visibility().name(),
                 "priceTiers", priceTiers.size())));
-    return toDto(listing, priceTiers, batch);
+    return ListingViews.toDto(listing, priceTiers, batch);
   }
 
   @Transactional
@@ -138,7 +133,7 @@ public class ListingService {
     List<String> changed = changedFields(before, after);
 
     List<PriceTier> currentTiers =
-        tiersOf(businessId, List.of(listingId)).getOrDefault(listingId, List.of());
+        views.tiersOf(businessId, List.of(listingId)).getOrDefault(listingId, List.of());
     boolean tiersGiven = request.priceTiers() != null;
     List<PriceTierRequest> wantedTiers =
         tiersGiven
@@ -170,7 +165,7 @@ public class ListingService {
       List<PriceTier> priceTiers,
       boolean replaceTiers) {
     if (changed.isEmpty()) {
-      return reload(businessId, listing);
+      return views.view(listing);
     }
     Instant now = Instant.now(clock);
     listing.apply(after, now);
@@ -186,7 +181,7 @@ public class ListingService {
             TARGET_TYPE,
             listing.id(),
             Map.of("changedFields", changed)));
-    return toDto(
+    return ListingViews.toDto(
         listing,
         priceTiers,
         batches.summaries(businessId, List.of(listing.batchId())).get(listing.batchId()));
@@ -204,42 +199,6 @@ public class ListingService {
     return listings
         .findByIdAndBusinessId(listingId, businessId)
         .orElseThrow(() -> ApiException.notFound(NOT_FOUND));
-  }
-
-  private Listing reload(UUID businessId, ListingEntity listing) {
-    return toDto(
-        listing,
-        tiersOf(businessId, List.of(listing.id())).getOrDefault(listing.id(), List.of()),
-        batches.summaries(businessId, List.of(listing.batchId())).get(listing.batchId()));
-  }
-
-  private Map<UUID, List<PriceTier>> tiersOf(UUID businessId, Collection<UUID> listingIds) {
-    if (listingIds.isEmpty()) {
-      return Map.of();
-    }
-    return tiers
-        .findByBusinessIdAndListingIdInOrderByMinQuantityAsc(businessId, listingIds)
-        .stream()
-        .collect(
-            Collectors.groupingBy(
-                PriceTierEntity::listingId,
-                Collectors.mapping(PriceTierEntity::toDto, Collectors.toList())));
-  }
-
-  private static Listing toDto(
-      ListingEntity listing, List<PriceTier> priceTiers, BatchSummary batch) {
-    Fields f = listing.fields();
-    return new Listing(
-        listing.id(),
-        listing.status(),
-        f.clearanceReason(),
-        f.visibility(),
-        f.moq(),
-        listing.quantityUnit(),
-        f.gstRateBp(),
-        f.notes(),
-        priceTiers,
-        batch);
   }
 
   private static Fields merge(Fields current, UpdateListingRequest request) {

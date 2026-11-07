@@ -1,5 +1,6 @@
 package com.b2bmarket.platform;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -9,14 +10,25 @@ import org.springframework.http.HttpStatus;
 public class ApiException extends RuntimeException {
 
   private final HttpStatus status;
+  private final Map<String, Object> properties;
 
-  private ApiException(HttpStatus status, String detail) {
+  private ApiException(HttpStatus status, String detail, Map<String, Object> properties) {
     super(detail);
     this.status = status;
+    this.properties = Map.copyOf(properties);
+  }
+
+  private ApiException(HttpStatus status, String detail) {
+    this(status, detail, Map.of());
   }
 
   public HttpStatus status() {
     return status;
+  }
+
+  /** Extra machine-readable fields for the problem response, such as a list of failed checks. */
+  public Map<String, Object> properties() {
+    return properties;
   }
 
   public static ApiException badRequest(String detail) {
@@ -34,5 +46,10 @@ public class ApiException extends RuntimeException {
 
   public static ApiException conflict(String detail) {
     return new ApiException(HttpStatus.CONFLICT, detail);
+  }
+
+  /** The request is well-formed but the thing cannot be done yet; properties say why. */
+  public static ApiException unprocessable(String detail, Map<String, Object> properties) {
+    return new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, detail, properties);
   }
 }

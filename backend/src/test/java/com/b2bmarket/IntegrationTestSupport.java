@@ -49,9 +49,23 @@ public abstract class IntegrationTestSupport {
           .withExposedPorts(8080)
           .waitingFor(Wait.forHttp("/default/.well-known/openid-configuration"));
 
+  /** S3-compatible photo storage, with the same local-only credentials as docker-compose. */
+  static final GenericContainer<?> STORAGE =
+      new GenericContainer<>(
+              DockerImageName.parse(
+                  System.getProperty("seaweedfs.image", "chrislusf/seaweedfs:4.48")))
+          .withClasspathResourceMapping(
+              "seaweedfs/s3.json",
+              "/etc/seaweedfs/s3.json",
+              org.testcontainers.containers.BindMode.READ_ONLY)
+          .withCommand("server", "-s3", "-s3.config=/etc/seaweedfs/s3.json", "-dir=/data")
+          .withExposedPorts(8333)
+          .waitingFor(Wait.forHttp("/healthz").forPort(8333));
+
   static {
-    POSTGRES.start(); // Testcontainers' Ryuk removes both containers when the JVM exits.
+    POSTGRES.start(); // Testcontainers' Ryuk removes the containers when the JVM exits.
     OAUTH.start();
+    STORAGE.start();
   }
 
   @DynamicPropertySource
@@ -61,6 +75,14 @@ public abstract class IntegrationTestSupport {
     registry.add("spring.datasource.password", POSTGRES::getPassword);
     registry.add("app.auth.issuer-uri", () -> issuer("default"));
     registry.add("app.auth.audience", () -> AUDIENCE);
+    registry.add(
+        "app.storage.endpoint",
+        () -> "http://" + STORAGE.getHost() + ":" + STORAGE.getMappedPort(8333));
+    registry.add("app.storage.bucket", () -> "test-photos");
+    registry.add("app.storage.access-key", () -> "local_dev_key");
+    registry.add("app.storage.secret-key", () -> "local_dev_secret_only");
+    registry.add("app.storage.path-style", () -> "true");
+    registry.add("app.storage.create-bucket", () -> "true");
   }
 
   protected static final JsonMapper JSON = JsonMapper.builder().build();
@@ -112,6 +134,58 @@ public abstract class IntegrationTestSupport {
       request.header("Authorization", "Bearer " + token);
     }
     return send(request.build());
+  }
+
+  /** Uploads one file as multipart/form-data, with extra plain form fields. */
+  protected HttpResponse<String> upload(
+      String path, String token, Map<String, String> fields, byte[] file, String contentType) {
+    String boundary = "----b2b" + java.util.UUID.randomUUID();
+    java.io.ByteArrayOutputStream body = new java.io.ByteArrayOutputStream();
+    java.util.function.Consumer<String> text =
+        s -> body.writeBytes(s.getBytes(StandardCharsets.UTF_8));
+    fields.forEach(
+        (name, value) ->
+            text.accept(
+                "--"
+                    + boundary
+                    + "\r\nContent-Disposition: form-data; name=\""
+                    + name
+                    + "\"\r\n\r\n"
+                    + value
+                    + "\r\n"));
+    text.accept(
+        "--"
+            + boundary
+            + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"photo\"\r\n"
+            + "Content-Type: "
+            + contentType
+            + "\r\n\r\n");
+    body.writeBytes(file);
+    text.accept("\r\n--" + boundary + "--\r\n");
+    HttpRequest request =
+        HttpRequest.newBuilder(URI.create(baseUrl() + path))
+            .header("Authorization", "Bearer " + token)
+            .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+            .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
+            .build();
+    return send(request);
+  }
+
+  /** A GET whose body is binary (photos). */
+  protected HttpResponse<byte[]> getBytes(String path, String token) {
+    HttpRequest request =
+        HttpRequest.newBuilder(URI.create(baseUrl() + path))
+            .header("Authorization", "Bearer " + token)
+            .GET()
+            .build();
+    try {
+      return HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   protected HttpResponse<String> get(String path) {

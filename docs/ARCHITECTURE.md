@@ -37,6 +37,23 @@ responses for small screens.
 Locally and in CI the "Google" is `mock-oauth2-server` in Docker Compose (any email works).
 Setup for real Google: `docs/google-signin-setup.md`.
 
+## Photos and review (Phase 5a)
+
+- Photos go browser → website server → API, never straight to storage. The API checks the file's
+  real type and size, re-encodes it (dropping all metadata, after applying the EXIF rotation) and
+  stores it under a key nobody sees. `platform.ObjectStorage` is S3 (AWS SDK v2); locally
+  SeaweedFS stands in, with credentials in `infra/seaweedfs/s3.json` (local only).
+- Listing life: `DRAFT` → submit (eligibility checks) → `PENDING_REVIEW` → reviewer approves
+  (checks again) → `PUBLISHED` ⇄ `PAUSED` → `CLOSED`; a rejection returns it to `DRAFT` with a
+  reason. While in review the batch's dates and photos are frozen.
+- Reviewers: `platform_roles` (ADMIN, REVIEWER). After the role check, review transactions switch
+  to the `marketplace_reviewer` database role: it reads all seller rows but has column-level grants
+  to change only review status, so a bug in the review code cannot alter prices or stock. A trigger
+  stops `marketplace_tenant` (a seller's transaction) from publishing a listing or approving a
+  batch. Decisions are append-only in `review_decisions`.
+- Buyer queries (Phase 6) must show only listings that are `PUBLISHED` **and** whose batch is
+  `APPROVED`: changing an approved batch's dates sends it back to review.
+
 ## Backend: modular monolith
 
 One deployable, with one package per business module under `com.b2bmarket`:
@@ -93,7 +110,7 @@ login for the application is planned for Phase 12.
 | 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
 | 3 | Authentication, business accounts, access control | **Done.** Sign in with Google (OIDC, server-side session in an encrypted cookie), users, businesses, OWNER/MANAGER/STAFF roles, invitations by email, tenant isolation tests, append-only audit log, Spring Modulith boundary test. Email or phone OTP can be added later |
 | 4 | Database, catalogue, inventory | **Done.** Non-food FMCG categories, products and variants, warehouses, batches, draft listings, price tiers; Row-Level Security on seller tables; warehouses page |
-| 5 | Seller dashboard and stock uploads | Step-by-step listing, photos to private S3, baseline eligibility checks, minimal admin approval queue |
+| 5 | Seller dashboard and stock uploads | **5a done** (backend): private photos with metadata removed, eligibility checks, submit/withdraw/pause/resume/close, admin review queue with platform roles. **5b next**: seller dashboard, listing wizard, review screens |
 | 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
 | 7 | AI search and recommendations | Spring AI added here; strict tool calling; evaluation set of real queries in en/te/hi and mixed language |
 | 8 | Expiry detection, Batch Passport, compliance engine | OCR comparison, versioned rules, checks at listing/publish/checkout/dispatch |

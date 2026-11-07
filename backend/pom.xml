@@ -32,6 +32,9 @@
     <pgvector.image>pgvector/pgvector:0.8.0-pg17</pgvector.image>
     <mock-oauth2.image>ghcr.io/navikt/mock-oauth2-server:6.1.2</mock-oauth2.image>
     <spring-modulith.version>2.1.1</spring-modulith.version>
+    <!-- Released 2026-10-21; S3 client for stock photos (SeaweedFS locally, AWS S3 later). -->
+    <aws-sdk.version>2.57.2</aws-sdk.version>
+    <seaweedfs.image>chrislusf/seaweedfs:4.48</seaweedfs.image>
   </properties>
 
   <dependencyManagement>
@@ -43,10 +46,37 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws-sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <!-- Photo storage. The JDK's HTTP client only: no Netty or Apache HTTP client. -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>netty-nio-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>apache-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>url-connection-client</artifactId>
+    </dependency>
+
     <!-- Web, security, validation -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -151,6 +181,7 @@
           <systemPropertyVariables>
             <pgvector.image>${pgvector.image}</pgvector.image>
             <mock-oauth2.image>${mock-oauth2.image}</mock-oauth2.image>
+            <seaweedfs.image>${seaweedfs.image}</seaweedfs.image>
           </systemPropertyVariables>
         </configuration>
       </plugin>

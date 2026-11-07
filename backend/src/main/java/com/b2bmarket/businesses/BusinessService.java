@@ -3,6 +3,7 @@ package com.b2bmarket.businesses;
 import com.b2bmarket.auditing.AuditEntry;
 import com.b2bmarket.auditing.AuditService;
 import com.b2bmarket.businesses.BusinessDtos.BusinessDetails;
+import com.b2bmarket.businesses.BusinessDtos.BusinessSummary;
 import com.b2bmarket.businesses.BusinessDtos.CreateBusinessRequest;
 import com.b2bmarket.businesses.BusinessDtos.Member;
 import com.b2bmarket.businesses.BusinessDtos.Membership;
@@ -19,6 +20,7 @@ import com.b2bmarket.users.UserProfile;
 import com.b2bmarket.users.UserService;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -161,6 +163,19 @@ public class BusinessService {
         .filter(m -> byId.containsKey(m.businessId()))
         .map(m -> new Membership(m.businessId(), byId.get(m.businessId()).displayName(), m.role()))
         .toList();
+  }
+
+  /**
+   * Names and verification status, keyed by id. No membership check: for platform reviewers, whose
+   * role the caller has already checked.
+   */
+  @Transactional(readOnly = true)
+  public Map<UUID, BusinessSummary> summaries(Collection<UUID> ids) {
+    return businesses.findAllById(ids).stream()
+        .collect(
+            Collectors.toMap(
+                BusinessEntity::id,
+                b -> new BusinessSummary(b.id(), b.displayName(), b.verificationStatus())));
   }
 
   private BusinessEntity load(UUID businessId) {

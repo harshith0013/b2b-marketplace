@@ -48,6 +48,12 @@ public class CategoryService {
     return Stream.concat(roots.stream(), children.stream()).toList();
   }
 
+  /** Whether products in this category need compliance checks (unknown ids count as regulated). */
+  @Transactional(readOnly = true)
+  public boolean isRegulated(UUID categoryId) {
+    return categories.findById(categoryId).map(CategoryEntity::regulated).orElse(true);
+  }
+
   /**
    * Checks that products may be filed under this category: it exists, is active, is a leaf and is
    * not regulated (regulated categories wait for the compliance engine, Phase 8). 400 otherwise.
