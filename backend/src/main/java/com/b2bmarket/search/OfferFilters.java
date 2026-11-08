@@ -2,6 +2,7 @@ package com.b2bmarket.search;
 
 import com.b2bmarket.platform.ApiException;
 import com.b2bmarket.platform.Text;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -11,6 +12,8 @@ import java.util.UUID;
  * @param maxOrderValuePaise highest cost of the minimum order (minimum order × its unit price)
  * @param minDaysLeft offers with fewer days before the printed date are left out (never fewer than
  *     {@link #MIN_SHELF_LIFE_DAYS})
+ * @param wantQuantity with wantUnit: how much the buyer wants. Only offers sold in that unit, whose
+ *     minimum order is at most this and whose stock is at least this
  */
 public record OfferFilters(
     String query,
@@ -23,7 +26,9 @@ public record OfferFilters(
     int minDaysLeft,
     OfferSort sort,
     int page,
-    int size) {
+    int size,
+    Long wantQuantity,
+    String wantUnit) {
 
   /** Offers stop showing this many days before the date on the pack. */
   public static final int MIN_SHELF_LIFE_DAYS = 30;
@@ -33,6 +38,8 @@ public record OfferFilters(
   static final int MAX_TEXT = 100;
   static final int MAX_DAYS = 3650;
   static final int MAX_PAGE = 400;
+  static final long MAX_QUANTITY = 10_000_000L;
+  static final Set<String> UNITS = Set.of("PIECE", "CASE");
 
   /** Checks and normalizes raw request parameters; 400 for anything out of range. */
   public static OfferFilters of(
@@ -75,7 +82,36 @@ public record OfferFilters(
         Math.max(days, MIN_SHELF_LIFE_DAYS),
         order,
         pageNumber,
-        pageSize);
+        pageSize,
+        null,
+        null);
+  }
+
+  /** The same search for a wanted quantity: both or neither; 400 when out of range. */
+  public OfferFilters wanting(Long quantity, String unit) {
+    if (quantity == null && unit == null) {
+      return this;
+    }
+    if (quantity == null || unit == null) {
+      throw ApiException.badRequest("Give both the quantity and its unit.");
+    }
+    if (quantity < 1 || quantity > MAX_QUANTITY || !UNITS.contains(unit)) {
+      throw ApiException.badRequest("The quantity or its unit is not valid.");
+    }
+    return new OfferFilters(
+        query,
+        categoryId,
+        state,
+        city,
+        brand,
+        maxPricePerPackPaise,
+        maxOrderValuePaise,
+        minDaysLeft,
+        sort,
+        page,
+        size,
+        quantity,
+        unit);
   }
 
   private static String limited(String value, String label) {

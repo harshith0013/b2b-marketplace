@@ -61,6 +61,24 @@ test("buyer home: search opens the offers page with the words typed", async ({
   );
 });
 
+test("buyer home: without the API the assistant falls back to normal search", async ({
+  page,
+}) => {
+  await page.goto("/en");
+  await page.getByRole("button", { name: en.home.assistant.open }).click();
+  const dialog = page.getByRole("dialog", { name: en.home.assistant.title });
+  await expect(dialog.getByText(en.home.assistant.privacy)).toBeVisible();
+  await dialog
+    .getByLabel(en.home.assistant.label, { exact: false })
+    .fill("20 cases of detergent");
+  await dialog.getByRole("button", { name: en.home.assistant.submit }).click();
+  await expect(page).toHaveURL(/\/en\/offers\?asked=20/);
+  await expect(page.getByText(en.offers.assistant.fallbackOff)).toBeVisible();
+  await expect(page.getByLabel(en.offers.query, { exact: true })).toHaveValue(
+    "20 cases of detergent",
+  );
+});
+
 test("buyer home: assistant dialog opens and closes with Escape", async ({
   page,
 }) => {

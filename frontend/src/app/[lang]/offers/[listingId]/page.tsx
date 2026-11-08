@@ -2,7 +2,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ArrowLeft, EyeOff, MapPin } from "lucide-react";
-import { offerPhotoSrc, offerTitle } from "@/components/offers/offer-card";
+import {
+  OfferCard,
+  offerPhotoSrc,
+  offerTitle,
+} from "@/components/offers/offer-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +17,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { format } from "@/i18n/format";
 import { formatDate } from "@/components/listings/listing-facts";
 import { ApiError, callPublic } from "@/lib/api/backend";
-import type { OfferDetails } from "@/lib/api/types";
+import type { OfferDetails, OfferSummary } from "@/lib/api/types";
 import { formatGstRate, formatPaise } from "@/lib/money";
 import { requireUuids } from "@/lib/pages";
 
@@ -216,6 +220,10 @@ async function OfferContent({ params }: { params: Props["params"] }) {
         </Card>
       </section>
 
+      <Suspense fallback={null}>
+        <SimilarOffers listingId={offer.id} lang={lang} dict={dict} />
+      </Suspense>
+
       <div className="flex flex-col gap-2">
         <Button
           variant="accent"
@@ -241,5 +249,46 @@ export default function OfferPage({ params }: Props) {
         <OfferContent params={params} />
       </Suspense>
     </div>
+  );
+}
+
+/** Similar offers (plain rules: category, place, price). Left out if they cannot be loaded. */
+async function SimilarOffers({
+  listingId,
+  lang,
+  dict,
+}: {
+  listingId: string;
+  lang: string;
+  dict: Awaited<ReturnType<typeof getDictionary>>;
+}) {
+  let similar: OfferSummary[];
+  try {
+    similar = await callPublic<OfferSummary[]>(
+      `/api/v1/offers/${listingId}/similar`,
+    );
+  } catch (error) {
+    unstable_rethrow(error);
+    return null;
+  }
+  if (similar.length === 0) return null;
+  return (
+    <section aria-labelledby="similar-heading" className="flex flex-col gap-3">
+      <h2 id="similar-heading" className="text-heading font-bold">
+        {dict.offers.similarHeading}
+      </h2>
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {similar.map((item) => (
+          <li key={item.id}>
+            <OfferCard
+              offer={item}
+              lang={lang}
+              labels={dict.offers}
+              enums={dict.labels}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

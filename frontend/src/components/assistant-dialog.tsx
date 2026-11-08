@@ -1,25 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useFormStatus } from "react-dom";
+import { Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { Field, controlClassName } from "@/components/ui/field";
 import type { Dictionary } from "@/i18n/dictionaries";
 
 interface AssistantDialogProps {
   labels: Dictionary["home"]["assistant"];
-  comingSoonLabel: string;
   closeLabel: string;
+  /** Server Action: sends the question and opens the offers page. */
+  action: (form: FormData) => Promise<void>;
 }
 
-// Entry point for the AI assistant (Phase 7). For now it only explains what is coming.
-export function AssistantDialog({ labels, comingSoonLabel, closeLabel }: AssistantDialogProps) {
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      variant="accent"
+      disabled={pending}
+      className="self-start"
+    >
+      <Search aria-hidden="true" className="size-5" />
+      {label}
+    </Button>
+  );
+}
+
+/** The search assistant: a question in the shopper's own words, in any of the three languages. */
+export function AssistantDialog({
+  labels,
+  closeLabel,
+  action,
+}: AssistantDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button variant="outline" size="lg" className="w-full" onClick={() => setOpen(true)}>
+      <Button
+        variant="outline"
+        size="lg"
+        className="w-full"
+        onClick={() => setOpen(true)}
+      >
         <Sparkles aria-hidden="true" className="size-5" />
         {labels.open}
       </Button>
@@ -29,13 +55,26 @@ export function AssistantDialog({ labels, comingSoonLabel, closeLabel }: Assista
         title={labels.title}
         closeLabel={closeLabel}
       >
-        <div className="flex flex-col gap-3">
-          <Badge variant="info" className="self-start">
-            {comingSoonLabel}
-          </Badge>
+        <form action={action} className="flex flex-col gap-4">
           <p>{labels.body}</p>
-          <p className="text-muted">{labels.note}</p>
-        </div>
+          <Field
+            id="assistant-question"
+            label={labels.label}
+            hint={labels.privacy}
+          >
+            <textarea
+              id="assistant-question"
+              name="question"
+              required
+              maxLength={300}
+              rows={3}
+              aria-describedby="assistant-question-hint"
+              className={`${controlClassName} py-3`}
+            />
+          </Field>
+          <SubmitButton label={labels.submit} />
+          <p className="text-sm text-muted">{labels.note}</p>
+        </form>
       </Dialog>
     </>
   );

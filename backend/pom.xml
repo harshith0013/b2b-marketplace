@@ -35,6 +35,8 @@
     <!-- Released 2026-10-21; S3 client for stock photos (SeaweedFS locally, AWS S3 later). -->
     <aws-sdk.version>2.57.2</aws-sdk.version>
     <seaweedfs.image>chrislusf/seaweedfs:4.48</seaweedfs.image>
+    <surefire.excludedGroups>ai-eval</surefire.excludedGroups>
+    <surefire.groups></surefire.groups>
   </properties>
 
   <dependencyManagement>
@@ -153,6 +155,16 @@
 
   <build>
     <plugins>
+      <!-- Unit tests. The live AI evaluation (tag ai-eval) calls a real provider, so it runs only
+           with -Pai-eval. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+          <groups>${surefire.groups}</groups>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -237,4 +249,15 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- mvn test -Pai-eval: only the live AI evaluation (needs AI_API_KEY or GEMINI_API_KEY). -->
+    <profile>
+      <id>ai-eval</id>
+      <properties>
+        <surefire.excludedGroups></surefire.excludedGroups>
+        <surefire.groups>ai-eval</surefire.groups>
+      </properties>
+    </profile>
+  </profiles>
 </project>

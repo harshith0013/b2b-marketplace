@@ -51,6 +51,9 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                     .permitAll()
+                    // The search assistant: public like search, limited per visitor and per day.
+                    .requestMatchers(HttpMethod.POST, "/api/v1/offers/interpret")
+                    .permitAll()
                     .requestMatchers("/api/v1/**")
                     .authenticated()
                     .anyRequest()

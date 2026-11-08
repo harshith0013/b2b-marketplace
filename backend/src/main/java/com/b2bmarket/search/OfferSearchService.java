@@ -92,6 +92,35 @@ public class OfferSearchService {
     return new PhotoContent(storage.get(photo.storageKey()), photo.contentType());
   }
 
+  static final int SIMILAR_COUNT = 6;
+
+  /**
+   * Up to six other offers like this one (plain rules, no AI): same or sibling category, price per
+   * pack within half to one and a half times this one's.
+   */
+  @Transactional(readOnly = true)
+  public List<OfferSummary> similar(UUID listingId) {
+    scope.enterPublic();
+    LocalDate today = IndiaTime.today(clock);
+    Row target = load(listingId, today);
+    long pricePerPack = summary(target, today).pricePerPackPaise();
+    UUID parent = queries.parentCategory(target.categoryId()).orElse(null);
+    return queries
+        .similar(
+            listingId,
+            target.categoryId(),
+            parent,
+            target.state(),
+            pricePerPack,
+            pricePerPack / 2,
+            pricePerPack * 3 / 2,
+            today.plusDays(OfferFilters.MIN_SHELF_LIFE_DAYS),
+            SIMILAR_COUNT)
+        .stream()
+        .map(row -> summary(row, today))
+        .toList();
+  }
+
   /** States, each with its cities, that have offers now. */
   @Transactional(readOnly = true)
   public List<Place> places() {

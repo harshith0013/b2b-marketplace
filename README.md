@@ -141,5 +141,29 @@ Done on 2026-11-08: **buyer portal, search and filters, open to everyone (no sig
   Playwright tests (including an anonymous buyer finding a confidential offer through a typo).
 - Known risk: public prices can be scraped; real rate limiting comes with the WAF in Phase 12.
 
+## Phase 7 status
+Done on 2026-11-08: **search assistant and similar offers.**
+- "Ask in your own words" on the home page: a question in English, Telugu, Hindi or mixed text
+  becomes search filters (category, place, quantity such as "20 cases", price, days left, sort).
+  The model (Google **Gemini `gemini-3.1-flash-lite`**, free tier) only proposes filters; the
+  backend checks each one against real categories and places, and the normal search returns the
+  offers. Nothing the model writes is shown; the offers page lists what it searched for as
+  removable filters.
+- Falls back to normal search when there is no key, the provider is slow (over 5 s) or out of
+  quota (then it is not asked again for 15 minutes), or a visitor or the day is over its limit
+  (10 a minute and 100 a day per visitor; 200 a day in total, all adjustable).
+- Only the question text is sent to Google. Questions are logged without any address or identity
+  and deleted after 90 days.
+- "Similar offers" on each offer page: same or sibling category, comparable price, same state
+  first (plain rules, no AI).
+- **Evaluation:** 40 questions in en/te/hi/mixed (`backend/src/test/resources/ai-eval`).
+  `gemini-3.1-flash-lite` scored 96.3% (104/108 checks; Telugu and mixed 100%), about 2 s per
+  answer. Run it with `cd backend && mvn test -Pai-eval` (needs `GEMINI_API_KEY`; uses free quota).
+  `gemini-2.5-flash` allows only 20 free requests a day, so it is not used.
+- **To use it:** put `GEMINI_API_KEY=...` (from Google AI Studio) in `.env`. On Gemini's free tier
+  Google may use the questions to improve its products; only anonymous search text is sent.
+- Tests: backend 101 unit and 86 integration (with a fake AI provider); website 152 unit, 52
+  Playwright and 22 full-stack Playwright tests.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

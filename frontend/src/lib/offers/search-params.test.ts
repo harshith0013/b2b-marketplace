@@ -4,6 +4,7 @@ import {
   pageHref,
   parseOfferSearch,
   toApiQuery,
+  withoutHref,
 } from "./search-params";
 
 const CATEGORY = "0f8fad5b-d9cb-469f-a165-70867728950e";
@@ -79,5 +80,48 @@ describe("pageHref", () => {
       "/te/offers?q=soap&city=Guntur&page=4",
     );
     expect(pageHref("en", search, 0)).toBe("/en/offers?q=soap&city=Guntur");
+  });
+});
+
+describe("assistant and quantity parameters", () => {
+  it("keeps a wanted quantity only with its unit, and sends both to the API", () => {
+    const both = parseOfferSearch({ quantity: "20", unit: "CASE" });
+    expect(both.invalid).toBe(false);
+    expect(toApiQuery(both.search, 24)).toBe("quantity=20&unit=CASE&size=24");
+
+    const alone = parseOfferSearch({ quantity: "20" });
+    expect(alone.invalid).toBe(true);
+    expect(alone.search.quantity).toBe("");
+    expect(parseOfferSearch({ quantity: "20", unit: "BOX" }).search.unit).toBe(
+      "",
+    );
+  });
+
+  it("reads the question asked (up to 300 characters) and a known fallback reason only", () => {
+    const { search } = parseOfferSearch({
+      asked: "q".repeat(400),
+      assistant: "busy",
+      place: "Chennai",
+    });
+    expect(search.asked).toHaveLength(300);
+    expect(search.assistant).toBe("busy");
+    expect(search.place).toBe("Chennai");
+    expect(parseOfferSearch({ assistant: "<script>" }).search.assistant).toBe(
+      "",
+    );
+  });
+
+  it("removes one filter and keeps the rest, including the question", () => {
+    const { search } = parseOfferSearch({
+      q: "detergent",
+      city: "Guntur",
+      state: "Andhra Pradesh",
+      quantity: "20",
+      unit: "CASE",
+      asked: "20 cases detergent Guntur",
+    });
+    expect(withoutHref("en", search, "city", "state")).toBe(
+      "/en/offers?q=detergent&quantity=20&unit=CASE&asked=20+cases+detergent+Guntur",
+    );
   });
 });

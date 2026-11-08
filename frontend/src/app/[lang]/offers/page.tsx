@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ArrowLeft, ArrowRight, SearchX } from "lucide-react";
+import { AssistantSummary } from "@/components/offers/assistant-summary";
 import { OfferCard } from "@/components/offers/offer-card";
 import { OfferFilters } from "@/components/offers/offer-filters";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -119,6 +120,7 @@ async function OffersContent({ params, searchParams }: Props) {
           </p>
         )}
         <OfferFilters
+          unitLabels={dict.labels.stockUnits}
           lang={lang}
           labels={labels}
           search={search}
@@ -134,6 +136,13 @@ async function OffersContent({ params, searchParams }: Props) {
         <h2 id="results-heading" className="text-heading font-bold">
           {labels.resultsHeading}
         </h2>
+        <AssistantSummary
+          lang={lang}
+          search={search}
+          labels={labels}
+          enums={dict.labels}
+          categories={categories}
+        />
         {results}
       </section>
     </div>

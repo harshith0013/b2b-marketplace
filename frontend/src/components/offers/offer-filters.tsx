@@ -17,6 +17,7 @@ export function OfferFilters({
   categories,
   places,
   brands,
+  unitLabels,
 }: {
   lang: string;
   labels: Dictionary["offers"];
@@ -24,6 +25,8 @@ export function OfferFilters({
   categories: Category[];
   places: Place[];
   brands: string[];
+  /** "Pieces (single packs)", "Cases" in the reader's language. */
+  unitLabels: Record<"PIECE" | "CASE", string>;
 }) {
   const parents = categories.filter((c) => c.parentId === null);
   const categoryOptions = parents.flatMap((parent) => [
@@ -115,6 +118,25 @@ export function OfferFilters({
         hint={labels.minDaysHint}
         defaultValue={search.minDays}
         autoComplete="off"
+      />
+      <Input
+        id="offers-quantity"
+        name="quantity"
+        inputMode="numeric"
+        label={labels.quantity}
+        defaultValue={search.quantity}
+        autoComplete="off"
+      />
+      <Select
+        id="offers-unit"
+        name="unit"
+        label={labels.unit}
+        placeholder={labels.anyUnit}
+        options={(["PIECE", "CASE"] as const).map((value) => ({
+          value,
+          label: unitLabels[value],
+        }))}
+        defaultValue={search.unit}
       />
       <Select
         id="offers-sort"

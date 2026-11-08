@@ -70,6 +70,28 @@ with a 2-second statement time limit:
   trigram word similarity for typos, and `ILIKE` on category names in all three languages.
 - The website asks search engines not to index anything until the pilot (`SITE_INDEXABLE`).
 
+## Search assistant (Phase 7)
+
+Decided 2026-11-08: no Spring AI. The assistant makes one HTTP call to any OpenAI-compatible chat
+completions API (`app.ai.base-url`, `model`, `api-key`), with Spring's `RestClient`; no new library.
+Default: Google Gemini `gemini-3.1-flash-lite` on the free tier. Switching to Claude, Grok, a paid
+Gemini tier or a local model is configuration plus a run of the evaluation set.
+
+1. The website posts the question to `POST /api/v1/offers/interpret` (public, like search).
+2. The `ai` module sends only the question, a fixed instruction and a strict JSON schema
+   (`response_format: json_schema`). The answer is filters, nothing else.
+3. The `search` module checks every value: the category slug must exist, the city or state must be
+   a place that has offers, numbers must be in range. Anything else is dropped; an unknown place is
+   reported ("no offers in X yet") rather than silently ignored.
+4. The website opens the normal offers page with those filters. No model text is ever displayed,
+   so the model cannot invent products, prices or stock.
+
+Fallbacks to normal search: no key, 5-second timeout, provider error or unreadable answer,
+provider quota (HTTP 429: not asked again for 15 minutes), per-visitor limits (in memory; the
+website forwards the visitor address, which the backend trusts because only the website reaches
+it) and a daily cap. `ai_search_requests` logs question, filters, outcome, latency and tokens,
+with no address or identity, for 90 days.
+
 ## Backend: modular monolith
 
 One deployable, with one package per business module under `com.b2bmarket`:
@@ -128,7 +150,7 @@ login for the application is planned for Phase 12.
 | 4 | Database, catalogue, inventory | **Done.** Non-food FMCG categories, products and variants, warehouses, batches, draft listings, price tiers; Row-Level Security on seller tables; warehouses page |
 | 5 | Seller dashboard and stock uploads | **Done.** 5a backend: private photos with metadata removed, eligibility checks, listing life cycle, review queue with platform roles. 5b website: seller dashboard, four-step listing wizard, photo upload, review screens |
 | 6 | Buyer portal, discovery, filtering | **Done.** Public offer search (full-text + trigram, category names in en/te/hi), filters (category, state/city, brand, price per pack, minimum order value, days left), offer pages |
-| 7 | AI search and recommendations | Spring AI added here; strict tool calling; evaluation set of real queries in en/te/hi and mixed language |
+| 7 | AI search and recommendations | **Done.** Search assistant (question → checked filters → normal search) over any OpenAI-compatible API, Gemini free tier by default; rule-based similar offers; 40-question en/te/hi/mixed evaluation set |
 | 8 | Expiry detection, Batch Passport, compliance engine | OCR comparison, versioned rules, checks at listing/publish/checkout/dispatch |
 | 9 | Cart, quotations, orders, payments | Order state machine, inventory reservations, idempotency, provider sandbox, COD support |
 | 10 | Confidential trading and privacy controls | Confidential Deal Mode disclosure rules, DPDP requests |

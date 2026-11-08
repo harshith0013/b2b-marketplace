@@ -43,10 +43,13 @@
     "searchPlaceholder": "For example: soap, detergent, notebooks",
     "searchButton": "Search",
     "assistant": {
-      "open": "Ask the assistant",
-      "title": "Shopping assistant",
-      "body": "Soon you can ask in English, Telugu or Hindi, for example \"20 boxes of detergent near Vijayawada\", and the assistant will find matching offers from verified sellers.",
-      "note": "The assistant only shows real offers from sellers. It never makes up products, prices or stock."
+      "open": "Ask in your own words",
+      "title": "Ask the assistant",
+      "body": "Say what you need in English, Telugu or Hindi, for example \"20 boxes of detergent near Vijayawada\". The assistant turns it into search filters.",
+      "note": "The assistant only chooses filters. Every offer you see comes from real sellers; it never makes up products, prices or stock.",
+      "label": "What do you need?",
+      "submit": "Find offers",
+      "privacy": "Your question is sent to Google's Gemini service to understand it. Please don't include names, phone numbers or other personal details."
     },
     "tilesHeading": "What would you like to do?",
     "tiles": {
@@ -487,6 +490,23 @@
     "back": "Back to offers",
     "photoAlt": "{kind}: {product}",
     "noPhoto": "No photo",
-    "open": "View offer"
+    "open": "View offer",
+    "quantity": "Quantity I need",
+    "unit": "Counted in",
+    "anyUnit": "Any",
+    "similarHeading": "Similar offers",
+    "assistant": {
+      "asked": "You asked: “{question}”",
+      "searchedFor": "We searched for:",
+      "remove": "Remove: {filter}",
+      "words": "Words: {words}",
+      "maxPrice": "Up to {price} a pack",
+      "maxOrder": "Minimum order up to {price}",
+      "minDays": "At least {days} days left",
+      "noPlace": "There are no offers in {place} yet, so all places are shown.",
+      "fallbackOff": "The assistant isn't available right now, so we searched for your words instead.",
+      "fallbackBusy": "The assistant is busy right now, so we searched for your words instead.",
+      "checkNote": "The assistant only chose these filters. Remove any that are wrong."
+    }
   }
 }

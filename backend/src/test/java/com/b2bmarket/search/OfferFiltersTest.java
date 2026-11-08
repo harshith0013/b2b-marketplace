@@ -98,4 +98,14 @@ class OfferFiltersTest {
     assertThat(hidden.seller().confidential()).isTrue();
     assertThat(hidden.seller().verificationStatus()).isEqualTo("UNVERIFIED");
   }
+
+  @Test
+  void aWantedQuantityNeedsItsUnitAndARange() {
+    OfferFilters base = filters(null, null, null, null);
+    assertThat(base.wanting(null, null)).isSameAs(base);
+    assertThat(base.wanting(20L, "CASE").wantQuantity()).isEqualTo(20L);
+    assertThatThrownBy(() -> base.wanting(20L, null)).isInstanceOf(ApiException.class);
+    assertThatThrownBy(() -> base.wanting(0L, "CASE")).isInstanceOf(ApiException.class);
+    assertThatThrownBy(() -> base.wanting(5L, "BOX")).isInstanceOf(ApiException.class);
+  }
 }

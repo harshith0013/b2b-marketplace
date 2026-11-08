@@ -50,14 +50,19 @@ describe("SearchBox", () => {
 });
 
 describe("AssistantDialog", () => {
-  it("opens a dialog that says what the assistant will and will not do", () => {
-    render(<AssistantDialog labels={en.home.assistant} comingSoonLabel="Coming soon" closeLabel="Close" />);
+  it("opens a question form that says what is sent where and what the assistant will not do", () => {
+    render(<AssistantDialog labels={en.home.assistant} closeLabel="Close" action={async () => {}} />);
 
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: en.home.assistant.open }));
 
     const dialog = screen.getByRole("dialog", { name: en.home.assistant.title });
     expect(within(dialog).getByText(en.home.assistant.note)).toBeTruthy();
+    const question = within(dialog).getByLabelText(en.home.assistant.label, { exact: false });
+    expect(question).toHaveProperty("name", "question");
+    expect(question.getAttribute("maxlength")).toBe("300");
+    expect(within(dialog).getByText(en.home.assistant.privacy)).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: en.home.assistant.submit })).toBeTruthy();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();

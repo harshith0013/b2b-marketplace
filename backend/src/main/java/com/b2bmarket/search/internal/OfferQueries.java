@@ -182,6 +182,53 @@ public class OfferQueries {
         .list();
   }
 
+  /**
+   * Other offers like one: same category (or a sibling in the same parent), price per pack within
+   * the given range; same category first, then same state, then closest price.
+   */
+  public List<Row> similar(
+      UUID listingId,
+      UUID categoryId,
+      UUID parentId,
+      String state,
+      long pricePerPackPaise,
+      long lowPaise,
+      long highPaise,
+      LocalDate minExpiry,
+      int limit) {
+    StringBuilder sql = new StringBuilder(COLUMNS).append('\n').append(FROM_AND_RULES);
+    sql.append(" and l.id <> :id");
+    sql.append(
+        parentId == null
+            ? " and c.id = :categoryId"
+            : " and (c.id = :categoryId or c.parent_id = :parentId)");
+    sql.append(" and ").append(PRICE_PER_PACK).append(" between :low and :high");
+    sql.append(" order by (c.id = :categoryId) desc, (w.state = :state) desc, abs(")
+        .append(PRICE_PER_PACK)
+        .append(" - :pricePerPack), l.id limit :limit");
+    var statement =
+        jdbc.sql(sql.toString())
+            .param("minExpiry", minExpiry)
+            .param("id", listingId)
+            .param("categoryId", categoryId)
+            .param("state", state)
+            .param("low", lowPaise)
+            .param("high", highPaise)
+            .param("pricePerPack", pricePerPackPaise)
+            .param("limit", limit);
+    if (parentId != null) {
+      statement = statement.param("parentId", parentId);
+    }
+    return statement.query(OfferQueries::row).list();
+  }
+
+  public Optional<UUID> parentCategory(UUID categoryId) {
+    return jdbc.sql("select parent_id from categories where id = :id")
+        .param("id", categoryId)
+        .query((rs, i) -> rs.getObject(1, UUID.class))
+        .optional();
+  }
+
   /** States and their cities that currently have offers, alphabetically. */
   public List<String[]> places(LocalDate minExpiry) {
     return jdbc.sql(
@@ -229,6 +276,13 @@ public class OfferQueries {
     if (filters.maxPricePerPackPaise() != null) {
       sql.append(" and ").append(PRICE_PER_PACK).append(" <= :maxPricePerPack");
       params.put("maxPricePerPack", filters.maxPricePerPackPaise());
+    }
+    if (filters.wantQuantity() != null) {
+      sql.append(
+          " and b.quantity_unit = :wantUnit and l.moq <= :wantQuantity"
+              + " and b.quantity >= :wantQuantity");
+      params.put("wantUnit", filters.wantUnit());
+      params.put("wantQuantity", filters.wantQuantity());
     }
     if (filters.maxOrderValuePaise() != null) {
       sql.append(" and l.moq * t.unit_price_paise <= :maxOrderValue");

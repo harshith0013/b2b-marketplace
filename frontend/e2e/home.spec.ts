@@ -1,12 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-test("root redirects to a language and shows the home page", async ({ page }) => {
+test("root redirects to a language and shows the home page", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/(en|te|hi)$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("switching to Telugu changes the page language and keeps the page", async ({ page }) => {
+test("switching to Telugu changes the page language and keeps the page", async ({
+  page,
+}) => {
   await page.goto("/en/status");
   await page.getByRole("link", { name: "తెలుగు" }).click();
   await expect(page).toHaveURL(/\/te\/status$/);
@@ -15,7 +19,9 @@ test("switching to Telugu changes the page language and keeps the page", async (
 
 test("status page shows the website as working", async ({ page }) => {
   await page.goto("/en/status");
-  await expect(page.getByRole("heading", { level: 1, name: "System status" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "System status" }),
+  ).toBeVisible();
   // The backend is not running during these tests, so only the website row is asserted.
   await expect(page.getByRole("definition").first()).toHaveText("Working");
 });

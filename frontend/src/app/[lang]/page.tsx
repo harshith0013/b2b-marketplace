@@ -10,6 +10,7 @@ import {
   Store,
 } from "lucide-react";
 import { AssistantDialog } from "@/components/assistant-dialog";
+import { askAssistant } from "@/lib/actions/assistant";
 import { HomeTile } from "@/components/home-tile";
 import { LatestOffers } from "@/components/offers/latest-offers";
 import { SearchBox } from "@/components/search-box";
@@ -42,8 +43,8 @@ export default async function BuyerHomePage({ params }: PageProps<"/[lang]">) {
         <SearchBox lang={lang} labels={home} />
         <AssistantDialog
           labels={home.assistant}
-          comingSoonLabel={common.comingSoon}
           closeLabel={common.close}
+          action={askAssistant.bind(null, lang)}
         />
       </section>
 

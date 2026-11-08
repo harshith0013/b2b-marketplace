@@ -1,0 +1,19 @@
+[
+  {"slug": "personal-care", "name": "Personal care"},
+  {"slug": "bath-soaps", "name": "Bath soaps and body wash"},
+  {"slug": "hair-care", "name": "Hair care"},
+  {"slug": "oral-care", "name": "Oral care"},
+  {"slug": "skin-care", "name": "Skin care"},
+  {"slug": "shaving-grooming", "name": "Shaving and grooming"},
+  {"slug": "home-care", "name": "Home care"},
+  {"slug": "laundry", "name": "Laundry detergents"},
+  {"slug": "dishwash", "name": "Dishwash"},
+  {"slug": "surface-cleaners", "name": "Floor and surface cleaners"},
+  {"slug": "air-fresheners", "name": "Air fresheners"},
+  {"slug": "household-kitchen", "name": "Household and kitchen"},
+  {"slug": "kitchen-supplies", "name": "Foil, wraps and bags"},
+  {"slug": "disposables", "name": "Disposable plates and cups"},
+  {"slug": "stationery", "name": "Stationery"},
+  {"slug": "notebooks-paper", "name": "Notebooks and paper"},
+  {"slug": "pens-writing", "name": "Pens and writing"}
+]

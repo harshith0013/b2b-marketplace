@@ -73,6 +73,20 @@ app:
     secret-key: ${STORAGE_SECRET_KEY:}
     path-style: ${STORAGE_PATH_STYLE:false}
     create-bucket: ${STORAGE_CREATE_BUCKET:false}
+  # The search assistant (Phase 7): any OpenAI-compatible chat API. Default: Google Gemini.
+  # No key means no assistant: questions simply go to normal search.
+  ai:
+    base-url: ${AI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/openai}
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:gemini-3.1-flash-lite}
+    # "none" turns thinking off: faster, and enough for turning a question
+    # into filters. Blank leaves the provider's default.
+    reasoning-effort: ${AI_REASONING_EFFORT:none}
+    timeout: ${AI_TIMEOUT:5s}
+    daily-request-limit: ${AI_DAILY_REQUEST_LIMIT:200}
+    visitor-per-minute: ${AI_VISITOR_PER_MINUTE:10}
+    visitor-per-day: ${AI_VISITOR_PER_DAY:100}
+    log-retention-days: ${AI_LOG_RETENTION_DAYS:90}
   admin:
     # Local development only: these emails (comma-separated) become platform admins on sign-in. Never set
     # this in a deployed environment; grant admins there as described in docs/admin-setup.md.

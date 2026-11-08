@@ -67,6 +67,28 @@ export async function callPublic<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** A public, anonymous POST (the search assistant). Extra headers carry the visitor's address. */
+export async function postPublic<T>(
+  path: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+  timeoutMs = TIMEOUT_MS,
+): Promise<T> {
+  const response = await fetch(`${backendUrl()}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw await failure(response);
+  return (await response.json()) as T;
+}
+
 /** A public photo, without a token. */
 export async function fetchPublicBinary(
   path: string,

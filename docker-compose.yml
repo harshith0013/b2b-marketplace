@@ -56,6 +56,10 @@ services:
       AUTH_JWK_SET_URI: http://mock-oauth2:8080/default/jwks
       AUTH_AUDIENCE: b2b-marketplace-web
       STORAGE_ENDPOINT: http://seaweedfs:8333
+      # The search assistant: your own Gemini key from .env (never committed). Without one, the
+      # assistant is off and questions use normal search.
+      AI_API_KEY: ${GEMINI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gemini-3.1-flash-lite}
       # Local only: these emails become platform admins on sign-in (see docs/admin-setup.md).
       # The .test address is the reviewer of the full-stack tests; it can never be a real account.
       BOOTSTRAP_ADMIN_EMAIL: e2e-reviewer@example.test,${BOOTSTRAP_ADMIN_EMAIL:-}

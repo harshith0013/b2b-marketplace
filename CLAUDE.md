@@ -48,8 +48,10 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1-6 are done (see README). Next: Phase 7 (AI search and recommendations), only when
-explicitly asked; verify Spring AI / Spring Boot 4 compatibility first. Public (anonymous) queries
+Phases 1-7 are done (see README). Next: Phase 8 (expiry detection, Batch Passport, compliance
+engine), only when explicitly asked. The AI assistant only proposes filters that the `search`
+module checks; never show model-written text. After changing the prompt or model, run
+`mvn test -Pai-eval` (live, uses provider quota) and compare with the README's score. Public (anonymous) queries
 must run after `TenantScope.enterPublic()` and only through the `search` module. Review code must call `PlatformRoles.requireReviewer` then `TenantScope.enterReview()`. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
 touching warehouses, batches, listings or price tiers must call `TenantAccess.enter(...)` inside its
 transaction before querying them; new seller tables need a policy in a new migration and an RLS test.

@@ -417,6 +417,37 @@ class OfferSearchIT extends SellerFixtures {
     assertThat(get("/api/v1/offers/brands").body()).contains(brand);
   }
 
+  @Test
+  void similarOffersShareTheCategoryAndAComparablePrice() {
+    // Prices stay within MRP (₹45 with 5% GST), so every offer passes review.
+    String target = offer(Spec.of("Target Soap").price(2_000), true);
+    String close = offer(Spec.of("Close Soap").price(2_200), true);
+    String sibling = offer(Spec.of("Sibling Wash").category("hair-care").price(2_000), true);
+    String pricey = offer(Spec.of("Pricey Soap").price(4_000), true); // over 1.5 x ₹20
+    String otherFamily =
+        offer(Spec.of("Floor Cleaner").category("surface-cleaners").price(2_000), true);
+
+    List<String> similar =
+        StreamSupport.stream(
+                json(get("/api/v1/offers/" + target + "/similar")).spliterator(), false)
+            .map(i -> i.get("id").asString())
+            .toList();
+
+    assertThat(similar).doesNotContain(target, pricey, otherFamily);
+    assertThat(similar).contains(close, sibling);
+    assertThat(similar.indexOf(close))
+        .as("same category first")
+        .isLessThan(similar.indexOf(sibling));
+  }
+
+  @Test
+  void withoutAnAiKeyTheAssistantSaysToUseNormalSearch() {
+    HttpResponse<String> response =
+        call("POST", "/api/v1/offers/interpret", null, Map.of("question", "20 cases of detergent"));
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(json(response).get("outcome").asString()).isEqualTo("NOT_CONFIGURED");
+  }
+
   // --- Access ----------------------------------------------------------------------------------
 
   @Test

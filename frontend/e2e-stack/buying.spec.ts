@@ -73,3 +73,30 @@ test("the offers page works in Telugu without signing in", async ({ page }) => {
   ).toBeVisible();
   await expectNoA11yViolations(page);
 });
+
+test("a question to the assistant opens matching offers, or normal search when it cannot help", async ({
+  page,
+}) => {
+  await page.goto("/te");
+  await page.getByRole("button", { name: te.home.assistant.open }).click();
+  const dialog = page.getByRole("dialog", { name: te.home.assistant.title });
+  await dialog
+    .getByLabel(te.home.assistant.label, { exact: false })
+    .fill("విజయవాడ దగ్గర 20 కేసుల డిటర్జెంట్");
+  await dialog.getByRole("button", { name: te.home.assistant.submit }).click();
+  await expect(page).toHaveURL(/\/te\/offers\?asked=/);
+  // With an AI key the question becomes removable filters; without one (as in CI), normal search.
+  const understood = page.getByRole("region", {
+    name: /విజయవాడ దగ్గర 20 కేసుల డిటర్జెంట్/,
+  });
+  const fallback = page.getByText(
+    new RegExp(
+      `${te.offers.assistant.fallbackOff}|${te.offers.assistant.fallbackBusy}`,
+    ),
+  );
+  await expect(understood.or(fallback)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: te.offers.resultsHeading }),
+  ).toBeVisible();
+  await expectNoA11yViolations(page);
+});
