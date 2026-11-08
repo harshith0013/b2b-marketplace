@@ -10,12 +10,11 @@
     "sell": "Sell"
   },
   "footer": {
-    "sampleNotice": "This is an early preview. Products shown are sample data, not real offers.",
+    "sampleNotice": "This is an early preview. Offers are real and checked by reviewers, but ordering and payment are not open yet.",
     "status": "System status"
   },
   "common": {
     "comingSoon": "Coming soon",
-    "sampleData": "Sample data",
     "close": "Close",
     "dismiss": "Dismiss message",
     "back": "Back",
@@ -41,9 +40,8 @@
   "home": {
     "tagline": "Wholesale and clearance stock from verified businesses near you.",
     "searchLabel": "Search products",
-    "searchPlaceholder": "For example: soap, rice, notebooks",
+    "searchPlaceholder": "For example: soap, detergent, notebooks",
     "searchButton": "Search",
-    "searchComingSoon": "Search opens soon. We are adding products now.",
     "assistant": {
       "open": "Ask the assistant",
       "title": "Shopping assistant",
@@ -81,25 +79,11 @@
         "description": "Track what you bought"
       }
     },
-    "offersHeading": "Clearance offers",
-    "offersIntro": "A preview of how offers will look. These are not real products.",
-    "offers": {
-      "first": {
-        "name": "Bath soap, 100 g bars",
-        "detail": "Expiry in 8 months · Minimum 10 boxes",
-        "seller": "Sample wholesaler, Guntur"
-      },
-      "second": {
-        "name": "Ruled notebooks, 200 pages",
-        "detail": "No expiry · Minimum 50 pieces",
-        "seller": "Sample distributor, Hyderabad"
-      },
-      "third": {
-        "name": "Dishwash liquid, 500 ml",
-        "detail": "Expiry in 5 months · Minimum 12 boxes",
-        "seller": "Sample manufacturer, Vijayawada"
-      }
-    }
+    "offersHeading": "Latest offers",
+    "offersIntro": "Real stock from sellers, checked by our reviewers before it is shown.",
+    "seeAll": "See all offers",
+    "noOffers": "No offers yet. Check back soon.",
+    "offersUnavailable": "Offers could not be loaded right now. Please try again in a moment."
   },
   "sell": {
     "title": "Sell your stock",
@@ -445,5 +429,64 @@
     "reject": "Send back to the seller",
     "rejected": "Sent back to the seller",
     "verification": "Business verification"
+  },
+  "offers": {
+    "title": "Offers",
+    "intro": "Clearance and surplus stock from businesses across India. Prices are per unit, before GST.",
+    "filtersHeading": "Filters",
+    "query": "Search",
+    "queryPlaceholder": "Product or brand, in any language",
+    "category": "Category",
+    "anyCategory": "All categories",
+    "state": "State",
+    "anyState": "All states",
+    "city": "City",
+    "anyCity": "All cities",
+    "brand": "Brand",
+    "anyBrand": "All brands",
+    "maxPrice": "Highest price per pack (₹)",
+    "maxOrder": "Highest minimum order (₹)",
+    "maxOrderHint": "What the smallest order would cost, before GST",
+    "minDays": "At least this many days left",
+    "minDaysHint": "Offers always have at least 30 days left",
+    "sort": "Sort by",
+    "sorts": {
+      "RELEVANCE": "Best match",
+      "EXPIRY": "Soonest expiry",
+      "PRICE": "Lowest price per pack",
+      "NEWEST": "Newest"
+    },
+    "apply": "Show offers",
+    "clear": "Clear filters",
+    "resultsHeading": "Results",
+    "none": "No offers match. Try fewer filters or other words.",
+    "unavailable": "Offers could not be loaded right now. Please try again in a moment.",
+    "invalidFilters": "Some filters could not be used. Check the numbers and try again.",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page}",
+    "perPack": "{price} per pack",
+    "perUnit": "{price} per {unit}",
+    "daysLeft": "{days} days left",
+    "minOrder": "Minimum order: {quantity} {unit} ({value})",
+    "available": "{quantity} {unit} available",
+    "packsPerCase": "{packs} packs per case",
+    "confidentialSeller": "Confidential seller",
+    "seller": "Seller",
+    "verification": "Verification",
+    "mrp": "MRP of one pack",
+    "gst": "GST",
+    "batchNumber": "Batch number",
+    "clearanceReason": "Why it is on clearance",
+    "location": "Location",
+    "tiersHeading": "Prices for larger orders",
+    "tierRow": "{quantity} {unit} or more",
+    "notes": "Notes from the seller",
+    "requestQuote": "Request a quote",
+    "quoteComingSoon": "Ordering opens soon. You will be able to request a quote here.",
+    "back": "Back to offers",
+    "photoAlt": "{kind}: {product}",
+    "noPhoto": "No photo",
+    "open": "View offer"
   }
 }

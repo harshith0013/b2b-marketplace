@@ -124,5 +124,22 @@ Done on 2026-11-07: **website screens for selling and review.** Phase 5 is compl
   `e2e-reviewer@example.test` (a local-only test reviewer) to review, or add your own email to
   `BOOTSTRAP_ADMIN_EMAIL` in `.env`.
 
+## Phase 6 status
+Done on 2026-11-08: **buyer portal, search and filters, open to everyone (no sign-in).**
+- Home shows the latest real offers; `/offers` searches by words, typos ("detrgent") and category
+  names in English, Telugu or Hindi, with filters for category, state and city, brand, price per
+  pack, minimum order value and days left, and four sort orders; `/offers/{id}` shows photos,
+  prices, stock, MRP, place and seller ("Confidential seller" when the seller chose that).
+- Only offers on sale appear: published, batch approved, at least **30 days** before the date on
+  the pack, and enough stock for the minimum order. Never shown: street addresses, and the name or
+  id of confidential sellers.
+- Public queries run as the read-only `marketplace_public` database role (row policies and column
+  grants) with a 2-second limit.
+- The site asks search engines not to index it until the pilot; set `SITE_INDEXABLE=true` when
+  building the website to allow indexing.
+- Tests: backend 90 unit and 76 integration; website 146 unit, 50 Playwright and 20 full-stack
+  Playwright tests (including an anonymous buyer finding a confidential offer through a typo).
+- Known risk: public prices can be scraped; real rate limiting comes with the WAF in Phase 12.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

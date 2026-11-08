@@ -56,6 +56,33 @@ async function failure(response: Response): Promise<ApiError> {
   return new ApiError(response.status, detail, problems);
 }
 
+/** Public, anonymous reads (offer search): no token is sent. */
+export async function callPublic<T>(path: string): Promise<T> {
+  const response = await fetch(`${backendUrl()}${path}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw await failure(response);
+  return (await response.json()) as T;
+}
+
+/** A public photo, without a token. */
+export async function fetchPublicBinary(
+  path: string,
+): Promise<{ bytes: ArrayBuffer; contentType: string }> {
+  const response = await fetch(`${backendUrl()}${path}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!response.ok) throw await failure(response);
+  return {
+    bytes: await response.arrayBuffer(),
+    contentType:
+      response.headers.get("Content-Type") ?? "application/octet-stream",
+  };
+}
+
 /** Photo uploads take longer than JSON calls. */
 const UPLOAD_TIMEOUT_MS = 30_000;
 

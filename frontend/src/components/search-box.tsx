@@ -1,29 +1,30 @@
-"use client";
-
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { controlClassName } from "@/components/ui/field";
-import { useToast } from "@/components/ui/toast";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 
 type SearchLabels = Pick<
   Dictionary["home"],
-  "searchLabel" | "searchPlaceholder" | "searchButton" | "searchComingSoon"
+  "searchLabel" | "searchPlaceholder" | "searchButton"
 >;
 
-// Search is not connected yet (Phase 6); submitting explains that instead of failing silently.
-export function SearchBox({ labels }: { labels: SearchLabels }) {
-  const showToast = useToast();
-
+/** A plain GET form to the offers page: works before (and without) any JavaScript. */
+export function SearchBox({
+  lang,
+  labels,
+  defaultValue,
+}: {
+  lang: string;
+  labels: SearchLabels;
+  defaultValue?: string;
+}) {
   return (
     <form
       role="search"
+      action={`/${lang}/offers`}
+      method="get"
       className="flex flex-col gap-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        showToast(labels.searchComingSoon);
-      }}
     >
       <label htmlFor="product-search" className="font-semibold">
         {labels.searchLabel}
@@ -33,6 +34,8 @@ export function SearchBox({ labels }: { labels: SearchLabels }) {
           id="product-search"
           name="q"
           type="search"
+          maxLength={100}
+          defaultValue={defaultValue}
           placeholder={labels.searchPlaceholder}
           className={cn(controlClassName, "flex-1")}
         />

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { siteIndexable } from "@/lib/site";
 import {
   Noto_Sans,
   Noto_Sans_Devanagari,
@@ -43,7 +44,13 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!hasLocale(lang)) return {};
   const dict = await getDictionary(lang);
-  return { title: dict.meta.title, description: dict.meta.description };
+  return {
+    title: dict.meta.title,
+    description: dict.meta.description,
+    // Not in search engines until the pilot (working name, prices not meant to be indexed yet).
+    // Set SITE_INDEXABLE=true at build time to allow indexing.
+    ...(!siteIndexable() && { robots: { index: false, follow: false } }),
+  };
 }
 
 export default async function RootLayout({

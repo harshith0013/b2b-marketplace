@@ -22,6 +22,15 @@ public class TenantScope {
   /** Reads every business's seller data, changes only review results. See migration V7. */
   static final String REVIEWER_ROLE = "marketplace_reviewer";
 
+  /** Sees only offers that are on sale, read-only. See migration V8. */
+  static final String PUBLIC_ROLE = "marketplace_public";
+
+  /** Anonymous searches must stay cheap: the database cancels anything slower. */
+  static final String PUBLIC_STATEMENT_TIMEOUT = "2s";
+
+  /** Word similarity for typo-tolerant search; pg_trgm's default of 0.6 misses common typos. */
+  static final String PUBLIC_WORD_SIMILARITY = "0.4";
+
   private final JdbcTemplate jdbc;
 
   TenantScope(JdbcTemplate jdbc) {
@@ -46,6 +55,17 @@ public class TenantScope {
   public void enterReview() {
     requireTransaction();
     jdbc.execute("set local role " + REVIEWER_ROLE);
+  }
+
+  /**
+   * Switches the rest of the transaction to the read-only public role, with a short statement time
+   * limit. For anonymous offer search.
+   */
+  public void enterPublic() {
+    requireTransaction();
+    jdbc.execute("set local role " + PUBLIC_ROLE);
+    jdbc.execute("set local statement_timeout = '" + PUBLIC_STATEMENT_TIMEOUT + "'");
+    jdbc.execute("set local pg_trgm.word_similarity_threshold = " + PUBLIC_WORD_SIMILARITY);
   }
 
   private static void requireTransaction() {

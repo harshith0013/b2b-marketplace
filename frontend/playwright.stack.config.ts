@@ -10,6 +10,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // The whole stack runs in containers; right after a fresh build the backend's JVM is still
+  // warming up, so allow assertions longer than the 5-second default.
+  expect: { timeout: 10_000 },
   use: {
     baseURL: process.env.STACK_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",

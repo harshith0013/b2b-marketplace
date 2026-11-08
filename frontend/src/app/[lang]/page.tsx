@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   BadgePercent,
@@ -10,8 +11,9 @@ import {
 } from "lucide-react";
 import { AssistantDialog } from "@/components/assistant-dialog";
 import { HomeTile } from "@/components/home-tile";
-import { SampleOfferCard } from "@/components/sample-offer-card";
+import { LatestOffers } from "@/components/offers/latest-offers";
 import { SearchBox } from "@/components/search-box";
+import { Skeleton } from "@/components/ui/skeleton";
 import { hasLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 
@@ -21,13 +23,14 @@ export default async function BuyerHomePage({ params }: PageProps<"/[lang]">) {
   const dict = await getDictionary(lang);
   const { home, common } = dict;
 
-  // Only Sell has a page so far; the other tiles are marked "coming soon".
+  // Tiles without a page yet (wholesale deals, nearby suppliers, orders) say "coming soon".
+  const offers = `/${lang}/offers`;
   const tiles = [
-    { key: "buy", icon: <ShoppingCart /> },
+    { key: "buy", icon: <ShoppingCart />, href: offers },
     { key: "sell", icon: <Store />, href: `/${lang}/sell` },
     { key: "wholesale", icon: <Boxes /> },
-    { key: "clearance", icon: <BadgePercent /> },
-    { key: "categories", icon: <LayoutGrid /> },
+    { key: "clearance", icon: <BadgePercent />, href: `${offers}?sort=EXPIRY` },
+    { key: "categories", icon: <LayoutGrid />, href: offers },
     { key: "nearby", icon: <MapPin /> },
     { key: "orders", icon: <ClipboardList /> },
   ] as const;
@@ -36,7 +39,7 @@ export default async function BuyerHomePage({ params }: PageProps<"/[lang]">) {
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-5">
         <h1 className="text-display font-bold">{home.tagline}</h1>
-        <SearchBox labels={home} />
+        <SearchBox lang={lang} labels={home} />
         <AssistantDialog
           labels={home.assistant}
           comingSoonLabel={common.comingSoon}
@@ -70,13 +73,9 @@ export default async function BuyerHomePage({ params }: PageProps<"/[lang]">) {
           </h2>
           <p className="text-muted">{home.offersIntro}</p>
         </div>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(home.offers).map(([key, offer]) => (
-            <li key={key}>
-              <SampleOfferCard {...offer} sampleLabel={common.sampleData} />
-            </li>
-          ))}
-        </ul>
+        <Suspense fallback={<Skeleton className="h-64" />}>
+          <LatestOffers lang={lang} dict={dict} />
+        </Suspense>
       </section>
     </div>
   );

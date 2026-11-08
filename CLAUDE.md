@@ -48,8 +48,9 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1-5 are done (see README). Next: Phase 6 (buyer portal, discovery, filtering), only when
-explicitly asked; buyer queries must show only PUBLISHED listings whose batch is APPROVED. Review code must call `PlatformRoles.requireReviewer` then `TenantScope.enterReview()`. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
+Phases 1-6 are done (see README). Next: Phase 7 (AI search and recommendations), only when
+explicitly asked; verify Spring AI / Spring Boot 4 compatibility first. Public (anonymous) queries
+must run after `TenantScope.enterPublic()` and only through the `search` module. Review code must call `PlatformRoles.requireReviewer` then `TenantScope.enterReview()`. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service
 touching warehouses, batches, listings or price tiers must call `TenantAccess.enter(...)` inside its
 transaction before querying them; new seller tables need a policy in a new migration and an RLS test.
 Sign-in is "Sign in with Google" (OIDC on the Next.js server, encrypted cookie session); locally

@@ -12,16 +12,25 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Deny-by-default security. Health and system information are public; every {@code /api/v1/**}
- * endpoint needs a valid access token (see {@link JwtDecoderConfig}); everything else is refused.
- * Which business a caller may act on is checked in the services, per request.
+ * Deny-by-default security. Health, system information, the category tree and published offers are
+ * public (read-only); every other {@code /api/v1/**} endpoint needs a valid access token (see
+ * {@link JwtDecoderConfig}); everything else is refused. Which business a caller may act on is
+ * checked in the services, per request.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class SecurityConfig {
 
   static final String[] PUBLIC_GET_ENDPOINTS = {
-    "/actuator/health", "/actuator/health/**", "/actuator/info", "/api/v1/system/info"
+    "/actuator/health",
+    "/actuator/health/**",
+    "/actuator/info",
+    "/api/v1/system/info",
+    // Buyers browse without signing in (Phase 6). Only GET; queries run as the read-only
+    // marketplace_public database role.
+    "/api/v1/categories",
+    "/api/v1/offers",
+    "/api/v1/offers/**"
   };
 
   @Bean

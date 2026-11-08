@@ -17,10 +17,9 @@ import tools.jackson.databind.JsonNode;
 class CatalogueIT extends SellerFixtures {
 
   @Test
-  void categoriesNeedSignInAndComeInThreeLanguages() {
-    assertThat(call("GET", "/api/v1/categories", null, null).statusCode()).isEqualTo(401);
-
-    JsonNode categories = json(call("GET", "/api/v1/categories", newPerson("reader"), null));
+  void categoriesArePublicAndComeInThreeLanguages() {
+    // Public since Phase 6: anonymous buyers filter offers by category.
+    JsonNode categories = json(call("GET", "/api/v1/categories", null, null));
 
     JsonNode soaps =
         StreamSupport.stream(categories.spliterator(), false)

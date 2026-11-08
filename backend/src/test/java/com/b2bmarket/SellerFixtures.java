@@ -166,12 +166,22 @@ public abstract class SellerFixtures extends IntegrationTestSupport {
         .asString();
   }
 
-  /** A distinct image per call, so the same-photo-twice check does not trip. */
+  private static final java.util.concurrent.atomic.AtomicInteger PHOTO_COUNTER =
+      new java.util.concurrent.atomic.AtomicInteger();
+
+  /**
+   * A distinct image per call, so the same-photo-twice check does not trip: a large block whose
+   * colour comes from a counter survives JPEG compression, unlike a changed pixel or two.
+   */
   private static java.awt.image.BufferedImage tinted(int seed) {
     java.awt.image.BufferedImage image = com.b2bmarket.batches.TestImages.halves();
-    int rgb = (seed ^ (int) System.nanoTime()) & 0xFFFFFF;
-    image.setRGB(0, 0, rgb);
-    image.setRGB(1, 1, rgb);
+    int n = PHOTO_COUNTER.incrementAndGet();
+    java.awt.Graphics2D g = image.createGraphics();
+    g.setColor(new java.awt.Color((n * 37 + seed) & 0xFF, (n * 91) & 0xFF, (n * 53) & 0xFF));
+    g.fillRect(0, 0, 120, 120);
+    g.setColor(java.awt.Color.WHITE);
+    g.fillRect((n % 20) * 10, 150, 60, 60);
+    g.dispose();
     return image;
   }
 
@@ -188,6 +198,26 @@ public abstract class SellerFixtures extends IntegrationTestSupport {
     uploadPhoto(token, businessId, batchId, "PACK_FRONT");
     uploadPhoto(token, businessId, batchId, "LABEL_DATE");
     return createListing(token, businessId, batchId);
+  }
+
+  private String publisher;
+
+  /** Submits a ready listing and approves it as a platform admin, so it is on sale. */
+  protected void publish(String sellerToken, String businessId, String listingId) {
+    HttpResponse<String> submitted =
+        call(
+            "POST",
+            "/api/v1/businesses/" + businessId + "/listings/" + listingId + "/submit",
+            sellerToken,
+            null);
+    assertThat(submitted.statusCode()).as(submitted.body()).isEqualTo(200);
+    if (publisher == null) {
+      publisher = newPerson("publisher");
+      makeAdmin(publisher);
+    }
+    HttpResponse<String> approved =
+        call("POST", "/api/v1/admin/reviews/" + listingId + "/approve", publisher, null);
+    assertThat(approved.statusCode()).as(approved.body()).isEqualTo(200);
   }
 
   protected String batchOfListing(String listingId) {

@@ -1,4 +1,3 @@
-import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import en from "../src/i18n/dictionaries/en.json";
 import {
@@ -6,18 +5,11 @@ import {
   createBusiness,
   expectNoA11yViolations,
   newSignedInPage,
+  isoDateInDays,
+  REVIEWER,
   uniqueEmail,
+  uploadListingPhoto,
 } from "./helpers";
-
-/** Made an admin by BOOTSTRAP_ADMIN_EMAIL in docker-compose.yml (a reserved .test address). */
-const REVIEWER = "e2e-reviewer@example.test";
-const FIXTURES = path.join(__dirname, "fixtures");
-
-function isoDateInDays(days: number): string {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
 
 /** The wizard's form; Next.js keeps earlier pages hidden in the DOM, so look only inside it. */
 function wizard(page: Page) {
@@ -26,17 +18,6 @@ function wizard(page: Page) {
 
 async function next(page: Page) {
   await page.getByRole("button", { name: new RegExp(en.common.next) }).click();
-}
-
-async function uploadPhoto(page: Page, file: string) {
-  const form = page.getByRole("region", { name: en.listings.photosHeading });
-  await form
-    .getByLabel(en.listings.photoFile, { exact: true })
-    .setInputFiles(path.join(FIXTURES, file));
-  await form.getByRole("button", { name: en.listings.upload }).click();
-  await expect(
-    form.getByRole("status").filter({ hasText: en.listings.uploaded }),
-  ).toBeVisible();
 }
 
 test("a seller lists stock, a reviewer sends it back, then approves it", async ({
@@ -113,8 +94,8 @@ test("a seller lists stock, a reviewer sends it back, then approves it", async (
   ).toBeDisabled();
   await expectNoA11yViolations(seller);
 
-  await uploadPhoto(seller, "pack-front.png");
-  await uploadPhoto(seller, "label-date.png");
+  await uploadListingPhoto(seller, "pack-front.png");
+  await uploadListingPhoto(seller, "label-date.png");
   await expect(seller.getByText(en.listings.ready)).toBeVisible();
   const photos = seller
     .getByRole("region", { name: en.listings.photosHeading })

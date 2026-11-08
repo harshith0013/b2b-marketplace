@@ -3,11 +3,9 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/i18n/dictionaries/en.json";
 import { AssistantDialog } from "./assistant-dialog";
 import { HomeTile } from "./home-tile";
-import { SampleOfferCard } from "./sample-offer-card";
 import { SearchBox } from "./search-box";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
-import { ToastProvider } from "./ui/toast";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/en" }));
 
@@ -39,26 +37,15 @@ describe("HomeTile", () => {
   });
 });
 
-describe("SampleOfferCard", () => {
-  it("is always labelled as sample data", () => {
-    render(<SampleOfferCard {...en.home.offers.first} sampleLabel="Sample data" />);
-
-    expect(screen.getByText("Sample data")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: en.home.offers.first.name })).toBeTruthy();
-  });
-});
-
 describe("SearchBox", () => {
-  it("explains that search is not open yet instead of failing silently", () => {
-    render(
-      <ToastProvider dismissLabel="Dismiss">
-        <SearchBox labels={en.home} />
-      </ToastProvider>,
-    );
+  it("is a plain search form that opens the offers page", () => {
+    render(<SearchBox lang="te" labels={en.home} defaultValue="soap" />);
 
-    fireEvent.change(screen.getByLabelText(en.home.searchLabel), { target: { value: "soap" } });
-    fireEvent.click(screen.getByRole("button", { name: en.home.searchButton }));
-    expect(screen.getByRole("status").textContent).toContain(en.home.searchComingSoon);
+    const form = screen.getByRole("search");
+    expect(form.getAttribute("action")).toBe("/te/offers");
+    expect(form.getAttribute("method")).toBe("get");
+    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty("name", "q");
+    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty("value", "soap");
   });
 });
 

@@ -240,4 +240,60 @@ class RowLevelSecurityIT extends SellerFixtures {
             });
     assertThat(seenByAlice).isZero();
   }
+
+  @Test
+  void thePublicRoleSeesOnlyWhatIsOnSaleAndNoPrivateColumns() {
+    // Alice's and Bob's listings from setUp are drafts: the public sees none of them.
+    Integer visibleDrafts =
+        tx.execute(
+            s -> {
+              tenantScope.enterPublic();
+              return jdbc.queryForObject(
+                  "select count(*) from listings where business_id in (?, ?)",
+                  Integer.class,
+                  alice,
+                  bob);
+            });
+    assertThat(visibleDrafts).isZero();
+
+    for (String query :
+        List.of(
+            "select address_line from warehouses limit 1",
+            "select email from users limit 1",
+            "select count(*) from business_memberships",
+            "select count(*) from audit_events",
+            "select gstin from businesses limit 1")) {
+      assertThatThrownBy(
+              () ->
+                  tx.executeWithoutResult(
+                      s -> {
+                        tenantScope.enterPublic();
+                        jdbc.queryForList(query);
+                      }))
+          .as(query)
+          .rootCause()
+          .hasMessageContaining("permission denied");
+    }
+
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enterPublic();
+                      jdbc.update("update listings set moq = 1");
+                    }))
+        .rootCause()
+        .hasMessageContaining("permission denied");
+  }
+
+  @Test
+  void publicQueriesHaveAShortTimeLimit() {
+    String limit =
+        tx.execute(
+            s -> {
+              tenantScope.enterPublic();
+              return jdbc.queryForObject("show statement_timeout", String.class);
+            });
+    assertThat(limit).isEqualTo("2s");
+  }
 }

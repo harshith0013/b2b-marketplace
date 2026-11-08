@@ -233,3 +233,57 @@ export interface ReviewDetails {
 
 /** GST slabs that apply to goods since September 2025, in basis points (1800 = 18%). */
 export const GST_RATES_BP = [0, 500, 1800, 4000] as const;
+
+export const OFFER_SORTS = ["RELEVANCE", "EXPIRY", "PRICE", "NEWEST"] as const;
+export type OfferSort = (typeof OFFER_SORTS)[number];
+
+/** A published offer as anyone may see it (no seller id; no name when confidential). */
+export interface OfferSummary {
+  id: string;
+  brand: string;
+  productName: string;
+  packSize: number;
+  packUnit: PackUnit;
+  categoryId: string;
+  dateType: DateType;
+  expiresOn: string;
+  daysLeft: number;
+  availableQuantity: number;
+  quantityUnit: StockUnit;
+  packsPerCase: number | null;
+  moq: number;
+  unitPricePaise: number;
+  pricePerPackPaise: number;
+  minimumOrderValuePaise: number;
+  mrpPaise: number | null;
+  gstRateBp: number;
+  clearanceReason: ClearanceReason;
+  location: { city: string; state: string; pincode: string };
+  seller: {
+    name: string | null;
+    confidential: boolean;
+    verificationStatus: string;
+  };
+  coverPhotoId: string | null;
+  publishedAt: string | null;
+}
+
+export interface OfferDetails {
+  offer: OfferSummary;
+  batchNumber: string;
+  notes: string | null;
+  priceTiers: PriceTier[];
+  photos: { id: string; kind: PhotoKind; width: number; height: number }[];
+}
+
+export interface OfferPage {
+  items: OfferSummary[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface Place {
+  state: string;
+  cities: string[];
+}

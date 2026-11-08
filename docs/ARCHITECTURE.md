@@ -54,6 +54,22 @@ Setup for real Google: `docs/google-signin-setup.md`.
 - Buyer queries (Phase 6) must show only listings that are `PUBLISHED` **and** whose batch is
   `APPROVED`: changing an approved batch's dates sends it back to review.
 
+## Public offers (Phase 6)
+
+Anyone can browse offers without signing in (decided 2026-11-08). `GET /api/v1/offers/**` and
+`GET /api/v1/categories` are the only public API endpoints. Every public query runs in a
+transaction switched to the `marketplace_public` database role (`TenantScope.enterPublic()`),
+with a 2-second statement time limit:
+
+- Row policies show only listings that are `PUBLISHED`, batches that are `APPROVED` and have such
+  a listing, and those listings' price tiers, warehouses and photos.
+- Column grants leave out warehouse street addresses, GSTINs and every user table.
+- The query itself also requires at least 30 days before the printed date and stock for the
+  minimum order. Confidential offers return neither the seller's name nor any seller id.
+- Search: a `tsvector` column on products ('simple' configuration, as names mix languages),
+  trigram word similarity for typos, and `ILIKE` on category names in all three languages.
+- The website asks search engines not to index anything until the pilot (`SITE_INDEXABLE`).
+
 ## Backend: modular monolith
 
 One deployable, with one package per business module under `com.b2bmarket`:
@@ -111,7 +127,7 @@ login for the application is planned for Phase 12.
 | 3 | Authentication, business accounts, access control | **Done.** Sign in with Google (OIDC, server-side session in an encrypted cookie), users, businesses, OWNER/MANAGER/STAFF roles, invitations by email, tenant isolation tests, append-only audit log, Spring Modulith boundary test. Email or phone OTP can be added later |
 | 4 | Database, catalogue, inventory | **Done.** Non-food FMCG categories, products and variants, warehouses, batches, draft listings, price tiers; Row-Level Security on seller tables; warehouses page |
 | 5 | Seller dashboard and stock uploads | **Done.** 5a backend: private photos with metadata removed, eligibility checks, listing life cycle, review queue with platform roles. 5b website: seller dashboard, four-step listing wizard, photo upload, review screens |
-| 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
+| 6 | Buyer portal, discovery, filtering | **Done.** Public offer search (full-text + trigram, category names in en/te/hi), filters (category, state/city, brand, price per pack, minimum order value, days left), offer pages |
 | 7 | AI search and recommendations | Spring AI added here; strict tool calling; evaluation set of real queries in en/te/hi and mixed language |
 | 8 | Expiry detection, Batch Passport, compliance engine | OCR comparison, versioned rules, checks at listing/publish/checkout/dispatch |
 | 9 | Cart, quotations, orders, payments | Order state machine, inventory reservations, idempotency, provider sandbox, COD support |

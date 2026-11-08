@@ -171,13 +171,13 @@ public abstract class IntegrationTestSupport {
     return send(request);
   }
 
-  /** A GET whose body is binary (photos). */
+  /** A GET whose body is binary (photos). No token means an anonymous request. */
   protected HttpResponse<byte[]> getBytes(String path, String token) {
-    HttpRequest request =
-        HttpRequest.newBuilder(URI.create(baseUrl() + path))
-            .header("Authorization", "Bearer " + token)
-            .GET()
-            .build();
+    HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(baseUrl() + path)).GET();
+    if (token != null) {
+      builder.header("Authorization", "Bearer " + token);
+    }
+    HttpRequest request = builder.build();
     try {
       return HTTP.send(request, HttpResponse.BodyHandlers.ofByteArray());
     } catch (IOException e) {
