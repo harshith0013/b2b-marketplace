@@ -18,7 +18,14 @@ export interface DialogProps {
  * A modal built on the native <dialog> element, which gives focus trapping,
  * Escape to close and an inert background without extra JavaScript.
  */
-export function Dialog({ open, onClose, title, closeLabel, children, className }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  closeLabel,
+  children,
+  className,
+}: DialogProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
   const titleId = React.useId();
 
@@ -43,7 +50,12 @@ export function Dialog({ open, onClose, title, closeLabel, children, className }
         <h2 id={titleId} className="text-title font-bold">
           {title}
         </h2>
-        <Button variant="ghost" className="-m-2 px-3" aria-label={closeLabel} onClick={onClose}>
+        <Button
+          variant="ghost"
+          className="-m-2 px-3"
+          aria-label={closeLabel}
+          onClick={onClose}
+        >
           <X aria-hidden="true" className="size-5" />
         </Button>
       </div>

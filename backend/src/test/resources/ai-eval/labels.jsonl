@@ -1,0 +1,10 @@
+{"file":"01.png","expect":{"expiryDate":"2027-03","dateType":"EXPIRY","batchNumber":"B23-0456","mrpRupees":45}}
+{"file":"02.png","expect":{"expiryDate":"2027-03-31","dateType":"BEST_BEFORE","batchNumber":"L2611A","mrpRupees":120}}
+{"file":"03.png","expect":{"expiryDate":"2027-03","dateType":"USE_BY","batchNumber":"7782K","mrpRupees":35}}
+{"file":"04.png","expect":{"expiryDate":"2027-08-15","dateType":"EXPIRY","batchNumber":"DT-9921","mrpRupees":249}}
+{"file":"05.png","expect":{"expiryDate":null,"batchNumber":"HC-551","mrpRupees":99}}
+{"file":"06.png","expect":{"expiryDate":"2027-11-30","dateType":"EXPIRY","batchNumber":"4471-B","mrpRupees":60}}
+{"file":"07.png","expect":{"expiryDate":null,"batchNumber":null,"mrpRupees":null}}
+{"file":"08.png","expect":{"expiryDate":"2027-12","dateType":"EXPIRY","batchNumber":"88A12","mrpRupees":15}}
+{"file":"09.png","expect":{"expiryDate":"2028-05","dateType":"BEST_BEFORE","batchNumber":"SP-0099","mrpRupees":210}}
+{"file":"10.png","expect":{"expiryDate":"2027-09-30","dateType":"USE_BY","batchNumber":"AX-77","mrpRupees":75}}

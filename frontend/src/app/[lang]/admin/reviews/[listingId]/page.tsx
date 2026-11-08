@@ -2,14 +2,15 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { ActionForm } from "@/components/forms/action-form";
 import {
   ListingFacts,
   ListingStatusBadge,
   productLine,
 } from "@/components/listings/listing-facts";
 import { PhotoGrid } from "@/components/listings/photo-grid";
+import { LabelCheckPanel } from "@/components/listings/label-check";
 import { ProblemList } from "@/components/listings/problem-list";
+import { ApproveForm } from "@/components/review/approve-form";
 import { RejectForm } from "@/components/review/reject-form";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -44,7 +45,7 @@ async function ReviewContent({ params }: { params: Params }) {
     return <EmptyState icon={<ShieldAlert />} title={labels.notAllowed} />;
   }
   if (details === "not-found") notFound();
-  const { listing, seller, photos, problems, history } = details;
+  const { listing, seller, photos, problems, flags, label, history } = details;
   const statuses = dict.business.statuses as Record<string, string>;
   const date = new Intl.DateTimeFormat(`${lang}-IN`, {
     dateStyle: "medium",
@@ -113,8 +114,31 @@ async function ReviewContent({ params }: { params: Params }) {
         <ProblemList
           problems={problems}
           messages={enums.problems}
-          allGood={labels.noProblems}
+          allGood={flags.length === 0 ? labels.noProblems : undefined}
         />
+        {flags.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h3 className="font-semibold">{labels.flagsHeading}</h3>
+            <ProblemList problems={flags} messages={enums.flags} />
+          </div>
+        )}
+      </section>
+
+      <section aria-labelledby="label-heading" className="flex flex-col gap-3">
+        <h2 id="label-heading" className="text-heading font-bold">
+          {labels.labelHeading}
+        </h2>
+        <Card>
+          <LabelCheckPanel
+            label={label}
+            batch={listing.batch}
+            lang={lang}
+            labels={listings}
+            enums={enums}
+            typedLabel={labels.typed}
+            readLabel={labels.read}
+          />
+        </Card>
       </section>
 
       {history.length > 0 && (
@@ -154,10 +178,10 @@ async function ReviewContent({ params }: { params: Params }) {
             {labels.approveHeading}
           </h2>
           <Card className="flex flex-col gap-6">
-            <ActionForm
-              label={labels.approve}
+            <ApproveForm
+              labels={labels}
               errors={errors}
-              variant="accent"
+              needsConfirmation={flags.length > 0}
               disabled={problems.length > 0}
               action={approveListing.bind(null, lang, listingId)}
             />

@@ -15,10 +15,19 @@ interface HomeTileProps {
 const tileClassName =
   "flex h-full min-h-28 items-start gap-4 rounded-card border-2 p-4 [&_svg]:size-7 [&_svg]:shrink-0";
 
-export function HomeTile({ icon, title, description, href, comingSoonLabel }: HomeTileProps) {
+export function HomeTile({
+  icon,
+  title,
+  description,
+  href,
+  comingSoonLabel,
+}: HomeTileProps) {
   const content = (
     <>
-      <span aria-hidden="true" className="rounded-control bg-surface p-2.5 text-foreground">
+      <span
+        aria-hidden="true"
+        className="rounded-control bg-surface p-2.5 text-foreground"
+      >
         {icon}
       </span>
       <span className="flex flex-col gap-1">
@@ -33,11 +42,18 @@ export function HomeTile({ icon, title, description, href, comingSoonLabel }: Ho
     return (
       <Link
         href={href}
-        className={cn(tileClassName, "border-accent bg-background shadow-card hover:bg-surface")}
+        className={cn(
+          tileClassName,
+          "border-accent bg-background shadow-card hover:bg-surface",
+        )}
       >
         {content}
       </Link>
     );
   }
-  return <div className={cn(tileClassName, "border-border bg-background")}>{content}</div>;
+  return (
+    <div className={cn(tileClassName, "border-border bg-background")}>
+      {content}
+    </div>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import type { Listing } from "@/lib/api/types";
+import { ApiError } from "@/lib/api/backend";
 import { api, requireSession } from "@/lib/auth/current-user";
 import { field, toFormState } from "./form-errors";
 import type { FormState } from "./form-state";
@@ -12,8 +13,11 @@ const queuePath = (lang: string) => `/${lang}/admin/reviews`;
 export async function approveListing(
   lang: string,
   listingId: string,
+  _previous: FormState,
+  form: FormData,
 ): Promise<FormState> {
   checkIds(lang, listingId);
+  const confirmedLabelCheck = form.get("confirmedLabelCheck") === "yes";
   const returnTo = `${queuePath(lang)}/${listingId}`;
   const session = await requireSession(lang, returnTo);
   try {
@@ -24,9 +28,16 @@ export async function approveListing(
       `/api/v1/admin/reviews/${listingId}/approve`,
       {
         method: "POST",
+        body: { confirmedLabelCheck },
       },
     );
   } catch (error) {
+    if (
+      error instanceof ApiError &&
+      error.problems.includes("LABEL_CHECK_CONFIRMATION_REQUIRED")
+    ) {
+      return { error: "labelCheckNeeded" };
+    }
     return toFormState(error, "alreadyDecided");
   }
   redirect(queuePath(lang));

@@ -60,6 +60,7 @@ services:
       # assistant is off and questions use normal search.
       AI_API_KEY: ${GEMINI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-gemini-3.1-flash-lite}
+      AI_VISION_DAILY_LIMIT: ${AI_VISION_DAILY_LIMIT:-100}
       # Local only: these emails become platform admins on sign-in (see docs/admin-setup.md).
       # The .test address is the reviewer of the full-stack tests; it can never be a real account.
       BOOTSTRAP_ADMIN_EMAIL: e2e-reviewer@example.test,${BOOTSTRAP_ADMIN_EMAIL:-}

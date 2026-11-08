@@ -9,6 +9,8 @@ import com.b2bmarket.batches.PhotoDtos.PhotoContent;
 import com.b2bmarket.businesses.BusinessDtos.BusinessSummary;
 import com.b2bmarket.businesses.BusinessDtos.Membership;
 import com.b2bmarket.businesses.BusinessService;
+import com.b2bmarket.compliance.ComplianceDtos.Evaluation;
+import com.b2bmarket.compliance.ComplianceDtos.Stage;
 import com.b2bmarket.listings.ListingDtos.Listing;
 import com.b2bmarket.listings.ReviewDtos.ReviewDetails;
 import com.b2bmarket.listings.ReviewDtos.ReviewItem;
@@ -43,6 +45,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewService {
 
   static final String NOT_FOUND = "Listing not found.";
+  static final String LABEL_CHECK_CONFIRMATION_REQUIRED = "LABEL_CHECK_CONFIRMATION_REQUIRED";
+
+  private static ReviewItem readinessItem(
+      Listing listing, BusinessSummary seller, ListingDtos.Readiness readiness) {
+    return new ReviewItem(listing, seller, readiness.problems(), readiness.flags());
+  }
 
   /** Oldest first: fair to sellers. */
   static final Sort QUEUE_ORDER = Sort.by("submittedAt", "id");
@@ -51,6 +59,7 @@ public class ReviewService {
   private final ReviewDecisionRepository decisions;
   private final ListingViews views;
   private final EligibilityEvaluator eligibility;
+  private final PassportBuilder passports;
   private final BatchService batches;
   private final BatchPhotoService photos;
   private final ProductService products;
@@ -65,6 +74,7 @@ public class ReviewService {
       ReviewDecisionRepository decisions,
       ListingViews views,
       EligibilityEvaluator eligibility,
+      PassportBuilder passports,
       BatchService batches,
       BatchPhotoService photos,
       ProductService products,
@@ -77,6 +87,7 @@ public class ReviewService {
     this.decisions = decisions;
     this.views = views;
     this.eligibility = eligibility;
+    this.passports = passports;
     this.batches = batches;
     this.photos = photos;
     this.products = products;
@@ -101,10 +112,10 @@ public class ReviewService {
         IntStream.range(0, pending.size())
             .mapToObj(
                 i ->
-                    new ReviewItem(
+                    readinessItem(
                         listed.get(i),
                         sellers.get(pending.get(i).businessId()),
-                        eligibility.problems(pending.get(i))))
+                        eligibility.readiness(pending.get(i))))
             .toList();
     return new PageResult<>(items, found.getNumber(), found.getSize(), found.hasNext());
   }
@@ -113,14 +124,24 @@ public class ReviewService {
   public ReviewDetails details(CurrentUser caller, UUID listingId) {
     enter(caller);
     ListingEntity listing = load(listingId);
+    ListingDtos.Readiness readiness = eligibility.readiness(listing);
     return new ReviewDetails(
         views.view(listing),
         businesses.summaries(List.of(listing.businessId())).get(listing.businessId()),
         photos.photosOf(listing.businessId(), listing.batchId()),
-        eligibility.problems(listing),
+        readiness.problems(),
+        readiness.flags(),
+        readiness.label(),
+        readiness.ruleSetVersion(),
         decisions.findByListingIdOrderByCreatedAtAsc(listingId).stream()
             .map(ReviewDecisionEntity::toDto)
             .toList());
+  }
+
+  @Transactional(readOnly = true)
+  public PassportDtos.Passport passport(CurrentUser caller, UUID listingId) {
+    enter(caller);
+    return passports.passport(load(listingId));
   }
 
   @Transactional(readOnly = true)
@@ -132,12 +153,18 @@ public class ReviewService {
 
   /** Publishes the listing and approves its batch and, if new, its product. */
   @Transactional
-  public Listing approve(CurrentUser caller, UUID listingId) {
+  public Listing approve(CurrentUser caller, UUID listingId, boolean confirmedLabelCheck) {
     enter(caller);
     ListingEntity listing = loadPending(caller, listingId);
-    List<EligibilityProblem> problems = eligibility.problems(listing);
-    if (!problems.isEmpty()) {
-      throw ListingWorkflowService.notEligible(problems);
+    Evaluation evaluation = eligibility.check(listing, Stage.APPROVE);
+    if (!evaluation.blocks().isEmpty()) {
+      throw ListingWorkflowService.notEligible(evaluation.blocks());
+    }
+    if (!evaluation.flags().isEmpty() && !confirmedLabelCheck) {
+      // The flags stay recorded in the stored evaluation; the reviewer must look and confirm.
+      throw ApiException.unprocessable(
+          "Compare the label photo with the typed details, then confirm.",
+          Map.of(ListingWorkflowService.PROBLEMS, List.of(LABEL_CHECK_CONFIRMATION_REQUIRED)));
     }
     BatchSummary batch =
         batches.summaries(listing.businessId(), List.of(listing.batchId())).get(listing.batchId());
@@ -147,7 +174,7 @@ public class ReviewService {
     }
     batches.approve(listing.businessId(), listing.batchId());
     products.approveIfUnreviewed(batch.variant().productId());
-    decide(caller, listing, ReviewDecisionEntity.APPROVED, null, now);
+    decide(caller, listing, ReviewDecisionEntity.APPROVED, null, now, confirmedLabelCheck);
     return views.view(load(listingId));
   }
 
@@ -162,7 +189,7 @@ public class ReviewService {
       throw alreadyDecided();
     }
     batches.returnToDraft(listing.businessId(), listing.batchId());
-    decide(caller, listing, ReviewDecisionEntity.REJECTED, why, now);
+    decide(caller, listing, ReviewDecisionEntity.REJECTED, why, now, false);
     return views.view(load(listingId));
   }
 
@@ -191,10 +218,21 @@ public class ReviewService {
   }
 
   private void decide(
-      CurrentUser caller, ListingEntity listing, String decision, String reason, Instant now) {
+      CurrentUser caller,
+      ListingEntity listing,
+      String decision,
+      String reason,
+      Instant now,
+      boolean labelCheckConfirmed) {
     decisions.save(
         ReviewDecisionEntity.create(
-            listing.id(), listing.businessId(), caller.userId(), decision, reason, now));
+            listing.id(),
+            listing.businessId(),
+            caller.userId(),
+            decision,
+            reason,
+            now,
+            labelCheckConfirmed));
     audit.record(
         new AuditEntry(
             ReviewDecisionEntity.APPROVED.equals(decision)

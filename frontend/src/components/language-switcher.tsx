@@ -11,13 +11,22 @@ interface LanguageSwitcherProps {
 }
 
 /** The same page in another language: swaps the leading locale segment of the path. */
-export function pathForLocale(pathname: string | null, current: Locale, target: Locale): string {
+export function pathForLocale(
+  pathname: string | null,
+  current: Locale,
+  target: Locale,
+): string {
   const prefix = `/${current}`;
-  if (pathname === prefix || !pathname?.startsWith(`${prefix}/`)) return `/${target}`;
+  if (pathname === prefix || !pathname?.startsWith(`${prefix}/`))
+    return `/${target}`;
   return `/${target}${pathname.slice(prefix.length)}`;
 }
 
-function LanguageLinks({ current, label, hrefFor }: LanguageSwitcherProps & { hrefFor: (locale: Locale) => string }) {
+function LanguageLinks({
+  current,
+  label,
+  hrefFor,
+}: LanguageSwitcherProps & { hrefFor: (locale: Locale) => string }) {
   return (
     <nav aria-label={label}>
       <ul className="flex flex-wrap gap-2">
@@ -61,5 +70,11 @@ export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
 
 /** Shown until the current path is known: links to each language's home page. */
 export function StaticLanguageLinks({ current, label }: LanguageSwitcherProps) {
-  return <LanguageLinks current={current} label={label} hrefFor={(locale) => `/${locale}`} />;
+  return (
+    <LanguageLinks
+      current={current}
+      label={label}
+      hrefFor={(locale) => `/${locale}`}
+    />
+  );
 }

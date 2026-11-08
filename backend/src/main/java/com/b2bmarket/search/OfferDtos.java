@@ -51,12 +51,24 @@ public final class OfferDtos {
 
   public record OfferPhoto(UUID id, String kind, int width, int height) {}
 
+  /**
+   * The buyer's Batch Passport summary. labelCheck: MATCHES_LABEL when the date read from the label
+   * photo matched the typed date; otherwise REVIEWER_CHECKED (a reviewer compared them). It flags,
+   * never certifies.
+   */
+  public record PassportSummary(
+      Instant approvedAt,
+      String labelCheck,
+      boolean detailsChangedAfterApproval,
+      Instant changedAt) {}
+
   public record OfferDetails(
       OfferSummary offer,
       String batchNumber,
       String notes,
       List<PriceTier> priceTiers,
-      List<OfferPhoto> photos) {
+      List<OfferPhoto> photos,
+      PassportSummary passport) {
 
     public OfferDetails {
       priceTiers = List.copyOf(priceTiers);

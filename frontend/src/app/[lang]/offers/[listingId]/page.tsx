@@ -1,7 +1,14 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, unstable_rethrow } from "next/navigation";
-import { ArrowLeft, EyeOff, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  EyeOff,
+  History,
+  MapPin,
+  ScanText,
+  ShieldCheck,
+} from "lucide-react";
 import {
   OfferCard,
   offerPhotoSrc,
@@ -191,6 +198,50 @@ async function OfferContent({ params }: { params: Props["params"] }) {
               <p>{details.notes}</p>
             </div>
           )}
+        </Card>
+      </section>
+
+      <section
+        aria-labelledby="passport-heading"
+        className="flex flex-col gap-3"
+      >
+        <h2 id="passport-heading" className="text-heading font-bold">
+          {labels.passport.heading}
+        </h2>
+        <Card className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2">
+            {details.passport.approvedAt && (
+              <li className="flex items-start gap-2">
+                <ShieldCheck
+                  aria-hidden="true"
+                  className="mt-0.5 size-5 shrink-0 text-success"
+                />
+                {format(labels.passport.approved, {
+                  date: new Intl.DateTimeFormat(`${lang}-IN`, {
+                    dateStyle: "medium",
+                  }).format(new Date(details.passport.approvedAt)),
+                })}
+              </li>
+            )}
+            <li className="flex items-start gap-2">
+              <ScanText aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+              {details.passport.labelCheck === "MATCHES_LABEL"
+                ? labels.passport.matchesLabel
+                : labels.passport.reviewerChecked}
+            </li>
+            <li className="flex items-start gap-2">
+              <History aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+              {details.passport.detailsChangedAfterApproval &&
+              details.passport.changedAt
+                ? format(labels.passport.changed, {
+                    date: new Intl.DateTimeFormat(`${lang}-IN`, {
+                      dateStyle: "medium",
+                    }).format(new Date(details.passport.changedAt)),
+                  })
+                : labels.passport.notChanged}
+            </li>
+          </ul>
+          <p className="text-sm text-muted">{labels.passport.disclaimer}</p>
         </Card>
       </section>
 

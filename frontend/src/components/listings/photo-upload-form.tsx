@@ -57,6 +57,7 @@ export function PhotoUploadForm({
           className={`${controlClassName} py-2`}
         />
       </Field>
+      <p className="text-sm text-muted">{labels.labelPhotoPrivacy}</p>
       <FormMessage state={state} errors={errors} success={labels.uploaded} />
       <Button type="submit" disabled={pending} className="self-start">
         <Upload aria-hidden="true" className="size-5" />

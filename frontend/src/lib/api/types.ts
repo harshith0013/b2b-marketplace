@@ -211,10 +211,50 @@ export interface BusinessSummary {
   verificationStatus: string;
 }
 
+export const LABEL_FLAGS = [
+  "LABEL_DATE_MISMATCH",
+  "LABEL_UNREADABLE",
+  "LABEL_DATE_NOT_FOUND",
+  "LABEL_BATCH_NUMBER_MISMATCH",
+  "LABEL_MRP_MISMATCH",
+] as const;
+export type LabelFlag = (typeof LABEL_FLAGS)[number];
+
+/** What the label photo seemed to show (never a certificate). expiry: "2027-03" or "2027-03-31". */
+export interface LabelCheck {
+  outcome: "READ" | "UNREADABLE" | "NOT_CHECKED";
+  reason: string | null;
+  printedDate: string | null;
+  dateType: DateType | null;
+  expiry: string | null;
+  batchNumber: string | null;
+  mrpPaise: number | null;
+  readAt: string;
+}
+
+/** problems block the listing; flags need a person to look. */
+export interface Readiness {
+  problems: EligibilityProblem[];
+  flags: LabelFlag[];
+  ruleSetVersion: string;
+  label: LabelCheck | null;
+}
+
+export interface PassportEntry {
+  at: string;
+  kind: string;
+  codes: string[];
+}
+
+export interface Passport {
+  entries: PassportEntry[];
+}
+
 export interface ReviewItem {
   listing: Listing;
   seller: BusinessSummary;
   problems: EligibilityProblem[];
+  flags: LabelFlag[];
 }
 
 export interface Decision {
@@ -228,6 +268,9 @@ export interface ReviewDetails {
   seller: BusinessSummary;
   photos: Photo[];
   problems: EligibilityProblem[];
+  flags: LabelFlag[];
+  label: LabelCheck | null;
+  ruleSetVersion: string;
   history: Decision[];
 }
 
@@ -274,6 +317,12 @@ export interface OfferDetails {
   notes: string | null;
   priceTiers: PriceTier[];
   photos: { id: string; kind: PhotoKind; width: number; height: number }[];
+  passport: {
+    approvedAt: string | null;
+    labelCheck: "MATCHES_LABEL" | "REVIEWER_CHECKED";
+    detailsChangedAfterApproval: boolean;
+    changedAt: string | null;
+  };
 }
 
 export interface OfferPage {

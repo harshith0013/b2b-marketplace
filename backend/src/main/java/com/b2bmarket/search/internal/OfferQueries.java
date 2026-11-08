@@ -229,6 +229,46 @@ public class OfferQueries {
         .optional();
   }
 
+  /**
+   * What the buyer's passport summary needs about an offer's batch and its latest label reading.
+   */
+  public record PassportFacts(
+      LocalDate expiresOn,
+      Instant detailsChangedAt,
+      String labelOutcome,
+      Integer labelYear,
+      Integer labelMonth,
+      Integer labelDay) {}
+
+  /** Call only after the offer itself was found (so it is on sale). */
+  public PassportFacts passportFacts(UUID listingId) {
+    return jdbc.sql(
+            """
+            select b.expires_on, b.details_changed_after_approval_at,
+                   r.outcome, r.expiry_year, r.expiry_month, r.expiry_day
+            from listings l join inventory_batches b on b.id = l.batch_id
+            left join lateral (
+              select lr.outcome, lr.expiry_year, lr.expiry_month, lr.expiry_day
+              from label_readings lr where lr.batch_id = b.id
+              order by lr.created_at desc limit 1
+            ) r on true
+            where l.id = :id
+            """)
+        .param("id", listingId)
+        .query(
+            (rs, i) -> {
+              OffsetDateTime changed = rs.getObject(2, OffsetDateTime.class);
+              return new PassportFacts(
+                  rs.getObject(1, LocalDate.class),
+                  changed == null ? null : changed.toInstant(),
+                  rs.getString(3),
+                  (Integer) rs.getObject(4),
+                  (Integer) rs.getObject(5),
+                  (Integer) rs.getObject(6));
+            })
+        .single();
+  }
+
   /** States and their cities that currently have offers, alphabetically. */
   public List<String[]> places(LocalDate minExpiry) {
     return jdbc.sql(

@@ -2,6 +2,8 @@ package com.b2bmarket.listings.internal;
 
 import com.b2bmarket.batches.PhotoDtos.PhotoContent;
 import com.b2bmarket.listings.ListingDtos.Listing;
+import com.b2bmarket.listings.PassportDtos;
+import com.b2bmarket.listings.ReviewDtos.ApproveRequest;
 import com.b2bmarket.listings.ReviewDtos.RejectRequest;
 import com.b2bmarket.listings.ReviewDtos.ReviewDetails;
 import com.b2bmarket.listings.ReviewDtos.ReviewItem;
@@ -44,6 +46,11 @@ class ReviewController {
     return reviews.details(caller, listingId);
   }
 
+  @GetMapping("/{listingId}/passport")
+  PassportDtos.Passport passport(CurrentUser caller, @PathVariable UUID listingId) {
+    return reviews.passport(caller, listingId);
+  }
+
   @GetMapping("/{listingId}/photos/{photoId}")
   ResponseEntity<byte[]> photo(
       CurrentUser caller, @PathVariable UUID listingId, @PathVariable UUID photoId) {
@@ -54,9 +61,14 @@ class ReviewController {
         .body(content.bytes());
   }
 
+  /** Body optional; {"confirmedLabelCheck": true} when the rules raised flags. */
   @PostMapping("/{listingId}/approve")
-  Listing approve(CurrentUser caller, @PathVariable UUID listingId) {
-    return reviews.approve(caller, listingId);
+  Listing approve(
+      CurrentUser caller,
+      @PathVariable UUID listingId,
+      @RequestBody(required = false) ApproveRequest request) {
+    return reviews.approve(
+        caller, listingId, request != null && Boolean.TRUE.equals(request.confirmedLabelCheck()));
   }
 
   @PostMapping("/{listingId}/reject")

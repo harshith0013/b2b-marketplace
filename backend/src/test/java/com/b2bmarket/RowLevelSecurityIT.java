@@ -296,4 +296,71 @@ class RowLevelSecurityIT extends SellerFixtures {
             });
     assertThat(limit).isEqualTo("2s");
   }
+
+  @Test
+  void labelReadingsAndChecksAreScopedAndTheAuditLogToo() {
+    String token = newPerson("labels");
+    UUID business = UUID.fromString(createBusiness(token, "Label RLS"));
+    String batchId = createBatch(token, business.toString());
+    jdbc.update(
+        "insert into label_readings (id, business_id, batch_id, photo_id, created_at, outcome)"
+            + " values (?, ?, ?::uuid, ?, now(), 'UNREADABLE')",
+        UUID.randomUUID(),
+        business,
+        batchId,
+        UUID.randomUUID());
+
+    for (String table : List.of("label_readings", "audit_events")) {
+      Integer seenByAlice =
+          tx.execute(
+              s -> {
+                tenantScope.enter(alice);
+                return jdbc.queryForObject(
+                    "select count(*) from " + table + " where business_id = ?",
+                    Integer.class,
+                    business);
+              });
+      assertThat(seenByAlice).as(table).isZero();
+    }
+    Integer ownAudit =
+        tx.execute(
+            s -> {
+              tenantScope.enter(business);
+              return jdbc.queryForObject(
+                  "select count(*) from audit_events where business_id = ?",
+                  Integer.class,
+                  business);
+            });
+    assertThat(ownAudit).isPositive();
+
+    // The public sees no readings of batches that are not on sale.
+    Integer publicReadings =
+        tx.execute(
+            s -> {
+              tenantScope.enterPublic();
+              return jdbc.queryForObject(
+                  "select count(*) from label_readings where batch_id = ?::uuid",
+                  Integer.class,
+                  batchId);
+            });
+    assertThat(publicReadings).isZero();
+
+    assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enter(business);
+                      jdbc.update("delete from compliance_checks");
+                      jdbc.update(
+                          "insert into compliance_checks (id, business_id, batch_id, stage,"
+                              + " rule_set_version, results, blocked, flagged, created_at)"
+                              + " values (?, ?, ?::uuid, 'SUBMIT', 'v', '[]', false, false, now())",
+                          UUID.randomUUID(),
+                          business,
+                          batchId);
+                      jdbc.update("update compliance_checks set blocked = true");
+                    }))
+        .as("compliance checks are append-only")
+        .isInstanceOf(DataAccessException.class);
+  }
 }

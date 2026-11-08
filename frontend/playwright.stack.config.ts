@@ -7,6 +7,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e-stack",
   fullyParallel: true,
+  // Everything (database, storage, backend, website, sign-in, browsers) shares one machine;
+  // more browsers at once mostly measures that machine. CI runners use one.
+  workers: process.env.CI ? 1 : 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",

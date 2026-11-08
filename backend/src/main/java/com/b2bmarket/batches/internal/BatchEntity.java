@@ -59,6 +59,9 @@ public class BatchEntity {
   @Column(nullable = false)
   private BatchStatus status;
 
+  @Column(name = "details_changed_after_approval_at")
+  private Instant detailsChangedAfterApprovalAt;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
@@ -116,9 +119,14 @@ public class BatchEntity {
     updatedAt = now;
   }
 
-  /** Approved details changed: an admin must look again (Phase 5 review queue). */
-  public void sendBackForReview() {
+  /** Approved details changed: a reviewer must look again, and buyers are told it happened. */
+  public void sendBackForReview(Instant now) {
     status = BatchStatus.PENDING_REVIEW;
+    detailsChangedAfterApprovalAt = now;
+  }
+
+  public Instant detailsChangedAfterApprovalAt() {
+    return detailsChangedAfterApprovalAt;
   }
 
   public Fields fields() {

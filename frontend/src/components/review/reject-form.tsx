@@ -16,7 +16,10 @@ export function RejectForm({
   errors: Dictionary["business"]["errors"];
   action: (previous: FormState, form: FormData) => Promise<FormState>;
 }) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <Field id="reject-reason" label={labels.reason} hint={labels.reasonHint}>
@@ -31,7 +34,12 @@ export function RejectForm({
         />
       </Field>
       <FormMessage state={state} errors={errors} />
-      <Button type="submit" variant="outline" disabled={pending} className="self-start">
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={pending}
+        className="self-start"
+      >
         {labels.reject}
       </Button>
     </form>

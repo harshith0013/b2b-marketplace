@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/i18n/dictionaries/en.json";
 import { AssistantDialog } from "./assistant-dialog";
@@ -10,7 +16,9 @@ import { SiteHeader } from "./site-header";
 vi.mock("next/navigation", () => ({ usePathname: () => "/en" }));
 
 beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+  HTMLDialogElement.prototype.showModal = function showModal(
+    this: HTMLDialogElement,
+  ) {
     this.setAttribute("open", "");
   };
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
@@ -23,14 +31,31 @@ afterEach(cleanup);
 
 describe("HomeTile", () => {
   it("links to its page when it has one", () => {
-    render(<HomeTile icon={null} title="Sell" description="List stock" href="/en/sell" comingSoonLabel="Coming soon" />);
+    render(
+      <HomeTile
+        icon={null}
+        title="Sell"
+        description="List stock"
+        href="/en/sell"
+        comingSoonLabel="Coming soon"
+      />,
+    );
 
-    expect(screen.getByRole("link", { name: /Sell/ }).getAttribute("href")).toBe("/en/sell");
+    expect(
+      screen.getByRole("link", { name: /Sell/ }).getAttribute("href"),
+    ).toBe("/en/sell");
     expect(screen.queryByText("Coming soon")).toBeNull();
   });
 
   it("is not a link and says coming soon when it has no page yet", () => {
-    render(<HomeTile icon={null} title="My orders" description="Track orders" comingSoonLabel="Coming soon" />);
+    render(
+      <HomeTile
+        icon={null}
+        title="My orders"
+        description="Track orders"
+        comingSoonLabel="Coming soon"
+      />,
+    );
 
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.getByText("Coming soon")).toBeTruthy();
@@ -44,25 +69,45 @@ describe("SearchBox", () => {
     const form = screen.getByRole("search");
     expect(form.getAttribute("action")).toBe("/te/offers");
     expect(form.getAttribute("method")).toBe("get");
-    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty("name", "q");
-    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty("value", "soap");
+    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty(
+      "name",
+      "q",
+    );
+    expect(screen.getByLabelText(en.home.searchLabel)).toHaveProperty(
+      "value",
+      "soap",
+    );
   });
 });
 
 describe("AssistantDialog", () => {
   it("opens a question form that says what is sent where and what the assistant will not do", () => {
-    render(<AssistantDialog labels={en.home.assistant} closeLabel="Close" action={async () => {}} />);
+    render(
+      <AssistantDialog
+        labels={en.home.assistant}
+        closeLabel="Close"
+        action={async () => {}}
+      />,
+    );
 
     expect(screen.queryByRole("dialog")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: en.home.assistant.open }));
+    fireEvent.click(
+      screen.getByRole("button", { name: en.home.assistant.open }),
+    );
 
-    const dialog = screen.getByRole("dialog", { name: en.home.assistant.title });
+    const dialog = screen.getByRole("dialog", {
+      name: en.home.assistant.title,
+    });
     expect(within(dialog).getByText(en.home.assistant.note)).toBeTruthy();
-    const question = within(dialog).getByLabelText(en.home.assistant.label, { exact: false });
+    const question = within(dialog).getByLabelText(en.home.assistant.label, {
+      exact: false,
+    });
     expect(question).toHaveProperty("name", "question");
     expect(question.getAttribute("maxlength")).toBe("300");
     expect(within(dialog).getByText(en.home.assistant.privacy)).toBeTruthy();
-    expect(within(dialog).getByRole("button", { name: en.home.assistant.submit })).toBeTruthy();
+    expect(
+      within(dialog).getByRole("button", { name: en.home.assistant.submit }),
+    ).toBeTruthy();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -79,9 +124,17 @@ describe("SiteHeader and SiteFooter", () => {
     );
 
     const menu = screen.getByRole("navigation", { name: en.nav.mainMenu });
-    expect(within(menu).getByRole("link", { name: en.nav.sell }).getAttribute("href")).toBe("/hi/sell");
-    expect(within(menu).getByRole("link", { name: en.nav.buy }).getAttribute("href")).toBe("/hi");
-    expect(screen.getByRole("link", { name: en.footer.status }).getAttribute("href")).toBe("/hi/status");
+    expect(
+      within(menu)
+        .getByRole("link", { name: en.nav.sell })
+        .getAttribute("href"),
+    ).toBe("/hi/sell");
+    expect(
+      within(menu).getByRole("link", { name: en.nav.buy }).getAttribute("href"),
+    ).toBe("/hi");
+    expect(
+      screen.getByRole("link", { name: en.footer.status }).getAttribute("href"),
+    ).toBe("/hi/status");
     expect(screen.getByText(en.footer.sampleNotice)).toBeTruthy();
   });
 });

@@ -48,6 +48,10 @@ test("an anonymous buyer finds a confidential offer with a misspelled search and
     buyer.getByRole("heading", { level: 1, name: new RegExp(productName) }),
   ).toBeVisible();
   await expect(buyer.getByText(en.offers.confidentialSeller)).toBeVisible();
+  await expect(
+    buyer.getByRole("heading", { name: en.offers.passport.heading }),
+  ).toBeVisible();
+  await expect(buyer.getByText(en.offers.passport.notChanged)).toBeVisible();
   await expect(buyer.getByText(businessName)).toHaveCount(0);
   await expect(buyer.getByText("12-3 Main Road")).toHaveCount(0); // never the street address
   await expect(

@@ -19,8 +19,16 @@ interface BusinessFormProps {
 
 const PINCODE_PATTERN = "[1-9][0-9]{5}";
 
-export function BusinessForm({ labels, action, submitLabel, initial }: BusinessFormProps) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+export function BusinessForm({
+  labels,
+  action,
+  submitLabel,
+  initial,
+}: BusinessFormProps) {
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
   const { fields } = labels;
 
   return (
@@ -47,7 +55,10 @@ export function BusinessForm({ labels, action, submitLabel, initial }: BusinessF
         name="businessType"
         label={fields.businessType}
         placeholder={fields.businessTypePlaceholder}
-        options={BUSINESS_TYPES.map((type) => ({ value: type, label: labels.types[type] }))}
+        options={BUSINESS_TYPES.map((type) => ({
+          value: type,
+          label: labels.types[type],
+        }))}
         defaultValue={initial?.businessType ?? ""}
         required
       />
@@ -90,8 +101,18 @@ export function BusinessForm({ labels, action, submitLabel, initial }: BusinessF
         maxLength={6}
         autoComplete="postal-code"
       />
-      <FormMessage state={state} errors={labels.errors} success={labels.saved} />
-      <Button type="submit" variant="accent" size="lg" disabled={pending} className="self-start">
+      <FormMessage
+        state={state}
+        errors={labels.errors}
+        success={labels.saved}
+      />
+      <Button
+        type="submit"
+        variant="accent"
+        size="lg"
+        disabled={pending}
+        className="self-start"
+      >
         {submitLabel}
       </Button>
     </form>

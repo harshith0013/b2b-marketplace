@@ -10,6 +10,8 @@ import {
 } from "@/components/listings/listing-facts";
 import { PhotoGrid } from "@/components/listings/photo-grid";
 import { PhotoUploadForm } from "@/components/listings/photo-upload-form";
+import { LabelCheckPanel } from "@/components/listings/label-check";
+import { PassportTimeline } from "@/components/listings/passport-timeline";
 import { ProblemList } from "@/components/listings/problem-list";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,7 +24,8 @@ import {
 } from "@/lib/actions/listings";
 import type {
   BusinessDetails,
-  EligibilityProblem,
+  Passport,
+  Readiness,
   Listing,
   Photo,
   PhotoKind,
@@ -60,17 +63,23 @@ async function ListingContent({ params }: { params: Params }) {
   ]);
   const batchId = listing.batch.id;
   const isDraft = listing.status === "DRAFT";
-  const [photos, problems] = await Promise.all([
+  const [photos, readiness, passport] = await Promise.all([
     api<Photo[]>(session, lang, returnTo, `${base}/batches/${batchId}/photos`),
-    isDraft
-      ? api<EligibilityProblem[]>(
-          session,
-          lang,
-          returnTo,
-          `${base}/listings/${listingId}/eligibility`,
-        )
-      : Promise.resolve([] as EligibilityProblem[]),
+    api<Readiness>(
+      session,
+      lang,
+      returnTo,
+      `${base}/listings/${listingId}/eligibility`,
+    ),
+    api<Passport>(
+      session,
+      lang,
+      returnTo,
+      `${base}/listings/${listingId}/passport`,
+    ),
   ]);
+  const problems = isDraft ? readiness.problems : [];
+  const hasLabelPhoto = photos.some((photo) => photo.kind === "LABEL_DATE");
   const editable = canEdit(business.yourRole);
   const act = (action: Parameters<typeof changeListing>[3]) =>
     changeListing.bind(null, lang, id, listingId, action);
@@ -158,6 +167,37 @@ async function ListingContent({ params }: { params: Params }) {
         )}
       </section>
 
+      {hasLabelPhoto && (
+        <section
+          aria-labelledby="label-heading"
+          className="flex flex-col gap-3"
+        >
+          <h2 id="label-heading" className="text-heading font-bold">
+            {labels.labelHeading}
+          </h2>
+          <Card className="flex flex-col gap-4">
+            <LabelCheckPanel
+              label={readiness.label}
+              batch={listing.batch}
+              lang={lang}
+              labels={labels}
+              enums={enums}
+              typedLabel={dict.review.typed}
+              readLabel={dict.review.read}
+            />
+            {readiness.flags.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="font-semibold">{labels.flagsHeading}</h3>
+                <ProblemList
+                  problems={readiness.flags}
+                  messages={enums.flags}
+                />
+              </div>
+            )}
+          </Card>
+        </section>
+      )}
+
       <section aria-labelledby="next-heading" className="flex flex-col gap-3">
         <h2 id="next-heading" className="text-heading font-bold">
           {labels.checksHeading}
@@ -231,6 +271,20 @@ async function ListingContent({ params }: { params: Params }) {
           </div>
         )}
         {!editable && <p className="text-muted">{labels.readOnly}</p>}
+      </section>
+      <section
+        aria-labelledby="passport-heading"
+        className="flex flex-col gap-3"
+      >
+        <h2 id="passport-heading" className="text-heading font-bold">
+          {labels.passportHeading}
+        </h2>
+        <PassportTimeline
+          passport={passport}
+          lang={lang}
+          labels={labels}
+          enums={enums}
+        />
       </section>
     </>
   );

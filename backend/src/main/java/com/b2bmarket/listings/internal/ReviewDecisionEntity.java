@@ -34,6 +34,9 @@ public class ReviewDecisionEntity {
 
   private String reason;
 
+  @Column(name = "label_check_confirmed", nullable = false)
+  private boolean labelCheckConfirmed;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -45,7 +48,8 @@ public class ReviewDecisionEntity {
       UUID reviewerUserId,
       String decision,
       String reason,
-      Instant now) {
+      Instant now,
+      boolean labelCheckConfirmed) {
     ReviewDecisionEntity entity = new ReviewDecisionEntity();
     entity.id = UUID.randomUUID();
     entity.listingId = listingId;
@@ -54,6 +58,7 @@ public class ReviewDecisionEntity {
     entity.decision = decision;
     entity.reason = reason;
     entity.createdAt = now;
+    entity.labelCheckConfirmed = labelCheckConfirmed;
     return entity;
   }
 

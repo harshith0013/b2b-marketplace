@@ -4,7 +4,9 @@ import { Dialog } from "./dialog";
 
 // jsdom does not implement the modal methods of <dialog>.
 beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+  HTMLDialogElement.prototype.showModal = function showModal(
+    this: HTMLDialogElement,
+  ) {
     this.setAttribute("open", "");
   };
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
@@ -17,7 +19,12 @@ afterEach(cleanup);
 
 function renderDialog(open: boolean, onClose = vi.fn()) {
   const utils = render(
-    <Dialog open={open} onClose={onClose} title="Shopping assistant" closeLabel="Close">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Shopping assistant"
+      closeLabel="Close"
+    >
       <p>Coming soon</p>
     </Dialog>,
   );
@@ -28,7 +35,9 @@ describe("Dialog", () => {
   it("opens as a modal labelled by its title", () => {
     renderDialog(true);
 
-    expect(screen.getByRole("dialog", { name: "Shopping assistant" })).toBeTruthy();
+    expect(
+      screen.getByRole("dialog", { name: "Shopping assistant" }),
+    ).toBeTruthy();
     expect(screen.getByText("Coming soon")).toBeTruthy();
   });
 
@@ -49,7 +58,12 @@ describe("Dialog", () => {
     const { rerender } = renderDialog(true);
 
     rerender(
-      <Dialog open={false} onClose={vi.fn()} title="Shopping assistant" closeLabel="Close">
+      <Dialog
+        open={false}
+        onClose={vi.fn()}
+        title="Shopping assistant"
+        closeLabel="Close"
+      >
         <p>Coming soon</p>
       </Dialog>,
     );

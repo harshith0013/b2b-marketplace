@@ -92,6 +92,21 @@ website forwards the visitor address, which the backend trusts because only the 
 it) and a daily cap. `ai_search_requests` logs question, filters, outcome, latency and tokens,
 with no address or identity, for 90 days.
 
+## Label reading and compliance (Phase 8)
+
+- `batches.LabelReadings` reads a label photo after its upload commits (`@Async`), with no
+  database transaction open while waiting for the provider; the result goes to `label_readings`.
+  The `ai.LabelReader` returns READ, UNREADABLE or NOT_CHECKED (with a reason); it never throws.
+- `compliance.PilotRules` (version `pilot-2026-11`) turns facts into PASS / FLAG / BLOCK / SKIPPED
+  per rule. `ComplianceService.check` stores each evaluation (append-only `compliance_checks`)
+  in the caller's scope: the seller's business at submit, review at approval and in the daily job.
+  A rule change needs a new version.
+- Approval with any flag requires the reviewer's explicit confirmation (`review_decisions.
+  label_check_confirmed`). Buyers' summary comes from the public role, which may read only the
+  outcome and printed date of readings for batches on sale.
+- `audit_events` now has row policies for the tenant and reviewer roles (not forced, so the
+  application's own login writes as before), feeding the seller's Batch Passport.
+
 ## Backend: modular monolith
 
 One deployable, with one package per business module under `com.b2bmarket`:
@@ -151,7 +166,7 @@ login for the application is planned for Phase 12.
 | 5 | Seller dashboard and stock uploads | **Done.** 5a backend: private photos with metadata removed, eligibility checks, listing life cycle, review queue with platform roles. 5b website: seller dashboard, four-step listing wizard, photo upload, review screens |
 | 6 | Buyer portal, discovery, filtering | **Done.** Public offer search (full-text + trigram, category names in en/te/hi), filters (category, state/city, brand, price per pack, minimum order value, days left), offer pages |
 | 7 | AI search and recommendations | **Done.** Search assistant (question → checked filters → normal search) over any OpenAI-compatible API, Gemini free tier by default; rule-based similar offers; 40-question en/te/hi/mixed evaluation set |
-| 8 | Expiry detection, Batch Passport, compliance engine | OCR comparison, versioned rules, checks at listing/publish/checkout/dispatch |
+| 8 | Expiry detection, Batch Passport, compliance engine | **Done.** Label reading (Gemini vision) compared by rules, versioned rule set `pilot-2026-11`, stored evaluations at submit/approve/daily, reviewer confirmation for flags, Batch Passport (full for sellers and reviewers, summary for buyers) |
 | 9 | Cart, quotations, orders, payments | Order state machine, inventory reservations, idempotency, provider sandbox, COD support |
 | 10 | Confidential trading and privacy controls | Confidential Deal Mode disclosure rules, DPDP requests |
 | 11 | Admin, disputes, analytics | Full admin tooling, dispute workflow |

@@ -2,9 +2,17 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Field, controlClassName, describedBy, type FieldProps } from "./field";
 
-export type InputProps = FieldProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, "id">;
+export type InputProps = FieldProps &
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, "id">;
 
-export function Input({ id, label, hint, error, className, ...props }: InputProps) {
+export function Input({
+  id,
+  label,
+  hint,
+  error,
+  className,
+  ...props
+}: InputProps) {
   return (
     <Field id={id} label={label} hint={hint} error={error}>
       <input

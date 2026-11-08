@@ -14,14 +14,29 @@ const noAction = async () => ({});
 
 describe("FormMessage", () => {
   it("announces errors as alerts in the reader's language", () => {
-    render(<FormMessage state={{ error: "gstinTaken" }} errors={en.business.errors} />);
-    expect(screen.getByRole("alert").textContent).toBe(en.business.errors.gstinTaken);
+    render(
+      <FormMessage
+        state={{ error: "gstinTaken" }}
+        errors={en.business.errors}
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toBe(
+      en.business.errors.gstinTaken,
+    );
   });
 
   it("announces success politely and shows nothing before a submit", () => {
-    const { rerender } = render(<FormMessage state={{}} errors={en.business.errors} success="Saved" />);
+    const { rerender } = render(
+      <FormMessage state={{}} errors={en.business.errors} success="Saved" />,
+    );
     expect(screen.queryByRole("status")).toBeNull();
-    rerender(<FormMessage state={{ ok: true }} errors={en.business.errors} success="Saved" />);
+    rerender(
+      <FormMessage
+        state={{ ok: true }}
+        errors={en.business.errors}
+        success="Saved"
+      />,
+    );
     expect(screen.getByRole("status").textContent).toBe("Saved");
   });
 });
@@ -33,7 +48,9 @@ describe("toFormState", () => {
     [409, "gstinTaken"],
     [500, "generic"],
   ])("maps API status %i to %s", (status, key) => {
-    expect(toFormState(new ApiError(status, "detail"), "gstinTaken")).toEqual({ error: key });
+    expect(toFormState(new ApiError(status, "detail"), "gstinTaken")).toEqual({
+      error: key,
+    });
   });
 
   it("rethrows anything that is not an API error, such as a redirect", () => {
@@ -64,9 +81,17 @@ describe("BusinessForm", () => {
       />,
     );
 
-    expect(screen.getByLabelText<HTMLInputElement>(en.business.fields.legalName).value).toBe("Asha Stores");
-    expect(screen.getByLabelText<HTMLSelectElement>(en.business.fields.businessType).value).toBe("KIRANA");
-    const pincode = screen.getByLabelText<HTMLInputElement>(en.business.fields.pincode);
+    expect(
+      screen.getByLabelText<HTMLInputElement>(en.business.fields.legalName)
+        .value,
+    ).toBe("Asha Stores");
+    expect(
+      screen.getByLabelText<HTMLSelectElement>(en.business.fields.businessType)
+        .value,
+    ).toBe("KIRANA");
+    const pincode = screen.getByLabelText<HTMLInputElement>(
+      en.business.fields.pincode,
+    );
     expect(pincode.required).toBe(true);
     expect(pincode.pattern).toBe("[1-9][0-9]{5}");
   });
@@ -74,17 +99,36 @@ describe("BusinessForm", () => {
 
 describe("InviteForm", () => {
   it("offers only manager and staff roles", () => {
-    render(<InviteForm labels={en.business} roles={en.account.roles} action={noAction} />);
+    render(
+      <InviteForm
+        labels={en.business}
+        roles={en.account.roles}
+        action={noAction}
+      />,
+    );
 
-    const roles = screen.getByLabelText<HTMLSelectElement>(en.business.inviteRole);
-    expect([...roles.options].map((o) => o.value)).toEqual(["STAFF", "MANAGER"]);
-    expect(screen.getByLabelText<HTMLInputElement>(en.business.inviteEmail).type).toBe("email");
+    const roles = screen.getByLabelText<HTMLSelectElement>(
+      en.business.inviteRole,
+    );
+    expect([...roles.options].map((o) => o.value)).toEqual([
+      "STAFF",
+      "MANAGER",
+    ]);
+    expect(
+      screen.getByLabelText<HTMLInputElement>(en.business.inviteEmail).type,
+    ).toBe("email");
   });
 });
 
 describe("WarehouseForm", () => {
   it("labels every field and asks for a 6-digit PIN code", () => {
-    render(<WarehouseForm labels={en.warehouses} errors={en.business.errors} action={noAction} />);
+    render(
+      <WarehouseForm
+        labels={en.warehouses}
+        errors={en.business.errors}
+        action={noAction}
+      />,
+    );
 
     for (const label of [
       en.warehouses.fields.name,
@@ -92,18 +136,30 @@ describe("WarehouseForm", () => {
       en.warehouses.fields.city,
       en.warehouses.fields.state,
     ]) {
-      expect(screen.getByLabelText(label, { exact: false })).toHaveProperty("required", true);
+      expect(screen.getByLabelText(label, { exact: false })).toHaveProperty(
+        "required",
+        true,
+      );
     }
-    const pincode = screen.getByLabelText(en.warehouses.fields.pincode, { exact: false });
+    const pincode = screen.getByLabelText(en.warehouses.fields.pincode, {
+      exact: false,
+    });
     expect(pincode.getAttribute("pattern")).toBe("[1-9][0-9]{5}");
     expect(pincode.getAttribute("inputmode")).toBe("numeric");
-    expect(screen.getByRole("button", { name: en.warehouses.add })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: en.warehouses.add }),
+    ).toBeTruthy();
   });
 
   it("shows the duplicate-name error in the reader's language", () => {
     render(
-      <FormMessage state={{ error: "warehouseNameTaken" }} errors={en.business.errors} />,
+      <FormMessage
+        state={{ error: "warehouseNameTaken" }}
+        errors={en.business.errors}
+      />,
     );
-    expect(screen.getByRole("alert").textContent).toBe(en.business.errors.warehouseNameTaken);
+    expect(screen.getByRole("alert").textContent).toBe(
+      en.business.errors.warehouseNameTaken,
+    );
   });
 });

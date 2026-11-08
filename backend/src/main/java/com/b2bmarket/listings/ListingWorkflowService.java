@@ -7,6 +7,7 @@ import com.b2bmarket.batches.BatchService;
 import com.b2bmarket.batches.BatchStatus;
 import com.b2bmarket.businesses.BusinessRole;
 import com.b2bmarket.businesses.TenantAccess;
+import com.b2bmarket.compliance.ComplianceDtos.Stage;
 import com.b2bmarket.listings.ListingDtos.Listing;
 import com.b2bmarket.listings.internal.ListingEntity;
 import com.b2bmarket.listings.internal.ListingRepository;
@@ -33,6 +34,7 @@ public class ListingWorkflowService {
   private final ListingRepository listings;
   private final ListingViews views;
   private final EligibilityEvaluator eligibility;
+  private final PassportBuilder passports;
   private final BatchService batches;
   private final TenantAccess tenants;
   private final AuditService audit;
@@ -42,6 +44,7 @@ public class ListingWorkflowService {
       ListingRepository listings,
       ListingViews views,
       EligibilityEvaluator eligibility,
+      PassportBuilder passports,
       BatchService batches,
       TenantAccess tenants,
       AuditService audit,
@@ -49,17 +52,25 @@ public class ListingWorkflowService {
     this.listings = listings;
     this.views = views;
     this.eligibility = eligibility;
+    this.passports = passports;
     this.batches = batches;
     this.tenants = tenants;
     this.audit = audit;
     this.clock = clock;
   }
 
-  /** What still stops this listing from being submitted. Any member may ask. */
+  /** What still stops this listing, what a reviewer will look at, and the label reading. */
   @Transactional(readOnly = true)
-  public List<EligibilityProblem> problems(CurrentUser caller, UUID businessId, UUID listingId) {
+  public ListingDtos.Readiness readiness(CurrentUser caller, UUID businessId, UUID listingId) {
     tenants.enter(caller, businessId, BusinessRole.ANY);
-    return eligibility.problems(load(businessId, listingId));
+    return eligibility.readiness(load(businessId, listingId));
+  }
+
+  /** The batch's history (Batch Passport). Any member may see it. */
+  @Transactional(readOnly = true)
+  public PassportDtos.Passport passport(CurrentUser caller, UUID businessId, UUID listingId) {
+    tenants.enter(caller, businessId, BusinessRole.ANY);
+    return passports.passport(load(businessId, listingId));
   }
 
   @Transactional
@@ -67,7 +78,7 @@ public class ListingWorkflowService {
     tenants.enter(caller, businessId, BusinessRole.OWNER_OR_MANAGER);
     ListingEntity listing = load(businessId, listingId);
     requireStatus(listing, Set.of(ListingStatus.DRAFT), "Only a draft can be submitted.");
-    List<EligibilityProblem> problems = eligibility.problems(listing);
+    List<String> problems = eligibility.check(listing, Stage.SUBMIT).blocks();
     if (!problems.isEmpty()) {
       throw notEligible(problems);
     }
@@ -114,7 +125,7 @@ public class ListingWorkflowService {
       throw ApiException.conflict(
           "The batch details changed and need review again. Close this listing and list it anew.");
     }
-    List<EligibilityProblem> problems = eligibility.problems(listing);
+    List<String> problems = eligibility.readiness(listing).problems();
     if (!problems.isEmpty()) {
       throw notEligible(problems);
     }
@@ -140,10 +151,10 @@ public class ListingWorkflowService {
     return views.view(reloaded(businessId, listingId));
   }
 
-  static ApiException notEligible(List<EligibilityProblem> problems) {
+  static ApiException notEligible(List<String> problems) {
     return ApiException.unprocessable(
         "This listing is not ready yet. Fix the problems listed and try again.",
-        Map.of(PROBLEMS, problems.stream().map(Enum::name).toList()));
+        Map.of(PROBLEMS, problems));
   }
 
   private ListingEntity load(UUID businessId, UUID listingId) {

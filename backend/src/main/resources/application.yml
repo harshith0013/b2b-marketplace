@@ -83,7 +83,10 @@ app:
     # into filters. Blank leaves the provider's default.
     reasoning-effort: ${AI_REASONING_EFFORT:none}
     timeout: ${AI_TIMEOUT:5s}
+    # Reading label photos (Phase 8) runs in the background after upload.
+    vision-timeout: ${AI_VISION_TIMEOUT:15s}
     daily-request-limit: ${AI_DAILY_REQUEST_LIMIT:200}
+    vision-daily-limit: ${AI_VISION_DAILY_LIMIT:100}
     visitor-per-minute: ${AI_VISITOR_PER_MINUTE:10}
     visitor-per-day: ${AI_VISITOR_PER_DAY:100}
     log-retention-days: ${AI_LOG_RETENTION_DAYS:90}

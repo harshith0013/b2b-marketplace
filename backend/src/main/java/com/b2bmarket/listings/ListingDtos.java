@@ -74,4 +74,28 @@ public final class ListingDtos {
       priceTiers = List.copyOf(priceTiers);
     }
   }
+
+  /**
+   * What the label photo seemed to show, for the seller and reviewer to compare. Never a
+   * certificate. expiry is "2027-03" when only a month was printed.
+   */
+  public record LabelCheck(
+      String outcome,
+      String reason,
+      String printedDate,
+      String dateType,
+      String expiry,
+      String batchNumber,
+      Long mrpPaise,
+      Instant readAt) {}
+
+  /** problems block the listing; flags need a person to look; label is the latest reading. */
+  public record Readiness(
+      List<String> problems, List<String> flags, String ruleSetVersion, LabelCheck label) {
+
+    public Readiness {
+      problems = List.copyOf(problems);
+      flags = List.copyOf(flags);
+    }
+  }
 }

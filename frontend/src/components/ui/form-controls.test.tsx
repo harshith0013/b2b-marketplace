@@ -7,7 +7,9 @@ afterEach(cleanup);
 
 describe("Input", () => {
   it("is labelled and described by its hint", () => {
-    render(<Input id="name" label="Product name" hint="As printed on the pack" />);
+    render(
+      <Input id="name" label="Product name" hint="As printed on the pack" />,
+    );
 
     const input = screen.getByLabelText("Product name");
     expect(input.getAttribute("aria-describedby")).toBe("name-hint");
@@ -16,7 +18,14 @@ describe("Input", () => {
   });
 
   it("marks itself invalid and points to the error text", () => {
-    render(<Input id="qty" label="Quantity" hint="Whole boxes" error="Enter a number" />);
+    render(
+      <Input
+        id="qty"
+        label="Quantity"
+        hint="Whole boxes"
+        error="Enter a number"
+      />,
+    );
 
     const input = screen.getByLabelText("Quantity");
     expect(input.getAttribute("aria-invalid")).toBe("true");
@@ -31,7 +40,14 @@ describe("Select", () => {
   ];
 
   it("renders an empty placeholder first so nothing is chosen by accident", () => {
-    render(<Select id="unit" label="Unit" placeholder="Choose a unit" options={options} />);
+    render(
+      <Select
+        id="unit"
+        label="Unit"
+        placeholder="Choose a unit"
+        options={options}
+      />,
+    );
 
     const select = screen.getByLabelText<HTMLSelectElement>("Unit");
     expect(select.value).toBe("");
@@ -45,6 +61,8 @@ describe("Select", () => {
   it("omits the placeholder when none is given", () => {
     render(<Select id="unit" label="Unit" options={options} />);
 
-    expect(screen.getByLabelText<HTMLSelectElement>("Unit").options).toHaveLength(2);
+    expect(
+      screen.getByLabelText<HTMLSelectElement>("Unit").options,
+    ).toHaveLength(2);
   });
 });

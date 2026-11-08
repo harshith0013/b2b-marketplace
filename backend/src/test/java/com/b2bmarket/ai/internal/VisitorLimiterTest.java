@@ -33,7 +33,17 @@ class VisitorLimiterTest {
 
   static AiProperties limits(int perMinute, int perDay) {
     return new AiProperties(
-        "http://x", "key", "m", "none", Duration.ofSeconds(1), 100, perMinute, perDay, 90);
+        "http://x",
+        "key",
+        "m",
+        "none",
+        Duration.ofSeconds(1),
+        Duration.ofSeconds(1),
+        100,
+        100,
+        perMinute,
+        perDay,
+        90);
   }
 
   @Test

@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -47,6 +48,7 @@ public class BatchPhotoService {
   private final ObjectStorage storage;
   private final TenantAccess tenants;
   private final AuditService audit;
+  private final ApplicationEventPublisher events;
   private final Clock clock;
 
   BatchPhotoService(
@@ -55,12 +57,14 @@ public class BatchPhotoService {
       ObjectStorage storage,
       TenantAccess tenants,
       AuditService audit,
+      ApplicationEventPublisher events,
       Clock clock) {
     this.photos = photos;
     this.batches = batches;
     this.storage = storage;
     this.tenants = tenants;
     this.audit = audit;
+    this.events = events;
     this.clock = clock;
   }
 
@@ -110,6 +114,10 @@ public class BatchPhotoService {
             TARGET_TYPE,
             photoId,
             Map.of("batchId", batchId.toString(), "kind", kind.name())));
+    if (kind == PhotoKind.LABEL_DATE) {
+      // Read by the AI once this upload has committed (see LabelReadings).
+      events.publishEvent(new LabelReadings.LabelPhotoSaved(businessId, batchId, photoId));
+    }
     return photo.toDto();
   }
 

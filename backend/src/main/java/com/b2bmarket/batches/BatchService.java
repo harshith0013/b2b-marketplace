@@ -163,7 +163,7 @@ public class BatchService {
     boolean reReview = printedChanged && batch.status() == BatchStatus.APPROVED;
     batch.apply(after, Instant.now(clock));
     if (reReview) {
-      batch.sendBackForReview();
+      batch.sendBackForReview(Instant.now(clock));
     }
     audit.record(
         new AuditEntry(

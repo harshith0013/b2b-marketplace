@@ -33,8 +33,11 @@ class ReviewIT extends SellerFixtures {
   void submitNeedsEveryCheckToPassAndSaysWhatIsMissing() {
     String listingId = createListing(seller, business, createBatch(seller, business));
 
-    JsonNode problems = json(call("GET", listingPath(listingId) + "/eligibility", seller, null));
-    assertThat(texts(problems)).containsExactly("PACK_PHOTO_MISSING", "LABEL_PHOTO_MISSING");
+    JsonNode readiness = json(call("GET", listingPath(listingId) + "/eligibility", seller, null));
+    assertThat(texts(readiness.get("problems")))
+        .containsExactly("PACK_PHOTO_MISSING", "LABEL_PHOTO_MISSING");
+    assertThat(readiness.get("flags").size()).isZero();
+    assertThat(readiness.get("ruleSetVersion").asString()).isEqualTo("pilot-2026-11");
 
     HttpResponse<String> refused = call("POST", listingPath(listingId) + "/submit", seller, null);
     assertThat(refused.statusCode()).isEqualTo(422);

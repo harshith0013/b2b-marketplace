@@ -77,7 +77,24 @@ public class OfferSearchService {
         queries.priceTiers(listingId).stream().map(t -> new PriceTier(t[0], t[1])).toList(),
         queries.photos(listingId).stream()
             .map(p -> new OfferPhoto(p.id(), p.kind(), p.width(), p.height()))
-            .toList());
+            .toList(),
+        passport(row.publishedAt(), queries.passportFacts(listingId)));
+  }
+
+  static OfferDtos.PassportSummary passport(
+      java.time.Instant approvedAt, OfferQueries.PassportFacts f) {
+    boolean matches =
+        "READ".equals(f.labelOutcome())
+            && f.labelYear() != null
+            && f.labelMonth() != null
+            && f.labelYear() == f.expiresOn().getYear()
+            && f.labelMonth() == f.expiresOn().getMonthValue()
+            && (f.labelDay() == null || f.labelDay() == f.expiresOn().getDayOfMonth());
+    return new OfferDtos.PassportSummary(
+        approvedAt,
+        matches ? "MATCHES_LABEL" : "REVIEWER_CHECKED",
+        f.detailsChangedAt() != null,
+        f.detailsChangedAt());
   }
 
   @Transactional(readOnly = true)

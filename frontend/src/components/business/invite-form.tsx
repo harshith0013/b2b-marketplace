@@ -15,7 +15,10 @@ interface InviteFormProps {
 }
 
 export function InviteForm({ labels, roles, action }: InviteFormProps) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -39,7 +42,11 @@ export function InviteForm({ labels, roles, action }: InviteFormProps) {
         ]}
         defaultValue="STAFF"
       />
-      <FormMessage state={state} errors={labels.errors} success={labels.invited} />
+      <FormMessage
+        state={state}
+        errors={labels.errors}
+        success={labels.invited}
+      />
       <Button type="submit" disabled={pending} className="self-start">
         {labels.invite}
       </Button>

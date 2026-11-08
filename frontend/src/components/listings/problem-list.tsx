@@ -1,18 +1,17 @@
 import { CircleAlert, CircleCheck } from "lucide-react";
-import type { Dictionary } from "@/i18n/dictionaries";
-import type { EligibilityProblem } from "@/lib/api/types";
 
-/** The open checks in plain words, or a single "all good" line. */
+/** The open checks (or flags) in plain words, or a single "all good" line. */
 export function ProblemList({
   problems,
   messages,
   allGood,
 }: {
-  problems: EligibilityProblem[];
-  messages: Dictionary["labels"]["problems"];
-  allGood: string;
+  problems: readonly string[];
+  messages: Record<string, string>;
+  allGood?: string;
 }) {
   if (problems.length === 0) {
+    if (!allGood) return null;
     return (
       <p className="flex items-center gap-2 rounded-control bg-success-soft px-4 py-3 font-semibold text-success">
         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />

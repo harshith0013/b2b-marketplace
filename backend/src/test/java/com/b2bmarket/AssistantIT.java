@@ -26,7 +26,7 @@ class AssistantIT extends SellerFixtures {
   static final FakeAiProvider PROVIDER = new FakeAiProvider();
 
   @org.springframework.beans.factory.annotation.Autowired
-  com.b2bmarket.ai.SearchAssistant assistant;
+  com.b2bmarket.ai.internal.ProviderPause pause;
 
   static final int PER_MINUTE = 3;
   static final int DAILY = 50;
@@ -44,8 +44,7 @@ class AssistantIT extends SellerFixtures {
   void freshDay() {
     jdbc.update("delete from ai_usage_daily");
     // A quota pause from one test must not leak into the next.
-    org.springframework.test.util.ReflectionTestUtils.setField(
-        assistant, "pausedUntil", java.time.Instant.MIN);
+    pause.resume();
   }
 
   static String answer(String city, Integer quantity, String unit) {
@@ -234,8 +233,7 @@ class AssistantIT extends SellerFixtures {
     assertThat(PROVIDER.seen().size() - before)
         .as("only the first question reached the provider")
         .isEqualTo(1);
-    org.springframework.test.util.ReflectionTestUtils.setField(
-        assistant, "pausedUntil", java.time.Instant.MIN);
+    pause.resume();
   }
 
   @Test

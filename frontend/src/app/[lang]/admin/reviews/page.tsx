@@ -40,7 +40,7 @@ async function QueueContent({ params }: { params: Params }) {
 
   return (
     <ul className="flex flex-col gap-3">
-      {queue.items.map(({ listing, seller, problems }) => (
+      {queue.items.map(({ listing, seller, problems, flags }) => (
         <li key={listing.id}>
           <Link
             href={`${returnTo}/${listing.id}`}
@@ -62,6 +62,11 @@ async function QueueContent({ params }: { params: Params }) {
                     date: date.format(new Date(listing.submittedAt)),
                   })}
                 </span>
+              )}
+              {flags.length > 0 && (
+                <Badge variant="info" className="self-start">
+                  {flags.length} × {labels.flagsHeading}
+                </Badge>
               )}
               {problems.length > 0 && (
                 <Badge variant="warning" className="self-start">

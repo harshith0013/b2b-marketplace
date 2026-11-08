@@ -14,7 +14,9 @@ public record AiProperties(
     String model,
     String reasoningEffort,
     Duration timeout,
+    Duration visionTimeout,
     int dailyRequestLimit,
+    int visionDailyLimit,
     int visitorPerMinute,
     int visitorPerDay,
     int logRetentionDays) {

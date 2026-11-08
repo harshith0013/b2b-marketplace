@@ -274,7 +274,8 @@
       "notReady": "Some checks do not pass yet. See the list above.",
       "alreadyDecided": "This listing is no longer waiting for review.",
       "photoProblem": "This photo could not be used. Upload a clear JPEG or PNG under 5 MB.",
-      "photoConflict": "This photo cannot be added: it is already there, the batch has 6 photos, or it is in review."
+      "photoConflict": "This photo cannot be added: it is already there, the batch has 6 photos, or it is in review.",
+      "labelCheckNeeded": "Tick the box to confirm you compared the label photo yourself."
     },
     "warehousesLink": "Warehouses",
     "listingsLink": "Listings"
@@ -361,6 +362,40 @@
       "PRICE_ABOVE_MRP": "With GST, one pack would cost more than its MRP. Lower the price.",
       "REGULATED_CATEGORY": "This category cannot be sold yet.",
       "NOT_ENOUGH_STOCK": "The minimum order is more than the stock in this batch."
+    },
+    "flags": {
+      "LABEL_DATE_MISMATCH": "The date in the label photo seems different from the date typed. Check both.",
+      "LABEL_UNREADABLE": "The label photo could not be read automatically. A clearer photo helps; a reviewer will compare it by eye.",
+      "LABEL_DATE_NOT_FOUND": "No expiry date was found in the label photo. Make sure the date is visible.",
+      "LABEL_BATCH_NUMBER_MISMATCH": "The batch number in the photo seems different from the one typed.",
+      "LABEL_MRP_MISMATCH": "The MRP in the photo seems different from the one typed."
+    },
+    "labelOutcomes": {
+      "READ": "Read from the photo",
+      "UNREADABLE": "Could not be read",
+      "NOT_CHECKED": "Not checked automatically"
+    },
+    "events": {
+      "batch.created": "Batch added",
+      "batch.updated": "Batch details changed",
+      "batch.approved_details_changed": "Approved dates changed: sent back for review",
+      "batch_photo.added": "Photo added",
+      "batch_photo.deleted": "Photo deleted",
+      "listing.created": "Listing drafted",
+      "listing.updated": "Listing changed",
+      "listing.submitted": "Sent for review",
+      "listing.withdrawn": "Withdrawn from review",
+      "listing.approved": "Approved and published",
+      "listing.rejected": "Sent back by the reviewer",
+      "listing.paused": "Paused",
+      "listing.resumed": "Resumed",
+      "listing.closed": "Closed",
+      "label.read": "Label photo read",
+      "check.SUBMIT": "Rules checked at submission",
+      "check.APPROVE": "Rules checked at approval",
+      "check.DAILY": "Daily rules check",
+      "check.CHECKOUT": "Rules checked at checkout",
+      "check.DISPATCH": "Rules checked at dispatch"
     }
   },
   "listings": {
@@ -406,7 +441,21 @@
     "pause": "Pause",
     "resume": "Resume",
     "close": "Close listing",
-    "done": "Done"
+    "done": "Done",
+    "labelHeading": "What the label photo seems to show",
+    "labelNote": "Read automatically to help spot typing mistakes. It is not a certificate: a reviewer decides.",
+    "labelDate": "Date",
+    "labelBatch": "Batch number",
+    "labelMrp": "MRP",
+    "notRead": "Not read",
+    "labelPending": "The label photo is being read. Refresh in a moment.",
+    "flagsHeading": "Please check",
+    "passportHeading": "Batch history",
+    "passportEmpty": "Nothing recorded yet.",
+    "allRulesPassed": "all rules passed",
+    "expiringSoon": "Expiring soon",
+    "offSale": "Under 30 days left: no longer shown to buyers",
+    "labelPhotoPrivacy": "Label photos are sent to Google's Gemini service to read the date, batch number and MRP."
   },
   "review": {
     "title": "Review queue",
@@ -431,7 +480,12 @@
     "reasonHint": "The seller sees this. Say what to fix, for example: the expiry date in the photo is not readable.",
     "reject": "Send back to the seller",
     "rejected": "Sent back to the seller",
-    "verification": "Business verification"
+    "verification": "Business verification",
+    "flagsHeading": "Needs your eye",
+    "confirmLabel": "I compared the label photo with the typed date, batch number and MRP myself.",
+    "labelHeading": "Label photo compared with the typed details",
+    "typed": "Typed",
+    "read": "In the photo"
   },
   "offers": {
     "title": "Offers",
@@ -507,6 +561,15 @@
       "fallbackOff": "The assistant isn't available right now, so we searched for your words instead.",
       "fallbackBusy": "The assistant is busy right now, so we searched for your words instead.",
       "checkNote": "The assistant only chose these filters. Remove any that are wrong."
+    },
+    "passport": {
+      "heading": "Batch Passport",
+      "approved": "Reviewed and approved on {date}",
+      "matchesLabel": "Expiry date matches the label photo (automatic check)",
+      "reviewerChecked": "Expiry date checked by a reviewer against the label photo",
+      "changed": "Dates were changed after approval on {date} and reviewed again",
+      "notChanged": "Dates have not changed since approval",
+      "disclaimer": "These checks help catch mistakes. They are not a guarantee of the product."
     }
   }
 }

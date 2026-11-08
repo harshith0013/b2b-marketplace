@@ -156,6 +156,7 @@ export async function publishOffer(
   const listingUrl = seller.url();
   await uploadListingPhoto(seller, "pack-front.png");
   await uploadListingPhoto(seller, "label-date.png");
+  await waitForLabelReading(seller);
   await seller.getByRole("button", { name: en.listings.submit }).click();
   await expect(seller.getByText(en.listings.inReviewNote)).toBeVisible();
 
@@ -167,9 +168,34 @@ export async function publishOffer(
   await reviewer
     .getByRole("link", { name: new RegExp(offer.productName) })
     .click();
-  await reviewer.getByRole("button", { name: en.review.approve }).click();
+  await approveAsReviewer(reviewer);
   await expect(reviewer).toHaveURL(/\/en\/admin\/reviews$/);
   await seller.close();
   await reviewer.close();
   return { listingUrl };
+}
+
+/**
+ * Label photos are read in the background after upload: reload until the reading is shown, so the
+ * reviewer later sees the same flags the rules use.
+ */
+export async function waitForLabelReading(page: Page) {
+  for (let attempt = 0; attempt < 30; attempt++) {
+    if ((await page.getByText(en.listings.labelPending).count()) === 0) return;
+    await page.waitForTimeout(500);
+    await page.reload();
+  }
+  throw new Error("The label photo was not read in time");
+}
+
+/** Approves in the review page, ticking the reviewer's own confirmation when flags ask for it. */
+export async function approveAsReviewer(reviewer: Page) {
+  // The review page streams in: wait for the decision form before looking for the confirmation.
+  const approve = reviewer.getByRole("button", { name: en.review.approve });
+  await expect(approve).toBeVisible();
+  const confirm = reviewer.getByRole("checkbox", {
+    name: en.review.confirmLabel,
+  });
+  if ((await confirm.count()) > 0) await confirm.check();
+  await approve.click();
 }

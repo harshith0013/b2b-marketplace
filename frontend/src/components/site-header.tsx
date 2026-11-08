@@ -18,7 +18,10 @@ export function SiteHeader({ lang, dict }: SiteHeaderProps) {
     <header className="border-b-2 border-border">
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center justify-between gap-4">
-          <Link href={`/${lang}`} className="inline-flex min-h-12 items-center text-xl font-bold">
+          <Link
+            href={`/${lang}`}
+            className="inline-flex min-h-12 items-center text-xl font-bold"
+          >
             {dict.meta.title}
           </Link>
           <nav aria-label={dict.nav.mainMenu}>
@@ -38,11 +41,19 @@ export function SiteHeader({ lang, dict }: SiteHeaderProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* The switcher reads the current path, which is per request on some pages. */}
-          <Suspense fallback={<StaticLanguageLinks current={lang} label={dict.language.label} />}>
+          <Suspense
+            fallback={
+              <StaticLanguageLinks current={lang} label={dict.language.label} />
+            }
+          >
             <LanguageSwitcher current={lang} label={dict.language.label} />
           </Suspense>
           {/* The rest of the header is static; only this part depends on who is signed in. */}
-          <Suspense fallback={<span aria-hidden="true" className="inline-flex min-h-12 w-28" />}>
+          <Suspense
+            fallback={
+              <span aria-hidden="true" className="inline-flex min-h-12 w-28" />
+            }
+          >
             <AuthLink lang={lang} labels={dict.auth} />
           </Suspense>
         </div>

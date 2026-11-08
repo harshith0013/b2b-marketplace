@@ -47,6 +47,8 @@ class AiEvalTest {
             env("AI_MODEL", "gemini-3.1-flash-lite"),
             env("AI_REASONING_EFFORT", "none"),
             Duration.ofSeconds(20),
+            Duration.ofSeconds(30),
+            1000,
             1000,
             1000,
             1000,
@@ -125,6 +127,97 @@ class AiEvalTest {
     System.out.println(report);
 
     assertThat(score).as("share of evaluation checks passed").isGreaterThanOrEqualTo(PASS_MARK);
+  }
+
+  /**
+   * Label photos (src/test/resources/ai-eval/labels): generated, clean images, so easier than real
+   * dot-printed packs. Add real pilot photos before trusting the score.
+   */
+  @Test
+  void labelReaderReadsTheEvaluationLabels() throws IOException, InterruptedException {
+    String key = firstNonBlank(System.getenv("AI_API_KEY"), System.getenv("GEMINI_API_KEY"));
+    assumeTrue(key != null, "No AI_API_KEY or GEMINI_API_KEY: skipping the live evaluation");
+    String model = env("AI_MODEL", "gemini-3.1-flash-lite");
+    AiProperties properties =
+        new AiProperties(
+            env("AI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai"),
+            key,
+            model,
+            env("AI_REASONING_EFFORT", "none"),
+            Duration.ofSeconds(20),
+            Duration.ofSeconds(30),
+            1000,
+            1000,
+            1000,
+            1000,
+            90);
+    ChatCompletionsClient client = new ChatCompletionsClient(properties);
+    long pauseMillis = Long.parseLong(env("AI_EVAL_PAUSE_MS", "7000"));
+
+    int passed = 0;
+    int total = 0;
+    List<String> misses = new ArrayList<>();
+    for (String line : resource("ai-eval/labels.jsonl").split("\n")) {
+      if (line.isBlank()) {
+        continue;
+      }
+      JsonNode item = json.readTree(line);
+      String file = item.get("file").asString();
+      byte[] image = new ClassPathResource("ai-eval/labels/" + file).getContentAsByteArray();
+      com.b2bmarket.ai.LabelReading got;
+      try {
+        got = LabelCalls.read(LabelCalls.ask(client, image, "image/png").content(), json, model);
+      } catch (RuntimeException e) {
+        got = com.b2bmarket.ai.LabelReading.notChecked("ERROR");
+        misses.add(file + " -> call failed: " + e.getMessage());
+      }
+      for (Map.Entry<String, JsonNode> expected : item.get("expect").properties()) {
+        Object actual =
+            switch (expected.getKey()) {
+              case "expiryDate" ->
+                  got.expiryYear() == null || got.expiryMonth() == null
+                      ? null
+                      : got.expiryDay() == null
+                          ? "%04d-%02d".formatted(got.expiryYear(), got.expiryMonth())
+                          : "%04d-%02d-%02d"
+                              .formatted(got.expiryYear(), got.expiryMonth(), got.expiryDay());
+              case "dateType" -> got.dateType();
+              case "batchNumber" -> got.batchNumber();
+              case "mrpRupees" ->
+                  got.mrpPaise() == null ? null : BigDecimal.valueOf(got.mrpPaise(), 2);
+              default -> throw new IllegalArgumentException(expected.getKey());
+            };
+        JsonNode want = expected.getValue();
+        boolean ok =
+            want.isNull()
+                ? actual == null
+                : actual != null
+                    && (want.isNumber()
+                        ? new BigDecimal(actual.toString()).compareTo(want.decimalValue()) == 0
+                        : actual.toString().equalsIgnoreCase(want.asString()));
+        total++;
+        if (ok) {
+          passed++;
+        } else {
+          misses.add(file + " -> " + expected.getKey() + ": expected " + want + ", got " + actual);
+        }
+      }
+      Thread.sleep(pauseMillis);
+    }
+    double score = (double) passed / total;
+    String report =
+        String.format(
+                Locale.ROOT,
+                "Labels, model %s: %d/%d checks = %.1f%%%n",
+                model,
+                passed,
+                total,
+                score * 100)
+            + String.join("\n", misses);
+    Files.writeString(
+        Path.of("target", "ai-eval-labels-report.txt"), report, StandardCharsets.UTF_8);
+    System.out.println(report);
+    assertThat(score).as("share of label checks passed").isGreaterThanOrEqualTo(PASS_MARK);
   }
 
   static boolean matches(String field, JsonNode expected, ProposedFilters got) {

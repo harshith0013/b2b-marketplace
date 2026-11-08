@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import en from "../src/i18n/dictionaries/en.json";
 import {
   addWarehouse,
+  approveAsReviewer,
+  waitForLabelReading,
   createBusiness,
   expectNoA11yViolations,
   newSignedInPage,
@@ -96,6 +98,7 @@ test("a seller lists stock, a reviewer sends it back, then approves it", async (
 
   await uploadListingPhoto(seller, "pack-front.png");
   await uploadListingPhoto(seller, "label-date.png");
+  await waitForLabelReading(seller);
   await expect(seller.getByText(en.listings.ready)).toBeVisible();
   const photos = seller
     .getByRole("region", { name: en.listings.photosHeading })
@@ -127,7 +130,10 @@ test("a seller lists stock, a reviewer sends it back, then approves it", async (
   await reviewer.getByRole("link", { name: en.account.reviewQueue }).click();
   await expectNoA11yViolations(reviewer);
   await reviewer.getByRole("link", { name: new RegExp(productName) }).click();
-  await expect(reviewer.getByText(en.review.noProblems)).toBeVisible();
+  // With an AI key the plain test images read as "unreadable" (a flag); without one, no flags.
+  await expect(
+    reviewer.getByRole("heading", { name: en.review.labelHeading }),
+  ).toBeVisible();
   const reviewPhotos = reviewer
     .getByRole("region", { name: en.listings.photosHeading })
     .getByRole("img");
@@ -162,7 +168,7 @@ test("a seller lists stock, a reviewer sends it back, then approves it", async (
   await reviewer.goto("/en/admin/reviews");
   await reviewer.getByRole("link", { name: new RegExp(productName) }).click();
   await expect(reviewer.getByText(en.review.decisions.REJECTED)).toBeVisible(); // history
-  await reviewer.getByRole("button", { name: en.review.approve }).click();
+  await approveAsReviewer(reviewer);
   await expect(reviewer).toHaveURL(/\/en\/admin\/reviews$/);
 
   await seller.goto(listingUrl);

@@ -165,5 +165,26 @@ Done on 2026-11-08: **search assistant and similar offers.**
 - Tests: backend 101 unit and 86 integration (with a fake AI provider); website 152 unit, 52
   Playwright and 22 full-stack Playwright tests.
 
+## Phase 8 status
+Done on 2026-11-08: **label reading, Batch Passport and versioned compliance rules.**
+- After a "label with the date" photo is uploaded, Gemini vision reads the printed date, batch
+  number and MRP in the background. Rules compare them with what the seller typed and **flag**
+  differences or unreadable labels; nothing is certified. Sellers see the flags; reviewers see the
+  photo reading next to the typed values and must tick "I compared it myself" to approve a
+  flagged batch (recorded). No key, quota or timeout means "not checked", never a block.
+- The `compliance` module holds rule set `pilot-2026-11` (in `PilotRules`, written for counsel):
+  blocks (30 days left, photos, MRP, price within MRP, regulated category, stock) and flags (label
+  date, batch number, MRP). Every evaluation is stored append-only with stage (submit, approve,
+  daily) and version; a 06:30 daily job re-checks published offers. Checkout and dispatch hooks
+  are ready for Phase 9.
+- Batch Passport: sellers and reviewers see the batch's full history; buyers see a summary on the
+  offer page (approved on, expiry matched the label or was checked by a reviewer, dates changed
+  after approval or not).
+- Evaluations: assistant 96.3% (Phase 7); labels 38/38 checks on 10 generated label images. Real
+  dot-printed pack photos are harder: add pilot photos to `ai-eval/labels` before relying on it.
+- Only label photos (location data already removed) are sent to Google; separate daily cap
+  (`AI_VISION_DAILY_LIMIT`, default 100).
+- Tests: backend 105 unit and 94 integration; website 158 unit, Playwright and full-stack suites.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

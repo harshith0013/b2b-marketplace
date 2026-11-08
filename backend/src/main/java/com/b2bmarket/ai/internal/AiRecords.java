@@ -30,6 +30,19 @@ public class AiRecords {
         .single();
   }
 
+  /** Counts one more label reading for the day and returns the new total. */
+  public int countVisionRequest(LocalDate day) {
+    return jdbc.sql(
+            """
+            insert into ai_usage_daily (day, vision_requests) values (:day, 1)
+            on conflict (day) do update set vision_requests = ai_usage_daily.vision_requests + 1
+            returning vision_requests
+            """)
+        .param("day", day)
+        .query(Integer.class)
+        .single();
+  }
+
   public void addTokens(LocalDate day, Integer prompt, Integer completion) {
     jdbc.sql(
             "update ai_usage_daily set prompt_tokens = prompt_tokens + :p,"

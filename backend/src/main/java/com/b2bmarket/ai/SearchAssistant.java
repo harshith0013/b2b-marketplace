@@ -9,6 +9,7 @@ import com.b2bmarket.ai.internal.AiRecords;
 import com.b2bmarket.ai.internal.AssistantCalls;
 import com.b2bmarket.ai.internal.ChatCompletionsClient;
 import com.b2bmarket.ai.internal.ChatCompletionsClient.Answer;
+import com.b2bmarket.ai.internal.ProviderPause;
 import com.b2bmarket.ai.internal.VisitorLimiter;
 import com.b2bmarket.platform.IndiaTime;
 import java.time.Clock;
@@ -33,16 +34,11 @@ public class SearchAssistant {
   /** Longest question accepted and stored. */
   public static final int MAX_QUESTION_LENGTH = 300;
 
-  /** After the provider says its quota is used up, stop asking it for this long. */
-  static final Duration QUOTA_PAUSE = Duration.ofMinutes(15);
-
-  /** Until when the provider is not asked (after a quota refusal); one server, so in memory. */
-  private volatile Instant pausedUntil = Instant.MIN;
-
   private final AiProperties properties;
   private final ChatCompletionsClient client;
   private final VisitorLimiter visitors;
   private final AiRecords records;
+  private final ProviderPause pause;
   private final JsonMapper json;
   private final Clock clock;
 
@@ -51,12 +47,14 @@ public class SearchAssistant {
       ChatCompletionsClient client,
       VisitorLimiter visitors,
       AiRecords records,
+      ProviderPause pause,
       JsonMapper json,
       Clock clock) {
     this.properties = properties;
     this.client = client;
     this.visitors = visitors;
     this.records = records;
+    this.pause = pause;
     this.json = json;
     this.clock = clock;
   }
@@ -76,7 +74,7 @@ public class SearchAssistant {
     if (!visitors.tryAcquire(visitor)) {
       return logged(text, Interpretation.fallback(Outcome.VISITOR_LIMIT), started, null);
     }
-    if (clock.instant().isBefore(pausedUntil)) {
+    if (pause.paused()) {
       return logged(text, Interpretation.fallback(Outcome.PROVIDER_LIMIT), started, null);
     }
     LocalDate today = IndiaTime.today(clock);
@@ -91,8 +89,8 @@ public class SearchAssistant {
       log.warn("Assistant timed out after {}", properties.timeout());
       return logged(text, Interpretation.fallback(Outcome.TIMEOUT), started, null);
     } catch (ChatCompletionsClient.RateLimitedException e) {
-      pausedUntil = clock.instant().plus(QUOTA_PAUSE);
-      log.warn("Assistant provider quota used up; pausing for {}", QUOTA_PAUSE);
+      pause.pause();
+      log.warn("AI provider quota used up; pausing for {}", ProviderPause.QUOTA_PAUSE);
       return logged(text, Interpretation.fallback(Outcome.PROVIDER_LIMIT), started, null);
     } catch (ChatCompletionsClient.ProviderException e) {
       log.warn("Assistant provider error: {}", e.getMessage(), e.getCause());

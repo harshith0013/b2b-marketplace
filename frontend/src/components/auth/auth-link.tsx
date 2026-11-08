@@ -7,7 +7,13 @@ export const authLinkClassName =
   "inline-flex min-h-12 items-center rounded-control border-2 border-border px-4 font-semibold hover:bg-surface";
 
 /** "Sign in" or "My account". Reads the session cookie, so render it inside <Suspense>. */
-export async function AuthLink({ lang, labels }: { lang: Locale; labels: Dictionary["auth"] }) {
+export async function AuthLink({
+  lang,
+  labels,
+}: {
+  lang: Locale;
+  labels: Dictionary["auth"];
+}) {
   const session = await getSession().catch(() => null);
   return session ? (
     <Link href={`/${lang}/account`} className={authLinkClassName}>

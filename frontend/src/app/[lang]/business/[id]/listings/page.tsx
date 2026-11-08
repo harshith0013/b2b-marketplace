@@ -7,7 +7,10 @@ import {
   expiryLine,
   productLine,
 } from "@/components/listings/listing-facts";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { daysUntilInIndia } from "@/lib/dates";
+import type { Dictionary } from "@/i18n/dictionaries";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasLocale } from "@/i18n/config";
@@ -93,11 +96,12 @@ async function ListingsContent({ params }: { params: Params }) {
                         })}
                       </span>
                     )}
-                    <span className="self-start">
+                    <span className="flex flex-wrap gap-2 self-start">
                       <ListingStatusBadge
                         status={listing.status}
                         enums={enums}
                       />
+                      <ExpiryBadge listing={listing} labels={labels} />
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-1 font-semibold">
@@ -112,6 +116,22 @@ async function ListingsContent({ params }: { params: Params }) {
       )}
     </>
   );
+}
+
+/** For live listings: under 30 days left (buyers no longer see it) or under 45 (soon). */
+function ExpiryBadge({
+  listing,
+  labels,
+}: {
+  listing: Listing;
+  labels: Dictionary["listings"];
+}) {
+  if (listing.status !== "PUBLISHED" && listing.status !== "PAUSED")
+    return null;
+  const days = daysUntilInIndia(listing.batch.expiresOn);
+  if (days < 30) return <Badge variant="danger">{labels.offSale}</Badge>;
+  if (days < 45) return <Badge variant="warning">{labels.expiringSoon}</Badge>;
+  return null;
 }
 
 export default function ListingsPage({

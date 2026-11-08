@@ -15,7 +15,16 @@ export type SelectProps = FieldProps &
   };
 
 // A native <select>: the phone's own picker is the easiest to use on small screens.
-export function Select({ id, label, hint, error, options, placeholder, className, ...props }: SelectProps) {
+export function Select({
+  id,
+  label,
+  hint,
+  error,
+  options,
+  placeholder,
+  className,
+  ...props
+}: SelectProps) {
   return (
     <Field id={id} label={label} hint={hint} error={error}>
       <select

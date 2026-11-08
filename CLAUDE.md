@@ -48,8 +48,10 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1-7 are done (see README). Next: Phase 8 (expiry detection, Batch Passport, compliance
-engine), only when explicitly asked. The AI assistant only proposes filters that the `search`
+Phases 1-8 are done (see README). Next: Phase 9 (cart, quotations, orders, payments), only when
+explicitly asked: settle payment provider, COD, delivery model, pilot city and who may order first.
+Compliance rules live in `compliance.PilotRules`; changing one needs a new version string. AI label
+readings only flag; reviewers confirm. The AI assistant only proposes filters that the `search`
 module checks; never show model-written text. After changing the prompt or model, run
 `mvn test -Pai-eval` (live, uses provider quota) and compare with the README's score. Public (anonymous) queries
 must run after `TenantScope.enterPublic()` and only through the `search` module. Review code must call `PlatformRoles.requireReviewer` then `TenantScope.enterReview()`. Pilot category: non-food FMCG. Seller tables have Row-Level Security: any service

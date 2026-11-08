@@ -16,8 +16,14 @@ describe("LanguageSwitcher", () => {
     expect(telugu.getAttribute("aria-current")).toBe("page");
     expect(telugu.getAttribute("href")).toBe("/te");
 
-    expect(screen.getByRole("link", { name: "English" }).getAttribute("aria-current")).toBeNull();
-    expect(screen.getByRole("link", { name: "हिन्दी" }).getAttribute("href")).toBe("/hi");
+    expect(
+      screen
+        .getByRole("link", { name: "English" })
+        .getAttribute("aria-current"),
+    ).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "हिन्दी" }).getAttribute("href"),
+    ).toBe("/hi");
     expect(screen.getByRole("navigation", { name: "Language" })).toBeTruthy();
   });
 
@@ -25,7 +31,9 @@ describe("LanguageSwitcher", () => {
     navigation.pathname = "/en/sell/new";
     render(<LanguageSwitcher current="en" label="Language" />);
 
-    expect(screen.getByRole("link", { name: "తెలుగు" }).getAttribute("href")).toBe("/te/sell/new");
+    expect(
+      screen.getByRole("link", { name: "తెలుగు" }).getAttribute("href"),
+    ).toBe("/te/sell/new");
   });
 });
 

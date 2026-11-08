@@ -2,6 +2,8 @@ package com.b2bmarket.ai.internal;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpTimeoutException;
+import java.time.Duration;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,22 +48,55 @@ public class ChatCompletionsClient {
   }
 
   private final AiProperties properties;
+
+  /** Questions: a visitor is waiting, so a short time limit. */
   private final RestClient http;
+
+  /** Label photos: read in the background, so more time. */
+  private final RestClient visionHttp;
 
   ChatCompletionsClient(AiProperties properties) {
     this.properties = properties;
-    HttpClient client = HttpClient.newBuilder().connectTimeout(properties.timeout()).build();
-    JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
-    factory.setReadTimeout(properties.timeout());
-    this.http =
-        RestClient.builder()
-            .baseUrl(properties.baseUrl())
-            .requestFactory(factory)
-            .defaultHeader("Authorization", "Bearer " + properties.apiKey())
-            .build();
+    this.http = client(properties, properties.timeout());
+    this.visionHttp = client(properties, properties.visionTimeout());
   }
 
+  private static RestClient client(AiProperties properties, Duration timeout) {
+    HttpClient client = HttpClient.newBuilder().connectTimeout(timeout).build();
+    JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
+    factory.setReadTimeout(timeout);
+    return RestClient.builder()
+        .baseUrl(properties.baseUrl())
+        .requestFactory(factory)
+        .defaultHeader("Authorization", "Bearer " + properties.apiKey())
+        .build();
+  }
+
+  /** A text question with a JSON-schema answer. */
   public Answer complete(String system, String user, Map<String, Object> schema) {
+    return send(http, system, user, schema, "search_filters");
+  }
+
+  /**
+   * An image (as bytes) with a short instruction, and a JSON-schema answer. The image goes as a
+   * data URL: nothing is uploaded or stored at the provider beyond this one request.
+   */
+  public Answer completeWithImage(
+      String system,
+      String instruction,
+      byte[] image,
+      String contentType,
+      Map<String, Object> schema) {
+    String dataUrl = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(image);
+    List<Object> content =
+        List.of(
+            Map.of("type", "text", "text", instruction),
+            Map.of("type", "image_url", "image_url", Map.of("url", dataUrl)));
+    return send(visionHttp, system, content, schema, "label_reading");
+  }
+
+  private Answer send(
+      RestClient http, String system, Object user, Map<String, Object> schema, String schemaName) {
     Map<String, Object> body = new LinkedHashMap<>();
     body.put("model", properties.model());
     if (properties.reasoningEffort() != null && !properties.reasoningEffort().isBlank()) {
@@ -77,7 +112,7 @@ public class ChatCompletionsClient {
             "type",
             "json_schema",
             "json_schema",
-            Map.of("name", "search_filters", "strict", true, "schema", schema)));
+            Map.of("name", schemaName, "strict", true, "schema", schema)));
     JsonNode response;
     try {
       response =

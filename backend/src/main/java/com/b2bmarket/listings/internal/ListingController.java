@@ -1,16 +1,16 @@
 package com.b2bmarket.listings.internal;
 
-import com.b2bmarket.listings.EligibilityProblem;
 import com.b2bmarket.listings.ListingDtos.CreateListingRequest;
 import com.b2bmarket.listings.ListingDtos.Listing;
+import com.b2bmarket.listings.ListingDtos.Readiness;
 import com.b2bmarket.listings.ListingDtos.UpdateListingRequest;
 import com.b2bmarket.listings.ListingService;
 import com.b2bmarket.listings.ListingWorkflowService;
+import com.b2bmarket.listings.PassportDtos;
 import com.b2bmarket.platform.PageResult;
 import com.b2bmarket.users.CurrentUser;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,11 +69,18 @@ class ListingController {
     return listings.update(caller, businessId, listingId, request);
   }
 
-  /** What still stops the listing from being submitted (codes; empty when ready). */
+  /** What still stops the listing (problems), what a reviewer will look at (flags), the label. */
   @GetMapping("/{listingId}/eligibility")
-  List<EligibilityProblem> eligibility(
+  Readiness eligibility(
       CurrentUser caller, @PathVariable UUID businessId, @PathVariable UUID listingId) {
-    return workflow.problems(caller, businessId, listingId);
+    return workflow.readiness(caller, businessId, listingId);
+  }
+
+  /** The batch's history (Batch Passport), for the business's members. */
+  @GetMapping("/{listingId}/passport")
+  PassportDtos.Passport passport(
+      CurrentUser caller, @PathVariable UUID businessId, @PathVariable UUID listingId) {
+    return workflow.passport(caller, businessId, listingId);
   }
 
   @PostMapping("/{listingId}/submit")

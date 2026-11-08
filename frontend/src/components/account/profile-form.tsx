@@ -17,8 +17,16 @@ interface ProfileFormProps {
   action: (previous: FormState, form: FormData) => Promise<FormState>;
 }
 
-export function ProfileForm({ labels, errors, profile, action }: ProfileFormProps) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+export function ProfileForm({
+  labels,
+  errors,
+  profile,
+  action,
+}: ProfileFormProps) {
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -38,11 +46,19 @@ export function ProfileForm({ labels, errors, profile, action }: ProfileFormProp
         id="profile-preferredLocale"
         name="preferredLocale"
         label={labels.language}
-        options={locales.map((locale) => ({ value: locale, label: localeLabels[locale] }))}
+        options={locales.map((locale) => ({
+          value: locale,
+          label: localeLabels[locale],
+        }))}
         defaultValue={profile.preferredLocale}
       />
       <FormMessage state={state} errors={errors} success={labels.saved} />
-      <Button type="submit" variant="outline" disabled={pending} className="self-start">
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={pending}
+        className="self-start"
+      >
         {labels.save}
       </Button>
     </form>

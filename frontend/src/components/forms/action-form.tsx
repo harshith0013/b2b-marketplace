@@ -16,12 +16,27 @@ interface ActionFormProps {
 }
 
 /** A single button that runs a Server Action and shows its result in the reader's language. */
-export function ActionForm({ label, errors, action, variant, disabled, success }: ActionFormProps) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+export function ActionForm({
+  label,
+  errors,
+  action,
+  variant,
+  disabled,
+  success,
+}: ActionFormProps) {
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
   return (
     <form action={formAction} className="flex flex-col gap-2">
       <FormMessage state={state} errors={errors} success={success} />
-      <Button type="submit" variant={variant} disabled={disabled || pending} className="self-start">
+      <Button
+        type="submit"
+        variant={variant}
+        disabled={disabled || pending}
+        className="self-start"
+      >
         {label}
       </Button>
     </form>

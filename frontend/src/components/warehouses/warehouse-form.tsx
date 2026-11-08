@@ -16,7 +16,10 @@ interface WarehouseFormProps {
 const PINCODE_PATTERN = "[1-9][0-9]{5}";
 
 export function WarehouseForm({ labels, errors, action }: WarehouseFormProps) {
-  const [state, formAction, pending] = useActionState(action, INITIAL_FORM_STATE);
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_FORM_STATE,
+  );
   const { fields } = labels;
 
   return (

@@ -20,7 +20,15 @@ function toDisplayed(state: ServiceState | undefined): Displayed {
   return state === "UP" ? "working" : "unavailable";
 }
 
-function StatusRow({ name, state, labels }: { name: string; state: Displayed; labels: StatusLabels }) {
+function StatusRow({
+  name,
+  state,
+  labels,
+}: {
+  name: string;
+  state: Displayed;
+  labels: StatusLabels;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <dt>{name}</dt>
@@ -55,11 +63,20 @@ export function BackendStatus({ labels }: { labels: StatusLabels }) {
     return () => controller.abort();
   }, []);
 
-  const website: Displayed = failed ? "unavailable" : summary ? "working" : "checking";
-  const server: Displayed = failed ? "unavailable" : toDisplayed(summary?.backend);
+  const website: Displayed = failed
+    ? "unavailable"
+    : summary
+      ? "working"
+      : "checking";
+  const server: Displayed = failed
+    ? "unavailable"
+    : toDisplayed(summary?.backend);
 
   return (
-    <section aria-labelledby="status-heading" className="rounded-xl border-2 border-border bg-surface p-5">
+    <section
+      aria-labelledby="status-heading"
+      className="rounded-xl border-2 border-border bg-surface p-5"
+    >
       <h2 id="status-heading" className="text-lg font-bold">
         {labels.heading}
       </h2>

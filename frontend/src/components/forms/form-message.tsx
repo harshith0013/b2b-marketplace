@@ -10,14 +10,20 @@ interface FormMessageProps {
 export function FormMessage({ state, errors, success }: FormMessageProps) {
   if (state.error) {
     return (
-      <p role="alert" className="rounded-control bg-danger-soft px-4 py-3 font-semibold text-danger">
+      <p
+        role="alert"
+        className="rounded-control bg-danger-soft px-4 py-3 font-semibold text-danger"
+      >
         {errors[state.error]}
       </p>
     );
   }
   if (state.ok && success) {
     return (
-      <p role="status" className="rounded-control bg-success-soft px-4 py-3 font-semibold text-success">
+      <p
+        role="status"
+        className="rounded-control bg-success-soft px-4 py-3 font-semibold text-success"
+      >
         {success}
       </p>
     );
