@@ -37,7 +37,7 @@ class ReviewIT extends SellerFixtures {
     assertThat(texts(readiness.get("problems")))
         .containsExactly("PACK_PHOTO_MISSING", "LABEL_PHOTO_MISSING");
     assertThat(readiness.get("flags").size()).isZero();
-    assertThat(readiness.get("ruleSetVersion").asString()).isEqualTo("pilot-2026-11");
+    assertThat(readiness.get("ruleSetVersion").asString()).isEqualTo("pilot-2026-11.2");
 
     HttpResponse<String> refused = call("POST", listingPath(listingId) + "/submit", seller, null);
     assertThat(refused.statusCode()).isEqualTo(422);

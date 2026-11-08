@@ -187,6 +187,46 @@ public class ListingService {
         batches.summaries(businessId, List.of(listing.batchId())).get(listing.batchId()));
   }
 
+  /** Delivery and cash-on-delivery settings; may change at any time until the listing closes. */
+  @Transactional
+  public Listing setDelivery(
+      CurrentUser caller, UUID businessId, UUID listingId, ListingDtos.DeliveryOptions request) {
+    tenants.enter(caller, businessId, BusinessRole.OWNER_OR_MANAGER);
+    ListingEntity listing = load(businessId, listingId);
+    if (listing.status() == ListingStatus.CLOSED) {
+      throw ApiException.conflict("This listing is closed.");
+    }
+    List<String> pincodes =
+        request.deliveryPincodes() == null
+            ? List.of()
+            : request.deliveryPincodes().stream().distinct().sorted().toList();
+    if (!request.pickupAvailable() && !request.ownDelivery()) {
+      throw ApiException.badRequest("Offer pickup, your own delivery, or both.");
+    }
+    if (request.ownDelivery() && pincodes.isEmpty()) {
+      throw ApiException.badRequest("List the PIN codes you deliver to.");
+    }
+    ListingEntity.Delivery delivery =
+        new ListingEntity.Delivery(
+            request.pickupAvailable(),
+            request.ownDelivery(),
+            request.ownDelivery() ? pincodes : List.of(),
+            request.ownDelivery() && request.deliveryChargePaise() != null
+                ? request.deliveryChargePaise()
+                : 0,
+            request.codAccepted());
+    listing.setDelivery(delivery, Instant.now(clock));
+    audit.record(
+        new AuditEntry(
+            "listing.delivery_changed",
+            caller.userId(),
+            businessId,
+            TARGET_TYPE,
+            listingId,
+            Map.of("ownDelivery", delivery.ownDelivery(), "cod", delivery.codAccepted())));
+    return views.view(listing);
+  }
+
   private void saveTiers(
       ListingEntity listing, UUID businessId, List<PriceTier> priceTiers, Instant now) {
     tiers.saveAll(

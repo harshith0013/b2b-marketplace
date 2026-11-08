@@ -49,6 +49,22 @@ public class ListingEntity {
 
   private String notes;
 
+  @Column(name = "pickup_available", nullable = false)
+  private boolean pickupAvailable = true;
+
+  @Column(name = "own_delivery", nullable = false)
+  private boolean ownDelivery;
+
+  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.ARRAY)
+  @Column(name = "delivery_pincodes", nullable = false)
+  private String[] deliveryPincodes = new String[0];
+
+  @Column(name = "delivery_charge_paise", nullable = false)
+  private long deliveryChargePaise;
+
+  @Column(name = "cod_accepted", nullable = false)
+  private boolean codAccepted;
+
   @Column(name = "submitted_at")
   private Instant submittedAt;
 
@@ -93,6 +109,37 @@ public class ListingEntity {
     moq = fields.moq();
     gstRateBp = fields.gstRateBp();
     notes = fields.notes();
+    updatedAt = now;
+  }
+
+  /** How the goods reach the buyer, and whether cash on delivery is accepted. Validated. */
+  public record Delivery(
+      boolean pickupAvailable,
+      boolean ownDelivery,
+      java.util.List<String> deliveryPincodes,
+      long deliveryChargePaise,
+      boolean codAccepted) {
+
+    public Delivery {
+      deliveryPincodes = java.util.List.copyOf(deliveryPincodes);
+    }
+  }
+
+  public Delivery delivery() {
+    return new Delivery(
+        pickupAvailable,
+        ownDelivery,
+        java.util.List.of(deliveryPincodes),
+        deliveryChargePaise,
+        codAccepted);
+  }
+
+  public void setDelivery(Delivery delivery, Instant now) {
+    pickupAvailable = delivery.pickupAvailable();
+    ownDelivery = delivery.ownDelivery();
+    deliveryPincodes = delivery.deliveryPincodes().toArray(String[]::new);
+    deliveryChargePaise = delivery.deliveryChargePaise();
+    codAccepted = delivery.codAccepted();
     updatedAt = now;
   }
 

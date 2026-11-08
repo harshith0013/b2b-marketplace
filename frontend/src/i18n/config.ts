@@ -34,7 +34,11 @@ export function negotiateLocale(
       const [tag, ...params] = part.trim().split(";");
       const qParam = params.find((p) => p.trim().startsWith("q="));
       const q = qParam ? Number.parseFloat(qParam.trim().slice(2)) : 1;
-      return { tag: tag.trim().toLowerCase(), q: Number.isNaN(q) ? 0 : q, index };
+      return {
+        tag: tag.trim().toLowerCase(),
+        q: Number.isNaN(q) ? 0 : q,
+        index,
+      };
     })
     .filter((entry) => entry.tag.length > 0 && entry.q > 0)
     .sort((a, b) => b.q - a.q || a.index - b.index);

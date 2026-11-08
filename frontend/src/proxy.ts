@@ -1,11 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { LOCALE_COOKIE, locales, negotiateLocale, type Locale } from "@/i18n/config";
+import {
+  LOCALE_COOKIE,
+  locales,
+  negotiateLocale,
+  type Locale,
+} from "@/i18n/config";
 import { SESSION_COOKIE, isExpired, unsealSession } from "@/lib/auth/session";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 /** Pages that need a signed-in person. The buyer home and other public pages are not listed. */
-const PROTECTED = /^\/(?:en|te|hi)\/(?:sell|account|onboarding|business|admin)(?:\/|$)/;
+const PROTECTED =
+  /^\/(?:en|te|hi)\/(?:sell|account|onboarding|business|admin)(?:\/|$)/;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED.test(pathname);
@@ -18,12 +24,16 @@ async function sessionState(request: NextRequest): Promise<SessionState> {
   if (!sealed) return "none";
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
-    console.error("SESSION_SECRET is not set; treating every visitor as signed out");
+    console.error(
+      "SESSION_SECRET is not set; treating every visitor as signed out",
+    );
     return "none";
   }
   const session = await unsealSession(sealed, secret);
   if (!session) return "none";
-  return isExpired(session, Math.floor(Date.now() / 1000)) ? "expired" : "valid";
+  return isExpired(session, Math.floor(Date.now() / 1000))
+    ? "expired"
+    : "valid";
 }
 
 /**
@@ -31,7 +41,10 @@ async function sessionState(request: NextRequest): Promise<SessionState> {
  * the session simply ran out, goes straight back through the provider, which signs them in again
  * without asking while they are still signed in there.
  */
-async function guard(request: NextRequest, lang: Locale): Promise<NextResponse | null> {
+async function guard(
+  request: NextRequest,
+  lang: Locale,
+): Promise<NextResponse | null> {
   const { pathname, search } = request.nextUrl;
   if (!isProtectedPath(pathname)) return null;
   const state = await sessionState(request);
@@ -72,7 +85,10 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  const locale = negotiateLocale(request.headers.get("accept-language"), savedLocale);
+  const locale = negotiateLocale(
+    request.headers.get("accept-language"),
+    savedLocale,
+  );
   const url = request.nextUrl.clone();
   url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
   return NextResponse.redirect(url);

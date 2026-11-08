@@ -32,6 +32,8 @@ import type {
 } from "@/lib/api/types";
 import { api, requireSession } from "@/lib/auth/current-user";
 import { apiOrNotFound, canEdit, requireUuids } from "@/lib/pages";
+import { DeliverySettingsForm } from "@/components/orders/delivery-settings-form";
+import { saveDelivery } from "@/lib/actions/orders";
 
 type Params = PageProps<"/[lang]/business/[id]/listings/[listingId]">["params"];
 
@@ -272,6 +274,24 @@ async function ListingContent({ params }: { params: Params }) {
         )}
         {!editable && <p className="text-muted">{labels.readOnly}</p>}
       </section>
+      {editable && listing.status !== "CLOSED" && (
+        <section
+          aria-labelledby="delivery-heading"
+          className="flex flex-col gap-3"
+        >
+          <h2 id="delivery-heading" className="text-heading font-bold">
+            {dict.orders.deliveryHeading}
+          </h2>
+          <Card>
+            <DeliverySettingsForm
+              delivery={listing.delivery}
+              labels={dict.orders}
+              errors={errors}
+              action={saveDelivery.bind(null, lang, id, listingId)}
+            />
+          </Card>
+        </section>
+      )}
       <section
         aria-labelledby="passport-heading"
         className="flex flex-col gap-3"

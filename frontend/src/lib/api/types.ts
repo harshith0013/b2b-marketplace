@@ -179,6 +179,16 @@ export interface Listing {
   submittedAt: string | null;
   reviewedAt: string | null;
   rejectionReason: string | null;
+  delivery: DeliveryOptions;
+}
+
+/** How a seller hands over a listing's stock: pickup, own delivery to PIN codes, COD. */
+export interface DeliveryOptions {
+  pickupAvailable: boolean;
+  ownDelivery: boolean;
+  deliveryPincodes: string[];
+  deliveryChargePaise: number;
+  codAccepted: boolean;
 }
 
 export const PHOTO_KINDS = ["PACK_FRONT", "LABEL_DATE", "OTHER"] as const;
@@ -323,6 +333,7 @@ export interface OfferDetails {
     detailsChangedAfterApproval: boolean;
     changedAt: string | null;
   };
+  delivery: DeliveryOptions;
 }
 
 export interface OfferPage {
@@ -335,4 +346,110 @@ export interface OfferPage {
 export interface Place {
   state: string;
   cities: string[];
+}
+
+export const ORDER_STATUSES = [
+  "PLACED",
+  "ACCEPTED",
+  "DECLINED",
+  "CANCELLED",
+  "EXPIRED",
+  "READY_FOR_PICKUP",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "PICKED_UP",
+  "COMPLETED",
+] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export const ORDER_ACTIONS = [
+  "ACCEPT",
+  "DECLINE",
+  "CANCEL",
+  "READY",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "PICKED_UP",
+  "PAID",
+] as const;
+export type OrderAction = (typeof ORDER_ACTIONS)[number];
+
+export type DeliveryMethod = "PICKUP" | "SELLER_DELIVERY";
+export type PaymentMethod = "COD" | "PAY_ON_PICKUP";
+export type OrderSide = "BUYER" | "SELLER";
+
+/** One cart line with the offer as it is now; sellerKey groups lines without naming the seller. */
+export interface CartLine {
+  listingId: string;
+  quantity: number;
+  available: boolean;
+  productLine: string;
+  unit: StockUnit;
+  moq: number;
+  unitPricePaise: number;
+  sellerKey: string;
+  sellerName: string | null;
+  city: string;
+  pickupAvailable: boolean;
+  ownDelivery: boolean;
+  deliveryPincodes: string[];
+  deliveryChargePaise: number;
+  codAccepted: boolean;
+}
+
+export interface OrderItem {
+  listingId: string;
+  productLine: string;
+  quantity: number;
+  unit: StockUnit;
+  unitPricePaise: number;
+  gstRateBp: number;
+  linePaise: number;
+  gstPaise: number;
+}
+
+export interface Order {
+  id: string;
+  viewerSide: OrderSide;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: "PENDING" | "PAID";
+  deliveryMethod: DeliveryMethod;
+  deliveryAddress: string | null;
+  deliveryPincode: string | null;
+  pickupCity: string;
+  pickupState: string;
+  buyerName: string | null;
+  sellerName: string | null;
+  items: OrderItem[];
+  itemsPaise: number;
+  gstPaise: number;
+  deliveryPaise: number;
+  totalPaise: number;
+  statusReason: string | null;
+  deliveryPersonName: string | null;
+  deliveryPersonPhone: string | null;
+  placedAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  allowedActions: OrderAction[];
+}
+
+export type QuoteStatus =
+  "REQUESTED" | "OFFERED" | "DECLINED" | "ORDERED" | "EXPIRED";
+
+export interface Quote {
+  id: string;
+  viewerSide: OrderSide;
+  listingId: string;
+  productLine: string;
+  quantity: number;
+  unit: StockUnit;
+  note: string | null;
+  status: QuoteStatus;
+  offeredUnitPricePaise: number | null;
+  validUntil: string | null;
+  buyerName: string | null;
+  sellerName: string | null;
+  createdAt: string;
 }

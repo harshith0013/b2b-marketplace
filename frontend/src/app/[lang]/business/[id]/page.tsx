@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { PackageOpen, Warehouse } from "lucide-react";
+import {
+  ClipboardList,
+  PackageOpen,
+  ShoppingCart,
+  Warehouse,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 import { BusinessForm } from "@/components/business/business-form";
 import { InviteForm } from "@/components/business/invite-form";
@@ -134,6 +139,18 @@ async function BusinessContent({
             <Link href={`/${lang}/business/${id}/warehouses`}>
               <Warehouse aria-hidden="true" className="size-5" />
               {labels.warehousesLink}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${lang}/business/${id}/orders`}>
+              <ClipboardList aria-hidden="true" className="size-5" />
+              {dict.orders.myOrders}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${lang}/business/${id}/cart`}>
+              <ShoppingCart aria-hidden="true" className="size-5" />
+              {dict.orders.myCart}
             </Link>
           </Button>
         </div>

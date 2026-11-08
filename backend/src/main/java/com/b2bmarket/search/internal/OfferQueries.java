@@ -229,6 +229,63 @@ public class OfferQueries {
         .optional();
   }
 
+  /** What ordering needs about an offer on sale. Server-side only: includes the seller's id. */
+  public record OrderableRow(
+      UUID listingId,
+      UUID sellerBusinessId,
+      UUID batchId,
+      boolean confidential,
+      String sellerName,
+      String productLine,
+      long moq,
+      String unit,
+      int gstRateBp,
+      long stock,
+      String city,
+      String state,
+      boolean pickupAvailable,
+      boolean ownDelivery,
+      List<String> deliveryPincodes,
+      long deliveryChargePaise,
+      boolean codAccepted) {}
+
+  public Optional<OrderableRow> orderable(UUID listingId, LocalDate minExpiry) {
+    return jdbc.sql(
+            "select l.id, l.business_id, l.batch_id, l.visibility, l.moq, l.quantity_unit,"
+                + " l.gst_rate_bp, b.quantity, w.city, w.state, l.pickup_available, l.own_delivery,"
+                + " l.delivery_pincodes, l.delivery_charge_paise, l.cod_accepted,"
+                + " coalesce(s.trade_name, s.legal_name) as seller_name,"
+                + " p.brand || ' ' || p.name || ', ' || trim(trailing '.' from trim(trailing '0' from v.pack_size::text))"
+                + " || ' ' || v.pack_unit as product_line "
+                + FROM_AND_RULES
+                + " and l.id = :id")
+        .param("minExpiry", minExpiry)
+        .param("id", listingId)
+        .query(
+            (rs, i) -> {
+              java.sql.Array pins = rs.getArray("delivery_pincodes");
+              return new OrderableRow(
+                  rs.getObject(1, UUID.class),
+                  rs.getObject(2, UUID.class),
+                  rs.getObject(3, UUID.class),
+                  "CONFIDENTIAL".equals(rs.getString(4)),
+                  rs.getString("seller_name"),
+                  rs.getString("product_line"),
+                  rs.getLong(5),
+                  rs.getString(6),
+                  rs.getInt(7),
+                  rs.getLong(8),
+                  rs.getString(9),
+                  rs.getString(10),
+                  rs.getBoolean(11),
+                  rs.getBoolean(12),
+                  pins == null ? List.of() : List.of((String[]) pins.getArray()),
+                  rs.getLong(14),
+                  rs.getBoolean(15));
+            })
+        .optional();
+  }
+
   /**
    * What the buyer's passport summary needs about an offer's batch and its latest label reading.
    */

@@ -40,7 +40,7 @@ class PilotRulesTest {
   @Test
   void aCompleteListingPassesUnderTheCurrentVersion() {
     Evaluation e = PilotRules.evaluate(facts(read(2027, 3, 31, "B23-0456", 4_500L)));
-    assertThat(e.ruleSetVersion()).isEqualTo("pilot-2026-11");
+    assertThat(e.ruleSetVersion()).isEqualTo("pilot-2026-11.2");
     assertThat(e.blocks()).isEmpty();
     assertThat(e.flags()).isEmpty();
   }

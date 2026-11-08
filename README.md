@@ -176,7 +176,7 @@ Done on 2026-11-08: **label reading, Batch Passport and versioned compliance rul
   blocks (30 days left, photos, MRP, price within MRP, regulated category, stock) and flags (label
   date, batch number, MRP). Every evaluation is stored append-only with stage (submit, approve,
   daily) and version; a 06:30 daily job re-checks published offers. Checkout and dispatch hooks
-  are ready for Phase 9.
+  are used from Phase 9.
 - Batch Passport: sellers and reviewers see the batch's full history; buyers see a summary on the
   offer page (approved on, expiry matched the label or was checked by a reviewer, dates changed
   after approval or not).
@@ -185,6 +185,32 @@ Done on 2026-11-08: **label reading, Batch Passport and versioned compliance rul
 - Only label photos (location data already removed) are sent to Google; separate daily cap
   (`AI_VISION_DAILY_LIMIT`, default 100).
 - Tests: backend 105 unit and 94 integration; website 158 unit, Playwright and full-stack suites.
+
+## Phase 9a status
+Done on 2026-11-09: **cart, quotes, orders and local delivery (cash payments only).**
+- Any business owner or manager can add an offer to the cart or ask the seller for a quote. A
+  cart is checked out per seller: one order per seller. Prices, GST (rounded per line) and the
+  delivery charge are worked out by the backend at order time and stored on the order.
+- Sellers choose per listing: buyer pickup from the warehouse (paid on pickup) and/or their own
+  delivery staff to listed PIN codes with a per-order charge, paid in cash on delivery if they
+  accept COD.
+- Placing an order reserves the stock for 24 hours (database row locks, so two buyers can never
+  get the same last packs). The seller accepts or declines (with a reason); orders not accepted
+  in 24 hours expire (job every 15 minutes) and release the stock. Dispatch re-checks the batch
+  is not expired (rule set `pilot-2026-11.2`, stage `DISPATCH`) and deducts the stock.
+- Steps: accept → ready for pickup → picked up, or accept → out for delivery (delivery person's
+  name and phone, deleted 30 days after the order completes) → delivered; then marked paid →
+  completed. Buyers can cancel before dispatch; staff members cannot accept, decline or cancel.
+- Quotes: the seller answers with a price per unit that is valid for 48 hours; the buyer orders
+  that quantity at that price. A confidential seller's name stays hidden until they accept.
+- A new database role (`marketplace_ordering`) places orders: it reads only offers on sale and
+  writes only the buyer's own orders. Orders, quotes and carts have Row-Level Security: only the
+  two businesses involved can see them.
+- Repeat submits are safe: every checkout carries an idempotency key.
+- Not yet: online payment (Phase 9b, Razorpay Route in test mode) and long-distance shipping
+  (Phase 9c, a logistics partner).
+- Tests: backend 111 unit and 105 integration; website 169 unit, Playwright and full-stack suites
+  (the full-stack journey: quote → order with delivery → accept → deliver → paid).
 
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

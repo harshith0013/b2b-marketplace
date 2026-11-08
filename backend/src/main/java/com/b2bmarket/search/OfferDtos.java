@@ -62,13 +62,51 @@ public final class OfferDtos {
       boolean detailsChangedAfterApproval,
       Instant changedAt) {}
 
+  /** Pickup from the warehouse city and/or the seller's delivery to these PIN codes. */
+  public record Delivery(
+      boolean pickupAvailable,
+      boolean ownDelivery,
+      List<String> deliveryPincodes,
+      long deliveryChargePaise,
+      boolean codAccepted) {
+
+    public Delivery {
+      deliveryPincodes = List.copyOf(deliveryPincodes);
+    }
+  }
+
+  /**
+   * An offer as the ordering code needs it. Never returned by the API: it carries the seller's id.
+   */
+  public record Orderable(
+      UUID listingId,
+      UUID sellerBusinessId,
+      UUID batchId,
+      boolean confidential,
+      String sellerName,
+      String productLine,
+      long moq,
+      String unit,
+      int gstRateBp,
+      long stock,
+      String city,
+      String state,
+      Delivery delivery,
+      List<PriceTier> priceTiers) {
+
+    public Orderable {
+      priceTiers = List.copyOf(priceTiers);
+    }
+  }
+
   public record OfferDetails(
       OfferSummary offer,
       String batchNumber,
       String notes,
       List<PriceTier> priceTiers,
       List<OfferPhoto> photos,
-      PassportSummary passport) {
+      PassportSummary passport,
+      Delivery delivery) {
 
     public OfferDetails {
       priceTiers = List.copyOf(priceTiers);

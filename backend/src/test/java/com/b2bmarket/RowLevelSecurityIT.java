@@ -363,4 +363,62 @@ class RowLevelSecurityIT extends SellerFixtures {
         .as("compliance checks are append-only")
         .isInstanceOf(DataAccessException.class);
   }
+
+  @Test
+  void ordersQuotesAndCartsAreSeenOnlyByTheirTwoBusinesses() {
+    UUID buyer = UUID.fromString(createBusiness(newPerson("buyer"), "RLS Buyer"));
+    UUID seller = alice;
+    UUID listing =
+        jdbc.queryForObject(
+            "select id from listings where business_id = ? limit 1", UUID.class, seller);
+    UUID batch =
+        jdbc.queryForObject("select batch_id from listings where id = ?", UUID.class, listing);
+    UUID order = UUID.randomUUID();
+    jdbc.update(
+        "insert into orders (id, buyer_business_id, seller_business_id, status, payment_method, delivery_method,"
+            + " pickup_city, pickup_state, items_total_paise, gst_total_paise, delivery_charge_paise, total_paise,"
+            + " idempotency_key, placed_at, updated_at) values (?, ?, ?, 'PLACED', 'PAY_ON_PICKUP', 'PICKUP',"
+            + " 'Guntur', 'AP', 100, 18, 0, 118, 'k', now(), now())",
+        order,
+        buyer,
+        seller);
+    jdbc.update(
+        "insert into cart_items (id, buyer_business_id, listing_id, quantity, created_at, updated_at)"
+            + " values (?, ?, ?, 1, now(), now())",
+        UUID.randomUUID(),
+        buyer,
+        listing);
+
+    for (UUID party : List.of(buyer, seller)) {
+      Integer seen =
+          tx.execute(
+              s -> {
+                tenantScope.enter(party);
+                return jdbc.queryForObject(
+                    "select count(*) from orders where id = ?", Integer.class, order);
+              });
+      assertThat(seen).as("party " + party).isEqualTo(1);
+    }
+    for (String table : List.of("orders", "cart_items", "quotes", "inventory_reservations")) {
+      Integer seenByBob =
+          tx.execute(
+              s -> {
+                tenantScope.enter(bob);
+                return jdbc.queryForObject("select count(*) from " + table, Integer.class);
+              });
+      assertThat(seenByBob).as(table).isZero();
+    }
+    // The ordering role, for another buyer, sees neither this cart nor this order.
+    Integer cartsSeenByBobOrdering =
+        tx.execute(
+            s -> {
+              tenantScope.enterOrdering(bob);
+              return jdbc.queryForObject(
+                  "select count(*) from cart_items where buyer_business_id = ?",
+                  Integer.class,
+                  buyer);
+            });
+    assertThat(cartsSeenByBobOrdering).isZero();
+    assertThat(batch).isNotNull();
+  }
 }

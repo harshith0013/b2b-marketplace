@@ -229,10 +229,10 @@ price_tiers (Phase 4). The rest is still a proposal, created incrementally. All 
 | compliance_reviews | batch_id or listing_id, rule set version, result, reviewer, reasons |
 | listings | batch_id, warehouse_id, status, clearance reason, MOQ, visibility (public / confidential) |
 | price_tiers | listing_id, min quantity, unit price (paise, bigint), GST rate |
-| carts, quotations, orders, order_items | Phase 9; prices captured at order time; order status as a state machine |
-| inventory_reservations | listing_id, order_id, quantity, expires_at |
-| payments, settlements, invoices | Phase 9; idempotency keys unique; provider references only, never card data |
-| shipments, disputes | Phase 9–11 |
+| cart_items, quotes, orders, order_items | Phase 9a (done); prices, GST and delivery captured at order time; order status as a state machine; RLS for both parties; written through the `marketplace_ordering` role |
+| inventory_reservations | listing_id, batch_id, order_id, quantity, status, expires_at (24 h; released on expiry, decline or cancel, consumed at dispatch) |
+| payments, settlements, invoices | Phase 9b; idempotency keys unique; provider references only, never card data |
+| shipments, disputes | Phase 9c (logistics partner) to Phase 11 |
 | ai_search_requests, recommendations | Phase 7; queries retained per privacy policy, scoped to business |
 | notifications | channel, template, recipient, status |
 | audit_events | append-only: actor, business, action, target, request id, timestamp |

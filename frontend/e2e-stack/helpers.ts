@@ -103,8 +103,10 @@ export async function publishOffer(
     city: string;
     confidential: boolean;
     businessName: string;
+    /** Keep the seller signed in and return the page, for tests that go on as the seller. */
+    keepSeller?: boolean;
   },
-): Promise<{ listingUrl: string }> {
+): Promise<{ listingUrl: string; listingId: string; seller: Page | null }> {
   const seller = await newSignedInPage(browser, uniqueEmail("seller"));
   const businessPath = await createBusiness(seller, offer.businessName);
   await seller.goto(`${businessPath}/warehouses`);
@@ -170,9 +172,13 @@ export async function publishOffer(
     .click();
   await approveAsReviewer(reviewer);
   await expect(reviewer).toHaveURL(/\/en\/admin\/reviews$/);
-  await seller.close();
   await reviewer.close();
-  return { listingUrl };
+  const listingId = listingUrl.split("/").at(-1) ?? "";
+  if (!offer.keepSeller) {
+    await seller.close();
+    return { listingUrl, listingId, seller: null };
+  }
+  return { listingUrl, listingId, seller };
 }
 
 /**
@@ -196,6 +202,15 @@ export async function approveAsReviewer(reviewer: Page) {
   const confirm = reviewer.getByRole("checkbox", {
     name: en.review.confirmLabel,
   });
-  if ((await confirm.count()) > 0) await confirm.check();
-  await approve.click();
+  // A re-render while the page settles can clear the tick: check it stuck, retry if refused.
+  await expect(async () => {
+    if ((await confirm.count()) > 0) {
+      await confirm.check();
+      await expect(confirm).toBeChecked();
+    }
+    await approve.click();
+    await expect(reviewer).toHaveURL(/\/en\/admin\/reviews$/, {
+      timeout: 5_000,
+    });
+  }).toPass({ timeout: 30_000 });
 }

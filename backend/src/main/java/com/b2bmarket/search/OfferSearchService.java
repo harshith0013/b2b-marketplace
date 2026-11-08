@@ -9,6 +9,7 @@ import com.b2bmarket.search.OfferDtos.OfferDetails;
 import com.b2bmarket.search.OfferDtos.OfferPage;
 import com.b2bmarket.search.OfferDtos.OfferPhoto;
 import com.b2bmarket.search.OfferDtos.OfferSummary;
+import com.b2bmarket.search.OfferDtos.Orderable;
 import com.b2bmarket.search.OfferDtos.Place;
 import com.b2bmarket.search.OfferDtos.PriceTier;
 import com.b2bmarket.search.OfferDtos.Seller;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,7 +80,47 @@ public class OfferSearchService {
         queries.photos(listingId).stream()
             .map(p -> new OfferPhoto(p.id(), p.kind(), p.width(), p.height()))
             .toList(),
-        passport(row.publishedAt(), queries.passportFacts(listingId)));
+        passport(row.publishedAt(), queries.passportFacts(listingId)),
+        orderable(listingId, today).map(Orderable::delivery).orElse(null));
+  }
+
+  /**
+   * For placing orders and quotes (server side): the offer if it is on sale now, with its seller.
+   * Runs as the public role, so only offers anyone may see are found.
+   */
+  @Transactional(readOnly = true)
+  public Optional<Orderable> orderable(UUID listingId) {
+    scope.enterPublic();
+    return orderable(listingId, IndiaTime.today(clock));
+  }
+
+  private Optional<Orderable> orderable(UUID listingId, LocalDate today) {
+    return queries
+        .orderable(listingId, today.plusDays(OfferFilters.MIN_SHELF_LIFE_DAYS))
+        .map(
+            r ->
+                new Orderable(
+                    r.listingId(),
+                    r.sellerBusinessId(),
+                    r.batchId(),
+                    r.confidential(),
+                    r.sellerName(),
+                    r.productLine(),
+                    r.moq(),
+                    r.unit(),
+                    r.gstRateBp(),
+                    r.stock(),
+                    r.city(),
+                    r.state(),
+                    new OfferDtos.Delivery(
+                        r.pickupAvailable(),
+                        r.ownDelivery(),
+                        r.deliveryPincodes(),
+                        r.deliveryChargePaise(),
+                        r.codAccepted()),
+                    queries.priceTiers(listingId).stream()
+                        .map(t -> new PriceTier(t[0], t[1]))
+                        .toList()));
   }
 
   static OfferDtos.PassportSummary passport(

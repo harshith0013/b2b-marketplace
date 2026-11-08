@@ -278,6 +278,14 @@ public class BatchService {
         now());
   }
 
+  /** Delivered or picked up: the stock leaves the batch. Seller scope. 409 if not enough. */
+  @Transactional
+  public void deductForOrder(UUID businessId, UUID batchId, long quantity) {
+    if (batches.deduct(businessId, batchId, quantity, now()) == 0) {
+      throw ApiException.conflict("The batch no longer has this much stock.");
+    }
+  }
+
   private Instant now() {
     return Instant.now(clock);
   }

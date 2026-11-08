@@ -82,6 +82,17 @@ class ListingViews {
         batch,
         listing.submittedAt(),
         listing.reviewedAt(),
-        listing.rejectionReason());
+        listing.rejectionReason(),
+        deliveryOf(listing));
+  }
+
+  static ListingDtos.DeliveryOptions deliveryOf(ListingEntity listing) {
+    ListingEntity.Delivery d = listing.delivery();
+    return new ListingDtos.DeliveryOptions(
+        d.pickupAvailable(),
+        d.ownDelivery(),
+        d.deliveryPincodes(),
+        d.deliveryChargePaise(),
+        d.codAccepted());
   }
 }

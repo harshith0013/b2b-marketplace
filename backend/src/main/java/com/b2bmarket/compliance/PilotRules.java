@@ -16,7 +16,8 @@ import java.util.Locale;
  * still says which rules it used. To be reviewed by counsel before the pilot.
  *
  * <ul>
- *   <li>SHELF_LIFE: at least 30 days before the printed date. Block.
+ *   <li>SHELF_LIFE: at least 30 days before the printed date (at dispatch of an accepted order: not
+ *       past the printed date). Block.
  *   <li>PACK_PHOTO, LABEL_PHOTO: a photo of the pack front and of the label with the date. Block.
  *   <li>MRP_GIVEN: the MRP printed on one pack is entered. Block.
  *   <li>PRICE_WITHIN_MRP: one pack, with GST, costs no more than its MRP. Block.
@@ -30,17 +31,23 @@ import java.util.Locale;
  */
 public final class PilotRules {
 
-  public static final String VERSION = "pilot-2026-11";
+  /** .2: at dispatch, an accepted order may go out until the printed date (not 30 days before). */
+  public static final String VERSION = "pilot-2026-11.2";
+
   static final int MIN_SHELF_LIFE_DAYS = 30;
   private static final long BASIS_POINTS = 10_000L;
 
   private PilotRules() {}
 
   public static Evaluation evaluate(Facts f) {
+    return evaluate(ComplianceDtos.Stage.SUBMIT, f);
+  }
+
+  public static Evaluation evaluate(ComplianceDtos.Stage stage, Facts f) {
     return new Evaluation(
         VERSION,
         List.of(
-            shelfLife(f),
+            stage == ComplianceDtos.Stage.DISPATCH ? notExpired(f) : shelfLife(f),
             photo("PACK_PHOTO", f, "PACK_FRONT", "PACK_PHOTO_MISSING"),
             photo("LABEL_PHOTO", f, "LABEL_DATE", "LABEL_PHOTO_MISSING"),
             f.mrpPaise() == null ? block("MRP_GIVEN", "MRP_MISSING") : pass("MRP_GIVEN"),
@@ -60,6 +67,10 @@ public final class PilotRules {
     return ChronoUnit.DAYS.between(f.today(), f.expiresOn()) < MIN_SHELF_LIFE_DAYS
         ? block("SHELF_LIFE", "SHELF_LIFE_TOO_SHORT")
         : pass("SHELF_LIFE");
+  }
+
+  static RuleResult notExpired(Facts f) {
+    return f.expiresOn().isBefore(f.today()) ? block("SHELF_LIFE", "EXPIRED") : pass("SHELF_LIFE");
   }
 
   static RuleResult photo(String rule, Facts f, String kind, String missing) {

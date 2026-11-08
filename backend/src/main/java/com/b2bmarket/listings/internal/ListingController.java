@@ -1,5 +1,6 @@
 package com.b2bmarket.listings.internal;
 
+import com.b2bmarket.listings.ListingDtos;
 import com.b2bmarket.listings.ListingDtos.CreateListingRequest;
 import com.b2bmarket.listings.ListingDtos.Listing;
 import com.b2bmarket.listings.ListingDtos.Readiness;
@@ -74,6 +75,15 @@ class ListingController {
   Readiness eligibility(
       CurrentUser caller, @PathVariable UUID businessId, @PathVariable UUID listingId) {
     return workflow.readiness(caller, businessId, listingId);
+  }
+
+  @org.springframework.web.bind.annotation.PutMapping("/{listingId}/delivery")
+  Listing setDelivery(
+      CurrentUser caller,
+      @PathVariable UUID businessId,
+      @PathVariable UUID listingId,
+      @Valid @RequestBody ListingDtos.DeliveryOptions request) {
+    return listings.setDelivery(caller, businessId, listingId, request);
   }
 
   /** The batch's history (Batch Passport), for the business's members. */

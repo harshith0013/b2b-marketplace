@@ -48,8 +48,11 @@ surplus and clearance inventory. Full vision and phase plan: `docs/ARCHITECTURE.
 - Approved expiry dates cannot be changed silently; changes require re-review and an audit event.
 
 ## Current status
-Phases 1-8 are done (see README). Next: Phase 9 (cart, quotations, orders, payments), only when
-explicitly asked: settle payment provider, COD, delivery model, pilot city and who may order first.
+Phases 1-8 and 9a (cart, quotes, orders, local delivery, cash only) are done (see README).
+Next: Phase 9b (Razorpay Route in test mode; the user puts the test keys in `.env` themselves,
+never in chat), then 9c (a logistics partner for long distance; check its test environment
+first), each only when explicitly asked. Orders are placed under `TenantScope.enterOrdering(buyer)`
+(role `marketplace_ordering`); lock batches in id order and never read seller tables outside it.
 Compliance rules live in `compliance.PilotRules`; changing one needs a new version string. AI label
 readings only flag; reviewers confirm. The AI assistant only proposes filters that the `search`
 module checks; never show model-written text. After changing the prompt or model, run

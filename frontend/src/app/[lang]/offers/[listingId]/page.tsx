@@ -27,6 +27,11 @@ import { ApiError, callPublic } from "@/lib/api/backend";
 import type { OfferDetails, OfferSummary } from "@/lib/api/types";
 import { formatGstRate, formatPaise } from "@/lib/money";
 import { requireUuids } from "@/lib/pages";
+import { OrderPanel } from "@/components/orders/order-panel";
+import { addToCart, requestQuote } from "@/lib/actions/orders";
+import { api, getSession } from "@/lib/auth/current-user";
+import type { Locale } from "@/i18n/config";
+import type { Me } from "@/lib/api/types";
 
 type Props = PageProps<"/[lang]/offers/[listingId]">;
 
@@ -275,20 +280,22 @@ async function OfferContent({ params }: { params: Props["params"] }) {
         <SimilarOffers listingId={offer.id} lang={lang} dict={dict} />
       </Suspense>
 
-      <div className="flex flex-col gap-2">
-        <Button
-          variant="accent"
-          size="lg"
-          disabled
-          aria-describedby="quote-note"
-          className="self-start"
-        >
-          {labels.requestQuote}
-        </Button>
-        <p id="quote-note" className="text-sm text-muted">
-          {labels.quoteComingSoon}
-        </p>
-      </div>
+      <section aria-labelledby="order-heading" className="flex flex-col gap-3">
+        <h2 id="order-heading" className="text-heading font-bold">
+          {dict.orders.checkoutHeading}
+        </h2>
+        <Card>
+          <Suspense fallback={<Skeleton className="h-48" />}>
+            <OfferOrdering
+              lang={lang}
+              listingId={offer.id}
+              moq={offer.moq}
+              unit={unit}
+              dict={dict}
+            />
+          </Suspense>
+        </Card>
+      </section>
     </>
   );
 }
@@ -341,5 +348,62 @@ async function SimilarOffers({
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Ordering needs a signed-in owner or manager of a business; the seller's own offers are refused by the API. */
+async function OfferOrdering({
+  lang,
+  listingId,
+  moq,
+  unit,
+  dict,
+}: {
+  lang: Locale;
+  listingId: string;
+  moq: number;
+  unit: string;
+  dict: Awaited<ReturnType<typeof getDictionary>>;
+}) {
+  const labels = dict.orders;
+  const returnTo = `/${lang}/offers/${listingId}`;
+  const session = await getSession();
+  if (!session)
+    return (
+      <div className="flex flex-col gap-3">
+        <p>{labels.signInToOrder}</p>
+        <Button asChild variant="accent" className="self-start">
+          <Link
+            href={`/${lang}/login?returnTo=${encodeURIComponent(returnTo)}`}
+          >
+            {dict.auth.signIn}
+          </Link>
+        </Button>
+      </div>
+    );
+  const me = await api<Me>(session, lang, returnTo, "/api/v1/me");
+  const buyers = me.businesses
+    .filter((b) => b.role === "OWNER" || b.role === "MANAGER")
+    .map((b) => ({ id: b.businessId, name: b.name }));
+  if (buyers.length === 0)
+    return (
+      <div className="flex flex-col gap-3">
+        <p>{labels.needBusiness}</p>
+        <Button asChild variant="accent" className="self-start">
+          <Link href={`/${lang}/onboarding`}>{dict.sell.createBusiness}</Link>
+        </Button>
+      </div>
+    );
+  return (
+    <OrderPanel
+      lang={lang}
+      businesses={buyers}
+      moq={moq}
+      unit={unit}
+      labels={labels}
+      errors={dict.business.errors}
+      addAction={addToCart.bind(null, lang, listingId)}
+      quoteAction={requestQuote.bind(null, lang, listingId)}
+    />
   );
 }

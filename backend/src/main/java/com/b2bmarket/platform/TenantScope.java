@@ -68,6 +68,29 @@ public class TenantScope {
     jdbc.execute("set local pg_trgm.word_similarity_threshold = " + PUBLIC_WORD_SIMILARITY);
   }
 
+  /** Places orders and quotes for this buyer business (see migration V11). */
+  static final String ORDERING_ROLE = "marketplace_ordering";
+
+  /**
+   * Switches to the ordering role for a buyer: reads only stock on sale, locks its batch, writes
+   * orders, reservations and quotes for this buyer. Callers check the buyer's membership first.
+   */
+  public void enterOrdering(UUID buyerBusinessId) {
+    if (buyerBusinessId == null) {
+      throw new IllegalArgumentException("buyerBusinessId is required");
+    }
+    requireTransaction();
+    jdbc.queryForObject(
+        "select set_config('app.business_id', ?, true)", String.class, buyerBusinessId.toString());
+    jdbc.execute("set local role " + ORDERING_ROLE);
+  }
+
+  /** The ordering role with no business: only for the order-expiry and clean-up jobs. */
+  public void enterOrderingSweep() {
+    requireTransaction();
+    jdbc.execute("set local role " + ORDERING_ROLE);
+  }
+
   private static void requireTransaction() {
     if (!TransactionSynchronizationManager.isActualTransactionActive()) {
       // Outside a transaction the settings would apply to one statement and be lost.

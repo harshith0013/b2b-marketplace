@@ -38,7 +38,7 @@ public class ComplianceService {
 
   @Transactional(propagation = Propagation.MANDATORY)
   public Evaluation check(Stage stage, UUID businessId, UUID batchId, UUID listingId, Facts facts) {
-    Evaluation evaluation = PilotRules.evaluate(facts);
+    Evaluation evaluation = PilotRules.evaluate(stage, facts);
     records.insert(
         new ComplianceRecords.Stored(
             businessId,

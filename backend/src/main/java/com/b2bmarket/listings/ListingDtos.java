@@ -68,7 +68,8 @@ public final class ListingDtos {
       Instant submittedAt,
       Instant reviewedAt,
       /** Why a reviewer sent it back; null unless the last review was a rejection. */
-      String rejectionReason) {
+      String rejectionReason,
+      DeliveryOptions delivery) {
 
     public Listing {
       priceTiers = List.copyOf(priceTiers);
@@ -98,4 +99,17 @@ public final class ListingDtos {
       flags = List.copyOf(flags);
     }
   }
+
+  /**
+   * How goods reach the buyer: pickup from the warehouse city and/or the seller's own delivery to
+   * the listed PIN codes, for a charge (paise). Cash on delivery when the seller accepts it.
+   */
+  public record DeliveryOptions(
+      @jakarta.validation.constraints.NotNull Boolean pickupAvailable,
+      @jakarta.validation.constraints.NotNull Boolean ownDelivery,
+      @Size(max = 50)
+          List<@jakarta.validation.constraints.Pattern(regexp = "^[1-9][0-9]{5}$") String>
+              deliveryPincodes,
+      @jakarta.validation.constraints.PositiveOrZero @Max(1_000_000_00L) Long deliveryChargePaise,
+      @jakarta.validation.constraints.NotNull Boolean codAccepted) {}
 }

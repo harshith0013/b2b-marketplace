@@ -28,6 +28,17 @@ public interface BatchRepository extends JpaRepository<BatchEntity, UUID> {
   boolean existsByBusinessIdAndVariantIdAndBatchNumberIgnoreCaseAndIdNot(
       UUID businessId, UUID variantId, String batchNumber, UUID id);
 
+  /** Takes delivered stock off the batch; 0 when there is not enough left. */
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(
+      "update BatchEntity b set b.quantity = b.quantity - :quantity, b.updatedAt = :now"
+          + " where b.id = :id and b.businessId = :businessId and b.quantity >= :quantity")
+  int deduct(
+      @Param("businessId") UUID businessId,
+      @Param("id") UUID id,
+      @Param("quantity") long quantity,
+      @Param("now") Instant now);
+
   /**
    * Moves a batch between review states, touching only status and updated_at (all the reviewer
    * database role may change). Returns 0 when the batch was not in one of the expected states.

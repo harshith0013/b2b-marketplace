@@ -161,7 +161,7 @@ class LabelReadingIT extends SellerFixtures {
             "select stage, rule_set_version, blocked, flagged from compliance_checks where listing_id = ?::uuid order by created_at",
             listingId);
     assertThat(checks).extracting(c -> c.get("stage")).containsExactly("SUBMIT", "APPROVE");
-    assertThat(checks).allMatch(c -> "pilot-2026-11".equals(c.get("rule_set_version")));
+    assertThat(checks).allMatch(c -> "pilot-2026-11.2".equals(c.get("rule_set_version")));
     assertThat(checks).allMatch(c -> Boolean.FALSE.equals(c.get("blocked")));
   }
 

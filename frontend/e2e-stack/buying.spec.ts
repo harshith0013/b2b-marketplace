@@ -54,9 +54,8 @@ test("an anonymous buyer finds a confidential offer with a misspelled search and
   await expect(buyer.getByText(en.offers.passport.notChanged)).toBeVisible();
   await expect(buyer.getByText(businessName)).toHaveCount(0);
   await expect(buyer.getByText("12-3 Main Road")).toHaveCount(0); // never the street address
-  await expect(
-    buyer.getByRole("button", { name: en.offers.requestQuote }),
-  ).toBeDisabled();
+  // Anonymous visitors are asked to sign in before ordering.
+  await expect(buyer.getByText(en.orders.signInToOrder)).toBeVisible();
   const photos = buyer
     .getByRole("region", { name: en.listings.photosHeading })
     .getByRole("img");
