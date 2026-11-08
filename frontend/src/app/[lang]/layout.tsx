@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Noto_Sans, Noto_Sans_Devanagari, Noto_Sans_Telugu } from "next/font/google";
+import {
+  Noto_Sans,
+  Noto_Sans_Devanagari,
+  Noto_Sans_Telugu,
+} from "next/font/google";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -9,7 +13,10 @@ import { getDictionary } from "@/i18n/dictionaries";
 import "../globals.css";
 
 // Downloaded at build time and served from this site: no requests to Google at runtime.
-const notoSans = Noto_Sans({ subsets: ["latin"], variable: "--font-noto-sans" });
+const notoSans = Noto_Sans({
+  subsets: ["latin"],
+  variable: "--font-noto-sans",
+});
 // Not preloaded: the browser fetches these only when a page contains Telugu or Devanagari text.
 const notoSansTelugu = Noto_Sans_Telugu({
   subsets: ["telugu"],
@@ -30,14 +37,19 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: LayoutProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
   if (!hasLocale(lang)) return {};
   const dict = await getDictionary(lang);
   return { title: dict.meta.title, description: dict.meta.description };
 }
 
-export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
+export default async function RootLayout({
+  children,
+  params,
+}: LayoutProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
@@ -53,7 +65,10 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
         </a>
         <ToastProvider dismissLabel={dict.common.dismiss}>
           <SiteHeader lang={lang} dict={dict} />
-          <main id="main-content" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8">
+          <main
+            id="main-content"
+            className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8"
+          >
             {children}
           </main>
           <SiteFooter lang={lang} labels={dict.footer} />

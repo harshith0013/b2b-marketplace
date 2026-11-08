@@ -10,7 +10,10 @@ import { safeReturnTo } from "@/lib/auth/return-to";
 
 type LoginErrors = Dictionary["auth"]["errors"];
 
-function isLoginError(value: unknown, errors: LoginErrors): value is keyof LoginErrors {
+function isLoginError(
+  value: unknown,
+  errors: LoginErrors,
+): value is keyof LoginErrors {
   return typeof value === "string" && Object.hasOwn(errors, value);
 }
 
@@ -25,11 +28,17 @@ async function LoginOptions({
   searchParams: PageProps<"/[lang]/login">["searchParams"];
 }) {
   const { error, returnTo } = await searchParams;
-  const target = safeReturnTo(typeof returnTo === "string" ? returnTo : null, lang);
+  const target = safeReturnTo(
+    typeof returnTo === "string" ? returnTo : null,
+    lang,
+  );
   return (
     <>
       {isLoginError(error, labels.errors) && (
-        <p role="alert" className="rounded-control bg-danger-soft px-4 py-3 font-semibold text-danger">
+        <p
+          role="alert"
+          className="rounded-control bg-danger-soft px-4 py-3 font-semibold text-danger"
+        >
           {labels.errors[error]}
         </p>
       )}
@@ -44,7 +53,10 @@ async function LoginOptions({
   );
 }
 
-export default async function LoginPage({ params, searchParams }: PageProps<"/[lang]/login">) {
+export default async function LoginPage({
+  params,
+  searchParams,
+}: PageProps<"/[lang]/login">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const { auth } = await getDictionary(lang);

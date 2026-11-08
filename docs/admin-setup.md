@@ -37,7 +37,9 @@ An API and screen for managing reviewers come with the admin tooling in Phase 11
 ## Local shortcut
 
 For trying the review queue on your own machine only, set `BOOTSTRAP_ADMIN_EMAIL` in `.env` to the
-email you sign in with and restart the stack. That email becomes an admin the next time it signs
+email you sign in with (several may be given, separated by commas) and restart the stack. Docker
+Compose always adds `e2e-reviewer@example.test`, the reviewer the full-stack tests sign in as; the
+reserved `.test` domain means it can never be a real Google account. That email becomes an admin the next time it signs
 in, and the grant is written to the audit log. **Never set this in a shared or deployed
 environment**; there, use the SQL above.
 

@@ -33,11 +33,15 @@ export function readAuthConfig(env: Env = process.env): AuthConfig {
   const issuer = new URL(required(env, "AUTH_ISSUER"));
   const allowHttpIssuer = env.AUTH_ALLOW_HTTP_ISSUER === "true";
   if (issuer.protocol !== "https:" && !allowHttpIssuer) {
-    throw new Error("AUTH_ISSUER must use https (set AUTH_ALLOW_HTTP_ISSUER=true only locally)");
+    throw new Error(
+      "AUTH_ISSUER must use https (set AUTH_ALLOW_HTTP_ISSUER=true only locally)",
+    );
   }
   const sessionSecret = required(env, "SESSION_SECRET");
   if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {
-    throw new Error(`SESSION_SECRET must be at least ${MIN_SESSION_SECRET_LENGTH} characters`);
+    throw new Error(
+      `SESSION_SECRET must be at least ${MIN_SESSION_SECRET_LENGTH} characters`,
+    );
   }
   const internal = env.AUTH_ISSUER_INTERNAL_URL?.trim();
   return {

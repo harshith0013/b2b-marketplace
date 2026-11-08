@@ -74,6 +74,6 @@ app:
     path-style: ${STORAGE_PATH_STYLE:false}
     create-bucket: ${STORAGE_CREATE_BUCKET:false}
   admin:
-    # Local development only: this email becomes a platform admin when it signs in. Never set it
-    # in a deployed environment; grant admins there as described in docs/admin-setup.md.
+    # Local development only: these emails (comma-separated) become platform admins on sign-in. Never set
+    # this in a deployed environment; grant admins there as described in docs/admin-setup.md.
     bootstrap-email: ${BOOTSTRAP_ADMIN_EMAIL:}

@@ -104,10 +104,11 @@
   "sell": {
     "title": "Sell your stock",
     "intro": "List surplus or clearance stock and reach verified buyers.",
-    "newListing": "List new stock",
-    "listingsHeading": "My listings",
-    "emptyTitle": "No listings yet",
-    "emptyDescription": "Stock you list will appear here.",
+    "businessesHeading": "Choose a business",
+    "manageListings": "Listings",
+    "noBusinessTitle": "Create your business first",
+    "noBusinessDescription": "Listings belong to a business. It takes about two minutes.",
+    "createBusiness": "Create business",
     "toolsHeading": "More for sellers",
     "tiles": {
       "orders": {
@@ -131,52 +132,65 @@
     "steps": {
       "product": "Product",
       "batch": "Batch and expiry",
-      "quantity": "Quantity and price",
-      "photos": "Photos",
-      "review": "Review"
+      "price": "Quantity and price",
+      "save": "Save"
     },
-    "fields": {
-      "productName": "Product name",
-      "productNameHint": "As printed on the pack",
-      "brand": "Brand",
+    "product": {
+      "existing": "A product from the catalogue",
+      "new": "A new product",
+      "modeLegend": "Which product is it?",
+      "choose": "Product and pack",
+      "choosePlaceholder": "Choose a product",
+      "noProducts": "You have no products yet. Add a new one.",
       "category": "Category",
       "categoryPlaceholder": "Choose a category",
+      "brand": "Brand",
+      "name": "Product name",
+      "nameHint": "As printed on the pack",
+      "packSize": "Pack size",
+      "packUnit": "Unit",
+      "gtin": "Barcode number (optional)",
+      "gtinHint": "The digits under the barcode, if there is one"
+    },
+    "batch": {
+      "warehouse": "Warehouse",
+      "warehousePlaceholder": "Choose a warehouse",
+      "noWarehouses": "Add a warehouse first: every batch is kept in one.",
+      "addWarehouse": "Add a warehouse",
       "batchNumber": "Batch number",
+      "batchNumberHint": "Copy it exactly from the pack",
       "dateType": "Date printed on the pack",
-      "dateTypePlaceholder": "Choose one",
-      "date": "Date",
-      "dateHint": "Copy it exactly from the label. It will be checked against your photos.",
+      "expiresOn": "Date",
+      "expiresOnHint": "Copy it exactly from the label. A reviewer checks it against your photo.",
+      "manufacturedOn": "Manufacturing date (optional)",
+      "mrp": "MRP of one pack (₹)",
+      "mrpHint": "As printed on the pack, including taxes",
       "quantity": "Quantity available",
-      "unit": "Unit",
-      "unitPlaceholder": "Choose a unit",
-      "pricePerUnit": "Price per unit (₹)",
-      "pricePerUnitHint": "Before GST",
-      "minimumOrder": "Minimum order quantity"
+      "quantityUnit": "Counted in",
+      "packsPerCase": "Packs in one case"
     },
-    "categories": {
-      "personalCare": "Personal care",
-      "homeCare": "Home care",
-      "packagedFood": "Packaged food",
-      "beverages": "Beverages",
-      "stationery": "Stationery"
+    "price": {
+      "moq": "Minimum order",
+      "moqHint": "The smallest quantity a buyer can order",
+      "tiersLegend": "Prices",
+      "tiersHint": "Price per unit before GST. Add lower prices for larger orders if you like.",
+      "tierQuantity": "From quantity",
+      "tierPrice": "Price per unit (₹)",
+      "addTier": "Add a price for a larger order",
+      "removeTier": "Remove this price",
+      "firstTierNote": "The first price starts at the minimum order.",
+      "gstRate": "GST rate",
+      "clearanceReason": "Why are you clearing this stock?",
+      "visibility": "Who sees your business name?",
+      "notes": "Notes for buyers (optional)"
     },
-    "dateTypes": {
-      "expiry": "Expiry date",
-      "useBy": "Use by",
-      "bestBefore": "Best before"
-    },
-    "units": {
-      "pieces": "Pieces",
-      "boxes": "Boxes",
-      "kg": "Kilograms",
-      "litres": "Litres"
-    },
-    "photosTitle": "Photo upload is coming soon",
-    "photosDescription": "You will add clear photos of the pack, the label and the expiry date.",
-    "reviewHint": "Check your answers before you submit.",
-    "notProvided": "Not filled in",
-    "submit": "Submit listing",
-    "submitNote": "Saving listings is not available yet. Nothing you enter here is stored."
+    "saveHeading": "Save as a draft",
+    "saveHint": "Next you will add photos and send the listing for review. Nothing is shown to buyers yet.",
+    "save": "Save draft and add photos",
+    "required": "Please fill this in.",
+    "invalidNumber": "Enter a whole number above zero.",
+    "invalidMoney": "Enter an amount in rupees, like 45 or 45.50.",
+    "notAllowed": "Only owners and managers can list stock."
   },
   "auth": {
     "signIn": "Sign in",
@@ -211,7 +225,8 @@
       "OWNER": "Owner",
       "MANAGER": "Manager",
       "STAFF": "Staff"
-    }
+    },
+    "reviewQueue": "Review queue"
   },
   "business": {
     "createTitle": "Create your business",
@@ -265,9 +280,17 @@
       "alreadyInvited": "This person already has an open invitation or is already a member.",
       "notAllowed": "Your role does not allow this.",
       "generic": "Something went wrong. Please try again.",
-      "warehouseNameTaken": "You already have a warehouse with this name."
+      "warehouseNameTaken": "You already have a warehouse with this name.",
+      "barcodeTaken": "A product with this barcode is already in the catalogue.",
+      "batchNumberTaken": "You already have this batch number for this product.",
+      "alreadyListed": "This batch already has a listing.",
+      "notReady": "Some checks do not pass yet. See the list above.",
+      "alreadyDecided": "This listing is no longer waiting for review.",
+      "photoProblem": "This photo could not be used. Upload a clear JPEG or PNG under 5 MB.",
+      "photoConflict": "This photo cannot be added: it is already there, the batch has 6 photos, or it is in review."
     },
-    "warehousesLink": "Warehouses"
+    "warehousesLink": "Warehouses",
+    "listingsLink": "Listings"
   },
   "warehouses": {
     "title": "Warehouses",
@@ -291,5 +314,136 @@
     "deactivate": "Stop using",
     "activate": "Use again",
     "readOnly": "Only owners and managers can add or change warehouses."
+  },
+  "labels": {
+    "packUnits": {
+      "G": "g",
+      "KG": "kg",
+      "ML": "ml",
+      "L": "litre",
+      "PIECE": "pieces"
+    },
+    "stockUnits": {
+      "PIECE": "Pieces (single packs)",
+      "CASE": "Cases"
+    },
+    "stockUnitsShort": {
+      "PIECE": "pcs",
+      "CASE": "cases"
+    },
+    "dateTypes": {
+      "EXPIRY": "Expiry date",
+      "USE_BY": "Use by",
+      "BEST_BEFORE": "Best before"
+    },
+    "clearanceReasons": {
+      "NEAR_EXPIRY": "Close to expiry",
+      "OVERSTOCK": "Too much stock",
+      "DISCONTINUED": "Product discontinued",
+      "PACKAGING_CHANGE": "Old packaging",
+      "SEASON_END": "End of season",
+      "OTHER": "Other reason"
+    },
+    "visibility": {
+      "PUBLIC": "Public: buyers see your business name",
+      "CONFIDENTIAL": "Confidential: your name is hidden until a deal"
+    },
+    "listingStatuses": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "In review",
+      "PUBLISHED": "Published",
+      "PAUSED": "Paused",
+      "CLOSED": "Closed"
+    },
+    "batchStatuses": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "In review",
+      "APPROVED": "Approved",
+      "REJECTED": "Not accepted"
+    },
+    "photoKinds": {
+      "PACK_FRONT": "Front of the pack",
+      "LABEL_DATE": "Label with the date",
+      "OTHER": "Other photo"
+    },
+    "problems": {
+      "SHELF_LIFE_TOO_SHORT": "Less than 30 days are left before the date on the pack.",
+      "PACK_PHOTO_MISSING": "Add a photo of the front of the pack.",
+      "LABEL_PHOTO_MISSING": "Add a photo of the label showing the date.",
+      "MRP_MISSING": "Enter the MRP printed on one pack.",
+      "PRICE_ABOVE_MRP": "With GST, one pack would cost more than its MRP. Lower the price.",
+      "REGULATED_CATEGORY": "This category cannot be sold yet.",
+      "NOT_ENOUGH_STOCK": "The minimum order is more than the stock in this batch."
+    }
+  },
+  "listings": {
+    "title": "Listings",
+    "newListing": "List new stock",
+    "back": "Back to listings",
+    "none": "No listings yet. Stock you list appears here.",
+    "readOnly": "Only owners and managers can create or change listings.",
+    "expires": "{type}: {date}",
+    "daysLeft": "{days} days left",
+    "moq": "Minimum order: {quantity} {unit}",
+    "priceFrom": "{price} per {unit}, before GST",
+    "pack": "{size} {unit}",
+    "view": "Open",
+    "batchHeading": "Stock",
+    "batchNumber": "Batch number",
+    "quantity": "Quantity",
+    "mrp": "MRP of one pack",
+    "notGiven": "Not given",
+    "pricesHeading": "Prices",
+    "tier": "{quantity} {unit} or more",
+    "gst": "GST",
+    "photosHeading": "Photos",
+    "noPhotos": "No photos yet.",
+    "photoAlt": "{kind}, uploaded photo",
+    "uploadHeading": "Add a photo",
+    "photoKind": "What does it show?",
+    "photoFile": "Photo",
+    "photoFileHint": "JPEG or PNG, up to 5 MB. On a phone you can take it now. Location data is removed.",
+    "upload": "Upload photo",
+    "uploaded": "Photo added",
+    "deletePhoto": "Delete",
+    "checksHeading": "Before review",
+    "ready": "All checks pass. You can send it for review.",
+    "submit": "Send for review",
+    "submitted": "Sent for review",
+    "inReviewNote": "A reviewer is checking this listing. Withdraw it if you need to change the stock or photos.",
+    "rejectedHeading": "Sent back by the reviewer",
+    "publishedNote": "Buyers can see this listing.",
+    "pausedNote": "Paused: buyers cannot see this listing until you resume it.",
+    "closedNote": "Closed. You can list this batch again as a new listing.",
+    "withdraw": "Withdraw from review",
+    "pause": "Pause",
+    "resume": "Resume",
+    "close": "Close listing",
+    "done": "Done"
+  },
+  "review": {
+    "title": "Review queue",
+    "intro": "Check each listing against its photos before buyers can see it. Oldest first.",
+    "notAllowed": "Only platform reviewers can open the review queue.",
+    "empty": "Nothing is waiting for review.",
+    "seller": "Seller",
+    "submitted": "Sent {date}",
+    "open": "Review",
+    "back": "Back to the queue",
+    "problemsHeading": "Automatic checks",
+    "noProblems": "All automatic checks pass. Still compare the photos with the details.",
+    "historyHeading": "Earlier decisions",
+    "decisions": {
+      "APPROVED": "Approved",
+      "REJECTED": "Sent back"
+    },
+    "approveHeading": "Decision",
+    "approve": "Approve and publish",
+    "approved": "Approved and published",
+    "reason": "Reason for sending it back",
+    "reasonHint": "The seller sees this. Say what to fix, for example: the expiry date in the photo is not readable.",
+    "reject": "Send back to the seller",
+    "rejected": "Sent back to the seller",
+    "verification": "Business verification"
   }
 }

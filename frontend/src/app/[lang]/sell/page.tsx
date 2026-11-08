@@ -1,17 +1,79 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardList, PackageOpen, Plus, ShieldCheck, Wallet } from "lucide-react";
+import {
+  Building2,
+  ChevronRight,
+  ClipboardList,
+  Plus,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import { HomeTile } from "@/components/home-tile";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { hasLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { Skeleton } from "@/components/ui/skeleton";
+import { hasLocale, type Locale } from "@/i18n/config";
+import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
+import type { Me } from "@/lib/api/types";
+import { api, requireSession } from "@/lib/auth/current-user";
 
-export default async function SellerHomePage({ params }: PageProps<"/[lang]/sell">) {
+/** Which business to sell for. Reads the session, so it renders inside <Suspense>. */
+async function Businesses({ lang, dict }: { lang: Locale; dict: Dictionary }) {
+  const session = await requireSession(lang, `/${lang}/sell`);
+  const me = await api<Me>(session, lang, `/${lang}/sell`, "/api/v1/me");
+  const { sell, account } = dict;
+
+  if (me.businesses.length === 0) {
+    return (
+      <EmptyState
+        icon={<Building2 />}
+        title={sell.noBusinessTitle}
+        description={sell.noBusinessDescription}
+        action={
+          <Button asChild variant="accent">
+            <Link href={`/${lang}/onboarding`}>
+              <Plus aria-hidden="true" className="size-5" />
+              {sell.createBusiness}
+            </Link>
+          </Button>
+        }
+      />
+    );
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {me.businesses.map((business) => (
+        <li key={business.businessId}>
+          <Link
+            href={`/${lang}/business/${business.businessId}/listings`}
+            className="flex min-h-14 items-center justify-between gap-3 rounded-card border-2 border-border p-4 hover:bg-surface"
+          >
+            <span className="flex flex-col gap-1">
+              <span className="font-semibold">{business.name}</span>
+              <Badge className="self-start">
+                {account.roles[business.role]}
+              </Badge>
+            </span>
+            <span className="inline-flex items-center gap-1 font-semibold">
+              {sell.manageListings}
+              <ChevronRight aria-hidden="true" className="size-5" />
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default async function SellerHomePage({
+  params,
+}: PageProps<"/[lang]/sell">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const { sell, common } = await getDictionary(lang);
-
+  const dict = await getDictionary(lang);
+  const { sell, common } = dict;
   const tiles = [
     { key: "orders", icon: <ClipboardList /> },
     { key: "payouts", icon: <Wallet /> },
@@ -23,23 +85,18 @@ export default async function SellerHomePage({ params }: PageProps<"/[lang]/sell
       <section className="flex flex-col gap-4">
         <h1 className="text-display font-bold">{sell.title}</h1>
         <p className="max-w-prose text-lg text-muted">{sell.intro}</p>
-        <Button asChild variant="accent" size="lg" className="self-start">
-          <Link href={`/${lang}/sell/new`}>
-            <Plus aria-hidden="true" className="size-5" />
-            {sell.newListing}
-          </Link>
-        </Button>
       </section>
 
-      <section aria-labelledby="listings-heading" className="flex flex-col gap-4">
-        <h2 id="listings-heading" className="text-heading font-bold">
-          {sell.listingsHeading}
+      <section
+        aria-labelledby="businesses-heading"
+        className="flex flex-col gap-4"
+      >
+        <h2 id="businesses-heading" className="text-heading font-bold">
+          {sell.businessesHeading}
         </h2>
-        <EmptyState
-          icon={<PackageOpen />}
-          title={sell.emptyTitle}
-          description={sell.emptyDescription}
-        />
+        <Suspense fallback={<Skeleton className="h-24" />}>
+          <Businesses lang={lang} dict={dict} />
+        </Suspense>
       </section>
 
       <section aria-labelledby="tools-heading" className="flex flex-col gap-4">

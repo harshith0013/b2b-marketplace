@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const session = await completeLogin(request.nextUrl, transaction);
-    const response = NextResponse.redirect(new URL(transaction.returnTo, config.appBaseUrl));
+    const response = NextResponse.redirect(
+      new URL(transaction.returnTo, config.appBaseUrl),
+    );
     response.cookies.delete(LOGIN_COOKIE);
     response.cookies.set(
       SESSION_COOKIE,

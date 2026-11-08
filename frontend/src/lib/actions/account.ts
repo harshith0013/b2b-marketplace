@@ -27,17 +27,28 @@ export async function updateProfile(
     return toFormState(error, "generic");
   }
   // Show the account page in the language the person just chose.
-  if (hasLocale(preferredLocale) && preferredLocale !== lang) redirect(`/${preferredLocale}/account`);
+  if (hasLocale(preferredLocale) && preferredLocale !== lang)
+    redirect(`/${preferredLocale}/account`);
   refresh();
   return { ok: true };
 }
 
-export async function acceptInvitation(lang: string, invitationId: string): Promise<void> {
-  if (!hasLocale(lang) || !UUID.test(invitationId)) throw new Error("Invalid request");
+export async function acceptInvitation(
+  lang: string,
+  invitationId: string,
+): Promise<void> {
+  if (!hasLocale(lang) || !UUID.test(invitationId))
+    throw new Error("Invalid request");
   const returnTo = `/${lang}/account`;
   const session = await requireSession(lang, returnTo);
-  await api(session, lang, returnTo, `/api/v1/me/invitations/${invitationId}/accept`, {
-    method: "POST",
-  });
+  await api(
+    session,
+    lang,
+    returnTo,
+    `/api/v1/me/invitations/${invitationId}/accept`,
+    {
+      method: "POST",
+    },
+  );
   refresh();
 }

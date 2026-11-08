@@ -11,8 +11,14 @@ export async function POST(request: NextRequest) {
   }
   const form = await request.formData().catch(() => null);
   const langValue = form?.get("lang");
-  const lang = typeof langValue === "string" && hasLocale(langValue) ? langValue : defaultLocale;
-  const response = NextResponse.redirect(new URL(`/${lang}`, authConfig().appBaseUrl), 303);
+  const lang =
+    typeof langValue === "string" && hasLocale(langValue)
+      ? langValue
+      : defaultLocale;
+  const response = NextResponse.redirect(
+    new URL(`/${lang}`, authConfig().appBaseUrl),
+    303,
+  );
   response.cookies.delete(SESSION_COOKIE);
   return response;
 }

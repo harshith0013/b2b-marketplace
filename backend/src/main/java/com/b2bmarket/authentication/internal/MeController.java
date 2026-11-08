@@ -5,12 +5,15 @@ import com.b2bmarket.businesses.BusinessService;
 import com.b2bmarket.businesses.InvitationDtos.ReceivedInvitation;
 import com.b2bmarket.businesses.InvitationService;
 import com.b2bmarket.users.CurrentUser;
+import com.b2bmarket.users.PlatformRole;
+import com.b2bmarket.users.PlatformRoles;
 import com.b2bmarket.users.UserProfile;
 import com.b2bmarket.users.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/me")
 class MeController {
 
-  record MeResponse(UserProfile profile, List<Membership> businesses) {}
+  /** platformRoles: empty for almost everyone; ADMIN or REVIEWER for the review team. */
+  record MeResponse(
+      UserProfile profile, List<Membership> businesses, Set<PlatformRole> platformRoles) {}
 
   /** Both fields optional; only the fields present are changed. A blank name clears it. */
   record UpdateProfileRequest(
@@ -37,17 +42,25 @@ class MeController {
   private final UserService users;
   private final BusinessService businesses;
   private final InvitationService invitations;
+  private final PlatformRoles platformRoles;
 
-  MeController(UserService users, BusinessService businesses, InvitationService invitations) {
+  MeController(
+      UserService users,
+      BusinessService businesses,
+      InvitationService invitations,
+      PlatformRoles platformRoles) {
     this.users = users;
     this.businesses = businesses;
     this.invitations = invitations;
+    this.platformRoles = platformRoles;
   }
 
   @GetMapping
   MeResponse me(CurrentUser caller) {
     return new MeResponse(
-        users.profile(caller.userId()), businesses.membershipsOf(caller.userId()));
+        users.profile(caller.userId()),
+        businesses.membershipsOf(caller.userId()),
+        platformRoles.of(caller.userId()));
   }
 
   @PatchMapping

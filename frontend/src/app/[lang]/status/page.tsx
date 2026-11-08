@@ -3,7 +3,9 @@ import { BackendStatus } from "@/components/backend-status";
 import { hasLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 
-export default async function StatusPage({ params }: PageProps<"/[lang]/status">) {
+export default async function StatusPage({
+  params,
+}: PageProps<"/[lang]/status">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const { status } = await getDictionary(lang);

@@ -33,14 +33,20 @@ async function WarehousesContent({ params }: { params: Params }) {
   try {
     [business, warehouses] = await Promise.all([
       api<BusinessDetails>(session, lang, returnTo, `/api/v1/businesses/${id}`),
-      api<Warehouse[]>(session, lang, returnTo, `/api/v1/businesses/${id}/warehouses`),
+      api<Warehouse[]>(
+        session,
+        lang,
+        returnTo,
+        `/api/v1/businesses/${id}/warehouses`,
+      ),
     ]);
   } catch (error) {
     // Not a member: the API says 404, and so do we.
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
-  const canEdit = business.yourRole === "OWNER" || business.yourRole === "MANAGER";
+  const canEdit =
+    business.yourRole === "OWNER" || business.yourRole === "MANAGER";
 
   return (
     <>
@@ -58,7 +64,10 @@ async function WarehousesContent({ params }: { params: Params }) {
         </p>
       </div>
 
-      <section aria-labelledby="warehouses-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="warehouses-heading"
+        className="flex flex-col gap-3"
+      >
         <h2 id="warehouses-heading" className="text-heading font-bold">
           {labels.listHeading}
         </h2>
@@ -74,7 +83,8 @@ async function WarehousesContent({ params }: { params: Params }) {
                 <span className="flex flex-col gap-1">
                   <span className="font-semibold">{warehouse.name}</span>
                   <span className="text-sm text-muted">
-                    {warehouse.addressLine}, {warehouse.city}, {warehouse.state} {warehouse.pincode}
+                    {warehouse.addressLine}, {warehouse.city}, {warehouse.state}{" "}
+                    {warehouse.pincode}
                   </span>
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
@@ -83,7 +93,13 @@ async function WarehousesContent({ params }: { params: Params }) {
                   </Badge>
                   {canEdit && (
                     <form
-                      action={setWarehouseActive.bind(null, lang, id, warehouse.id, !warehouse.active)}
+                      action={setWarehouseActive.bind(
+                        null,
+                        lang,
+                        id,
+                        warehouse.id,
+                        !warehouse.active,
+                      )}
                     >
                       <Button type="submit" variant="outline">
                         {warehouse.active ? labels.deactivate : labels.activate}
@@ -99,7 +115,10 @@ async function WarehousesContent({ params }: { params: Params }) {
       </section>
 
       {canEdit ? (
-        <section aria-labelledby="add-warehouse-heading" className="flex flex-col gap-3">
+        <section
+          aria-labelledby="add-warehouse-heading"
+          className="flex flex-col gap-3"
+        >
           <h2 id="add-warehouse-heading" className="text-heading font-bold">
             {labels.addHeading}
           </h2>
@@ -118,7 +137,9 @@ async function WarehousesContent({ params }: { params: Params }) {
   );
 }
 
-export default function WarehousesPage({ params }: PageProps<"/[lang]/business/[id]/warehouses">) {
+export default function WarehousesPage({
+  params,
+}: PageProps<"/[lang]/business/[id]/warehouses">) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
       <Suspense fallback={<Skeleton className="h-96" />}>

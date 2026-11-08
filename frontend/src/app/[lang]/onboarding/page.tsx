@@ -6,7 +6,9 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { createBusiness } from "@/lib/actions/business";
 
 /** Create a business. Sign-in is enforced by the proxy and again by the Server Action. */
-export default async function OnboardingPage({ params }: PageProps<"/[lang]/onboarding">) {
+export default async function OnboardingPage({
+  params,
+}: PageProps<"/[lang]/onboarding">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const { business } = await getDictionary(lang);

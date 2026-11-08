@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Building2, LogOut, Plus } from "lucide-react";
+import { Building2, LogOut, Plus, ShieldCheck } from "lucide-react";
 import { ProfileForm } from "@/components/account/profile-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,33 @@ import { acceptInvitation, updateProfile } from "@/lib/actions/account";
 import type { Me, ReceivedInvitation } from "@/lib/api/types";
 import { api, requireSession } from "@/lib/auth/current-user";
 
-async function AccountDetails({ lang, dict }: { lang: Locale; dict: Dictionary }) {
+async function AccountDetails({
+  lang,
+  dict,
+}: {
+  lang: Locale;
+  dict: Dictionary;
+}) {
   const returnTo = `/${lang}/account`;
   const session = await requireSession(lang, returnTo);
   const [me, invitations] = await Promise.all([
     api<Me>(session, lang, returnTo, "/api/v1/me"),
-    api<ReceivedInvitation[]>(session, lang, returnTo, "/api/v1/me/invitations"),
+    api<ReceivedInvitation[]>(
+      session,
+      lang,
+      returnTo,
+      "/api/v1/me/invitations",
+    ),
   ]);
   const { account } = dict;
 
   return (
     <>
       {invitations.length > 0 && (
-        <section aria-labelledby="invitations-heading" className="flex flex-col gap-3">
+        <section
+          aria-labelledby="invitations-heading"
+          className="flex flex-col gap-3"
+        >
           <h2 id="invitations-heading" className="text-heading font-bold">
             {account.invitationsHeading}
           </h2>
@@ -41,7 +55,9 @@ async function AccountDetails({ lang, dict }: { lang: Locale; dict: Dictionary }
                       role: account.roles[invitation.role],
                     })}
                   </p>
-                  <form action={acceptInvitation.bind(null, lang, invitation.id)}>
+                  <form
+                    action={acceptInvitation.bind(null, lang, invitation.id)}
+                  >
                     <Button type="submit" variant="accent">
                       {account.accept}
                     </Button>
@@ -53,7 +69,19 @@ async function AccountDetails({ lang, dict }: { lang: Locale; dict: Dictionary }
         </section>
       )}
 
-      <section aria-labelledby="businesses-heading" className="flex flex-col gap-3">
+      {me.platformRoles.length > 0 && (
+        <Button asChild variant="outline" className="self-start">
+          <Link href={`/${lang}/admin/reviews`}>
+            <ShieldCheck aria-hidden="true" className="size-5" />
+            {account.reviewQueue}
+          </Link>
+        </Button>
+      )}
+
+      <section
+        aria-labelledby="businesses-heading"
+        className="flex flex-col gap-3"
+      >
         <h2 id="businesses-heading" className="text-heading font-bold">
           {account.businessesHeading}
         </h2>
@@ -87,7 +115,10 @@ async function AccountDetails({ lang, dict }: { lang: Locale; dict: Dictionary }
         )}
       </section>
 
-      <section aria-labelledby="profile-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="profile-heading"
+        className="flex flex-col gap-3"
+      >
         <h2 id="profile-heading" className="text-heading font-bold">
           {account.profileHeading}
         </h2>
@@ -104,7 +135,9 @@ async function AccountDetails({ lang, dict }: { lang: Locale; dict: Dictionary }
   );
 }
 
-export default async function AccountPage({ params }: PageProps<"/[lang]/account">) {
+export default async function AccountPage({
+  params,
+}: PageProps<"/[lang]/account">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);

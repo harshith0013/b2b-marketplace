@@ -7,11 +7,16 @@ import type { FormErrorKey, FormState } from "./form-state";
  * own English explanations are not shown to users. Anything that is not an API error is rethrown,
  * which also lets Next.js redirects pass through.
  */
-export function toFormState(error: unknown, conflict: FormErrorKey): FormState {
+export function toFormState(
+  error: unknown,
+  conflict: FormErrorKey,
+  invalid: FormErrorKey = "invalid",
+): FormState {
   if (!(error instanceof ApiError)) throw error;
-  if (error.status === 400) return { error: "invalid" };
+  if (error.status === 400) return { error: invalid };
   if (error.status === 403) return { error: "notAllowed" };
   if (error.status === 409) return { error: conflict };
+  if (error.status === 422) return { error: "notReady" };
   console.error("API call failed", error.status, error.message);
   return { error: "generic" };
 }

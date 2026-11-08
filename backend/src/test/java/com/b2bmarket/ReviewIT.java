@@ -204,6 +204,13 @@ class ReviewIT extends SellerFixtures {
   }
 
   @Test
+  void meListsPlatformRoles() {
+    assertThat(texts(json(call("GET", "/api/v1/me", admin, null)).get("platformRoles")))
+        .containsExactly("ADMIN");
+    assertThat(json(call("GET", "/api/v1/me", seller, null)).get("platformRoles").size()).isZero();
+  }
+
+  @Test
   void theBootstrapEmailIsNotConfiguredInTests() {
     // Nobody becomes an admin by signing in unless the local-only setting names them.
     assertThat(

@@ -241,6 +241,7 @@ public class BatchService {
     return new BatchSummary(
         batch.id(),
         variant,
+        f.batchNumber(),
         f.expiresOn(),
         f.dateType(),
         f.quantity(),

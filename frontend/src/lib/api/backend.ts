@@ -5,6 +5,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Check codes from a 422 response (why a listing is not ready). */
+    readonly problems: string[] = [],
   ) {
     super(message);
   }
@@ -36,11 +38,58 @@ export async function callBackend<T>(
     },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
   });
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: unknown } | null;
-    const detail = typeof problem?.detail === "string" ? problem.detail : response.statusText;
-    throw new ApiError(response.status, detail);
-  }
+  if (!response.ok) throw await failure(response);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+async function failure(response: Response): Promise<ApiError> {
+  const problem = (await response.json().catch(() => null)) as {
+    detail?: unknown;
+    problems?: unknown;
+  } | null;
+  const detail =
+    typeof problem?.detail === "string" ? problem.detail : response.statusText;
+  const problems = Array.isArray(problem?.problems)
+    ? problem.problems.filter((p): p is string => typeof p === "string")
+    : [];
+  return new ApiError(response.status, detail, problems);
+}
+
+/** Photo uploads take longer than JSON calls. */
+const UPLOAD_TIMEOUT_MS = 30_000;
+
+/** Sends multipart form data (a photo upload) as the signed-in person. */
+export async function callBackendMultipart<T>(
+  token: string,
+  path: string,
+  body: FormData,
+): Promise<T> {
+  const response = await fetch(`${backendUrl()}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    body,
+  });
+  if (!response.ok) throw await failure(response);
+  return (await response.json()) as T;
+}
+
+/** Fetches a binary response (a photo) as the signed-in person. */
+export async function fetchBackendBinary(
+  token: string,
+  path: string,
+): Promise<{ bytes: ArrayBuffer; contentType: string }> {
+  const response = await fetch(`${backendUrl()}${path}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw await failure(response);
+  return {
+    bytes: await response.arrayBuffer(),
+    contentType:
+      response.headers.get("Content-Type") ?? "application/octet-stream",
+  };
 }

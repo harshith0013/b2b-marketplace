@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const css = readFileSync(fileURLToPath(new URL("./globals.css", import.meta.url)), "utf8");
+const css = readFileSync(
+  fileURLToPath(new URL("./globals.css", import.meta.url)),
+  "utf8",
+);
 
 const AA_TEXT = 4.5;
 const AA_NON_TEXT = 3;
@@ -13,7 +16,9 @@ function tokensAfter(marker: string): Record<string, string> {
   const start = css.indexOf(marker);
   const block = css.slice(start, css.indexOf("}", start));
   return Object.fromEntries(
-    [...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6});/gi)].map(([, name, hex]) => [name, hex]),
+    [...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6});/gi)].map(
+      ([, name, hex]) => [name, hex],
+    ),
   );
 }
 
@@ -60,6 +65,8 @@ describe.each([
   });
 
   it.each(nonTextPairs)("%s on %s meets AA for UI components", (fg, bg) => {
-    expect(contrast(tokens[fg], tokens[bg])).toBeGreaterThanOrEqual(AA_NON_TEXT);
+    expect(contrast(tokens[fg], tokens[bg])).toBeGreaterThanOrEqual(
+      AA_NON_TEXT,
+    );
   });
 });

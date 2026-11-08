@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   cacheComponents: true,
+  experimental: {
+    // Photo uploads go through a Server Action: 5 MB per photo plus form overhead.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

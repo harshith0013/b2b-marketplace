@@ -59,7 +59,9 @@ export async function beginLogin(
     scope: SCOPES,
     state: transaction.state,
     nonce: transaction.nonce,
-    code_challenge: await client.calculatePKCECodeChallenge(transaction.codeVerifier),
+    code_challenge: await client.calculatePKCECodeChallenge(
+      transaction.codeVerifier,
+    ),
     code_challenge_method: "S256",
   });
   return { url, transaction };
@@ -77,18 +79,27 @@ export async function completeLogin(
 ): Promise<Session> {
   const configuration = await oidc();
   // The provider redirected to the public address; check against that, not the internal one.
-  const currentUrl = new URL(callbackUrl.pathname + callbackUrl.search, authConfig().appBaseUrl);
-  const tokens = await client.authorizationCodeGrant(configuration, currentUrl, {
-    pkceCodeVerifier: transaction.codeVerifier,
-    expectedState: transaction.state,
-    expectedNonce: transaction.nonce,
-    idTokenExpected: true,
-  });
+  const currentUrl = new URL(
+    callbackUrl.pathname + callbackUrl.search,
+    authConfig().appBaseUrl,
+  );
+  const tokens = await client.authorizationCodeGrant(
+    configuration,
+    currentUrl,
+    {
+      pkceCodeVerifier: transaction.codeVerifier,
+      expectedState: transaction.state,
+      expectedNonce: transaction.nonce,
+      idTokenExpected: true,
+    },
+  );
   const claims = tokens.claims();
   if (!tokens.id_token || !claims) throw new LoginError("No ID token returned");
   const email = typeof claims.email === "string" ? claims.email : undefined;
   if (!email || !isTrue(claims.email_verified)) {
-    throw new LoginError("The sign-in provider did not confirm a verified email");
+    throw new LoginError(
+      "The sign-in provider did not confirm a verified email",
+    );
   }
   return { idToken: tokens.id_token, email, expiresAt: claims.exp };
 }

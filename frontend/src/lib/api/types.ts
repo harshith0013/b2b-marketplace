@@ -28,6 +28,7 @@ export interface Membership {
 export interface Me {
   profile: UserProfile;
   businesses: Membership[];
+  platformRoles: ("ADMIN" | "REVIEWER")[];
 }
 
 export interface BusinessDetails {
@@ -75,3 +76,160 @@ export interface Warehouse {
   pincode: string;
   active: boolean;
 }
+
+export type PlatformRole = "ADMIN" | "REVIEWER";
+
+export interface PageResult<T> {
+  items: T[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface Category {
+  id: string;
+  parentId: string | null;
+  slug: string;
+  name: { en: string; te: string; hi: string };
+  regulated: boolean;
+  leaf: boolean;
+}
+
+export const PACK_UNITS = ["G", "KG", "ML", "L", "PIECE"] as const;
+export type PackUnit = (typeof PACK_UNITS)[number];
+
+export interface Variant {
+  id: string;
+  packSize: number;
+  packUnit: PackUnit;
+  gtin: string | null;
+}
+
+export interface Product {
+  id: string;
+  categoryId: string;
+  brand: string;
+  name: string;
+  description: string | null;
+  reviewStatus: "UNREVIEWED" | "APPROVED" | "REJECTED";
+  variants: Variant[];
+}
+
+export interface VariantSummary {
+  variantId: string;
+  productId: string;
+  categoryId: string;
+  brand: string;
+  productName: string;
+  packSize: number;
+  packUnit: PackUnit;
+}
+
+export const STOCK_UNITS = ["PIECE", "CASE"] as const;
+export type StockUnit = (typeof STOCK_UNITS)[number];
+
+export const DATE_TYPES = ["EXPIRY", "USE_BY", "BEST_BEFORE"] as const;
+export type DateType = (typeof DATE_TYPES)[number];
+
+export type BatchStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+
+export interface BatchSummary {
+  id: string;
+  variant: VariantSummary;
+  batchNumber: string;
+  expiresOn: string;
+  dateType: DateType;
+  quantity: number;
+  quantityUnit: StockUnit;
+  packsPerCase: number | null;
+  mrpPaise: number | null;
+  status: BatchStatus;
+}
+
+export const CLEARANCE_REASONS = [
+  "NEAR_EXPIRY",
+  "OVERSTOCK",
+  "DISCONTINUED",
+  "PACKAGING_CHANGE",
+  "SEASON_END",
+  "OTHER",
+] as const;
+export type ClearanceReason = (typeof CLEARANCE_REASONS)[number];
+
+export type Visibility = "PUBLIC" | "CONFIDENTIAL";
+export type ListingStatus =
+  "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "PAUSED" | "CLOSED";
+
+export interface PriceTier {
+  minQuantity: number;
+  unitPricePaise: number;
+}
+
+export interface Listing {
+  id: string;
+  status: ListingStatus;
+  clearanceReason: ClearanceReason;
+  visibility: Visibility;
+  moq: number;
+  quantityUnit: StockUnit;
+  gstRateBp: number;
+  notes: string | null;
+  priceTiers: PriceTier[];
+  batch: BatchSummary;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+export const PHOTO_KINDS = ["PACK_FRONT", "LABEL_DATE", "OTHER"] as const;
+export type PhotoKind = (typeof PHOTO_KINDS)[number];
+
+export interface Photo {
+  id: string;
+  kind: PhotoKind;
+  contentType: string;
+  width: number;
+  height: number;
+  sizeBytes: number;
+  uploadedAt: string;
+}
+
+export const ELIGIBILITY_PROBLEMS = [
+  "SHELF_LIFE_TOO_SHORT",
+  "PACK_PHOTO_MISSING",
+  "LABEL_PHOTO_MISSING",
+  "MRP_MISSING",
+  "PRICE_ABOVE_MRP",
+  "REGULATED_CATEGORY",
+  "NOT_ENOUGH_STOCK",
+] as const;
+export type EligibilityProblem = (typeof ELIGIBILITY_PROBLEMS)[number];
+
+export interface BusinessSummary {
+  id: string;
+  name: string;
+  verificationStatus: string;
+}
+
+export interface ReviewItem {
+  listing: Listing;
+  seller: BusinessSummary;
+  problems: EligibilityProblem[];
+}
+
+export interface Decision {
+  decision: "APPROVED" | "REJECTED";
+  reason: string | null;
+  decidedAt: string;
+}
+
+export interface ReviewDetails {
+  listing: Listing;
+  seller: BusinessSummary;
+  photos: Photo[];
+  problems: EligibilityProblem[];
+  history: Decision[];
+}
+
+/** GST slabs that apply to goods since September 2025, in basis points (1800 = 18%). */
+export const GST_RATES_BP = [0, 500, 1800, 4000] as const;

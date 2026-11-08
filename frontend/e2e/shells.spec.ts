@@ -62,7 +62,7 @@ test("buyer home: every sample offer is labelled as sample data", async ({ page 
   }
 });
 
-for (const path of ["/sell", "/sell/new", "/account", "/onboarding"]) {
+for (const path of ["/sell", "/account", "/onboarding", "/admin/reviews"]) {
   test(`${path} sends signed-out visitors to sign in and remembers where they were going`, async ({
     page,
   }) => {

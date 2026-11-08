@@ -108,5 +108,21 @@ Done on 2026-11-05: **backend for stock photos, eligibility checks and the revie
   the queue.
 - MinIO no longer publishes Docker images, so SeaweedFS (S3-compatible) is the local store.
 
+## Phase 5b status
+Done on 2026-11-07: **website screens for selling and review.** Phase 5 is complete.
+- `/sell` picks the business; `/business/{id}/listings` is the seller dashboard; the listing wizard
+  (`…/listings/new`) creates the product, batch and draft listing in four steps (prices typed in
+  rupees, stored as paise); each listing page takes photos (phones open the camera), lists the
+  open checks in plain words, and offers submit, withdraw, pause, resume and close.
+- `/admin/reviews` is the review queue for platform reviewers (linked from their account page):
+  photos at full size, the automatic checks, past decisions, approve, or send back with a reason
+  the seller then sees.
+- Photos reach the browser only through this site's own routes; the token never leaves the server.
+- Tests: backend 85 unit and 64 integration; website 142 unit, 44 Playwright, and 16 full-stack
+  Playwright tests including the whole seller → reviewer → seller journey.
+- **Try it:** `docker compose up --build`, sign in as any email to sell; sign in as
+  `e2e-reviewer@example.test` (a local-only test reviewer) to review, or add your own email to
+  `BOOTSTRAP_ADMIN_EMAIL` in `.env`.
+
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

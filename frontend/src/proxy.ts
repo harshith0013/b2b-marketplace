@@ -5,7 +5,7 @@ import { SESSION_COOKIE, isExpired, unsealSession } from "@/lib/auth/session";
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 /** Pages that need a signed-in person. The buyer home and other public pages are not listed. */
-const PROTECTED = /^\/(?:en|te|hi)\/(?:sell|account|onboarding|business)(?:\/|$)/;
+const PROTECTED = /^\/(?:en|te|hi)\/(?:sell|account|onboarding|business|admin)(?:\/|$)/;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED.test(pathname);

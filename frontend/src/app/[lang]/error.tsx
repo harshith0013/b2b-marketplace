@@ -13,7 +13,8 @@ const errorLabels = { en: en.errors, te: te.errors, hi: hi.errors };
 
 export default function LocaleError({ retry }: { retry: () => void }) {
   const params = useParams<{ lang: string }>();
-  const labels = errorLabels[hasLocale(params.lang) ? params.lang : defaultLocale];
+  const labels =
+    errorLabels[hasLocale(params.lang) ? params.lang : defaultLocale];
 
   return (
     <ErrorState

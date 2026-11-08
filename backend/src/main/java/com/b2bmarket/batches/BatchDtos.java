@@ -65,6 +65,7 @@ public final class BatchDtos {
   public record BatchSummary(
       UUID id,
       VariantSummary variant,
+      String batchNumber,
       LocalDate expiresOn,
       DateType dateType,
       long quantity,

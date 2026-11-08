@@ -110,7 +110,7 @@ login for the application is planned for Phase 12.
 | 2 | Design system and simple responsive UI shells | **Done**: tokens, core components, buyer home, seller home, listing wizard shell (see README) |
 | 3 | Authentication, business accounts, access control | **Done.** Sign in with Google (OIDC, server-side session in an encrypted cookie), users, businesses, OWNER/MANAGER/STAFF roles, invitations by email, tenant isolation tests, append-only audit log, Spring Modulith boundary test. Email or phone OTP can be added later |
 | 4 | Database, catalogue, inventory | **Done.** Non-food FMCG categories, products and variants, warehouses, batches, draft listings, price tiers; Row-Level Security on seller tables; warehouses page |
-| 5 | Seller dashboard and stock uploads | **5a done** (backend): private photos with metadata removed, eligibility checks, submit/withdraw/pause/resume/close, admin review queue with platform roles. **5b next**: seller dashboard, listing wizard, review screens |
+| 5 | Seller dashboard and stock uploads | **Done.** 5a backend: private photos with metadata removed, eligibility checks, listing life cycle, review queue with platform roles. 5b website: seller dashboard, four-step listing wizard, photo upload, review screens |
 | 6 | Buyer portal, discovery, filtering | Full-text + trigram search, filters (location, price, brand, MOQ, shelf life) |
 | 7 | AI search and recommendations | Spring AI added here; strict tool calling; evaluation set of real queries in en/te/hi and mixed language |
 | 8 | Expiry detection, Batch Passport, compliance engine | OCR comparison, versioned rules, checks at listing/publish/checkout/dispatch |

@@ -3,7 +3,12 @@ import { hasLocale, defaultLocale } from "@/i18n/config";
 import { authConfig } from "@/lib/auth/config";
 import { beginLogin } from "@/lib/auth/oidc";
 import { safeReturnTo } from "@/lib/auth/return-to";
-import { LOGIN_COOKIE, LOGIN_TTL_SECONDS, cookieOptions, sealLogin } from "@/lib/auth/session";
+import {
+  LOGIN_COOKIE,
+  LOGIN_TTL_SECONDS,
+  cookieOptions,
+  sealLogin,
+} from "@/lib/auth/session";
 
 /** Starts sign-in: remembers where to come back to, then sends the browser to the provider. */
 export async function GET(request: NextRequest) {
@@ -25,6 +30,8 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Could not start sign-in", error);
-    return NextResponse.redirect(new URL(`/${lang}/login?error=unavailable`, config.appBaseUrl));
+    return NextResponse.redirect(
+      new URL(`/${lang}/login?error=unavailable`, config.appBaseUrl),
+    );
   }
 }

@@ -40,7 +40,10 @@ export function sealSession(session: Session, secret: string): Promise<string> {
   return sealData(session, { password: secret, ttl: 0 });
 }
 
-export function sealLogin(transaction: LoginTransaction, secret: string): Promise<string> {
+export function sealLogin(
+  transaction: LoginTransaction,
+  secret: string,
+): Promise<string> {
   return sealData(transaction, { password: secret, ttl: LOGIN_TTL_SECONDS });
 }
 
@@ -51,9 +54,17 @@ export async function unsealSession(
 ): Promise<Session | null> {
   if (!sealed) return null;
   try {
-    const data = await unsealData<Partial<Session>>(sealed, { password: secret, ttl: 0 });
-    if (!data.idToken || !data.email || typeof data.expiresAt !== "number") return null;
-    return { idToken: data.idToken, email: data.email, expiresAt: data.expiresAt };
+    const data = await unsealData<Partial<Session>>(sealed, {
+      password: secret,
+      ttl: 0,
+    });
+    if (!data.idToken || !data.email || typeof data.expiresAt !== "number")
+      return null;
+    return {
+      idToken: data.idToken,
+      email: data.email,
+      expiresAt: data.expiresAt,
+    };
   } catch {
     return null;
   }
@@ -69,7 +80,8 @@ export async function unsealLogin(
       password: secret,
       ttl: LOGIN_TTL_SECONDS,
     });
-    if (!data.state || !data.nonce || !data.codeVerifier || !data.returnTo) return null;
+    if (!data.state || !data.nonce || !data.codeVerifier || !data.returnTo)
+      return null;
     return {
       state: data.state,
       nonce: data.nonce,

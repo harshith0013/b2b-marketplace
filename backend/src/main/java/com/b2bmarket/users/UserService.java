@@ -9,6 +9,7 @@ import com.b2bmarket.users.internal.UserEntity;
 import com.b2bmarket.users.internal.UserRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
@@ -39,8 +40,8 @@ public class UserService {
   private final Clock clock;
   private final TransactionTemplate transaction;
 
-  /** Local development only; blank everywhere else. */
-  private final String bootstrapAdminEmail;
+  /** Local development only; empty everywhere else. */
+  private final Set<String> bootstrapAdminEmails;
 
   UserService(
       UserRepository users,
@@ -48,13 +49,13 @@ public class UserService {
       AuditService audit,
       Clock clock,
       PlatformTransactionManager transactionManager,
-      @Value("${app.admin.bootstrap-email:}") String bootstrapAdminEmail) {
+      @Value("${app.admin.bootstrap-email:}") String bootstrapAdminEmails) {
     this.users = users;
     this.platformRoles = platformRoles;
     this.audit = audit;
     this.clock = clock;
     this.transaction = new TransactionTemplate(transactionManager);
-    this.bootstrapAdminEmail = bootstrapAdminEmail.trim().toLowerCase(Locale.ROOT);
+    this.bootstrapAdminEmails = parseEmails(bootstrapAdminEmails);
   }
 
   /**
@@ -93,7 +94,7 @@ public class UserService {
 
   /** Local development convenience: makes the configured email an admin on sign-in. */
   private void grantBootstrapAdminIfConfigured(UserEntity user, Instant now) {
-    if (bootstrapAdminEmail.isEmpty() || !bootstrapAdminEmail.equals(user.email())) {
+    if (!bootstrapAdminEmails.contains(user.email())) {
       return;
     }
     PlatformRoleEntity.Key key = new PlatformRoleEntity.Key(user.id(), PlatformRole.ADMIN);
@@ -151,6 +152,14 @@ public class UserService {
 
   private UserEntity find(UUID userId) {
     return users.findById(userId).orElseThrow(() -> ApiException.notFound("User not found."));
+  }
+
+  /** "a@x.com, B@y.com" → {a@x.com, b@y.com}; blank → empty. */
+  static Set<String> parseEmails(String list) {
+    return Arrays.stream(list.split(","))
+        .map(e -> e.trim().toLowerCase(Locale.ROOT))
+        .filter(e -> !e.isEmpty())
+        .collect(Collectors.toUnmodifiableSet());
   }
 
   private static String blankToNull(String value) {

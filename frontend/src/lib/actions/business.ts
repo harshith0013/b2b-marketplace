@@ -12,7 +12,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function checkIds(lang: string, ...ids: string[]): asserts lang is Locale {
   // Server Actions are public endpoints: never trust their arguments.
-  if (!hasLocale(lang) || ids.some((id) => !UUID.test(id))) throw new Error("Invalid request");
+  if (!hasLocale(lang) || ids.some((id) => !UUID.test(id)))
+    throw new Error("Invalid request");
 }
 
 function businessFields(form: FormData) {
@@ -37,10 +38,16 @@ export async function createBusiness(
   const session = await requireSession(lang, returnTo);
   let created: BusinessDetails;
   try {
-    created = await api<BusinessDetails>(session, lang, returnTo, "/api/v1/businesses", {
-      method: "POST",
-      body: businessFields(form),
-    });
+    created = await api<BusinessDetails>(
+      session,
+      lang,
+      returnTo,
+      "/api/v1/businesses",
+      {
+        method: "POST",
+        body: businessFields(form),
+      },
+    );
   } catch (error) {
     return toFormState(error, "gstinTaken");
   }
@@ -83,7 +90,10 @@ export async function inviteMember(
       lang,
       returnTo,
       `/api/v1/businesses/${businessId}/invitations`,
-      { method: "POST", body: { email: field(form, "email"), role: field(form, "role") } },
+      {
+        method: "POST",
+        body: { email: field(form, "email"), role: field(form, "role") },
+      },
     );
   } catch (error) {
     return toFormState(error, "alreadyInvited");

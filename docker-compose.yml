@@ -56,8 +56,9 @@ services:
       AUTH_JWK_SET_URI: http://mock-oauth2:8080/default/jwks
       AUTH_AUDIENCE: b2b-marketplace-web
       STORAGE_ENDPOINT: http://seaweedfs:8333
-      # Local only: this email becomes a platform admin on sign-in (see docs/admin-setup.md).
-      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      # Local only: these emails become platform admins on sign-in (see docs/admin-setup.md).
+      # The .test address is the reviewer of the full-stack tests; it can never be a real account.
+      BOOTSTRAP_ADMIN_EMAIL: e2e-reviewer@example.test,${BOOTSTRAP_ADMIN_EMAIL:-}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

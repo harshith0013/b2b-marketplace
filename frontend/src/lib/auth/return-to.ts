@@ -4,9 +4,17 @@ import { defaultLocale, hasLocale, type Locale } from "@/i18n/config";
  * Where to send someone after sign-in. Only same-site paths are allowed, so a crafted link
  * cannot bounce a freshly signed-in person to another website.
  */
-export function safeReturnTo(value: string | null | undefined, lang: Locale): string {
+export function safeReturnTo(
+  value: string | null | undefined,
+  lang: Locale,
+): string {
   const fallback = `/${lang}/account`;
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\")
+  ) {
     return fallback;
   }
   try {
