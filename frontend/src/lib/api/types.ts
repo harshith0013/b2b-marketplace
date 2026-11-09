@@ -189,6 +189,8 @@ export interface DeliveryOptions {
   deliveryPincodes: string[];
   deliveryChargePaise: number;
   codAccepted: boolean;
+  /** Buyers may pay online; works only once the seller's payout account is active. */
+  onlineAccepted: boolean;
 }
 
 export const PHOTO_KINDS = ["PACK_FRONT", "LABEL_DATE", "OTHER"] as const;
@@ -375,7 +377,7 @@ export const ORDER_ACTIONS = [
 export type OrderAction = (typeof ORDER_ACTIONS)[number];
 
 export type DeliveryMethod = "PICKUP" | "SELLER_DELIVERY";
-export type PaymentMethod = "COD" | "PAY_ON_PICKUP";
+export type PaymentMethod = "COD" | "PAY_ON_PICKUP" | "ONLINE";
 export type OrderSide = "BUYER" | "SELLER";
 
 /** One cart line with the offer as it is now; sellerKey groups lines without naming the seller. */
@@ -395,6 +397,7 @@ export interface CartLine {
   deliveryPincodes: string[];
   deliveryChargePaise: number;
   codAccepted: boolean;
+  onlineAccepted: boolean;
 }
 
 export interface OrderItem {
@@ -413,7 +416,7 @@ export interface Order {
   viewerSide: OrderSide;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  paymentStatus: "PENDING" | "PAID";
+  paymentStatus: "PENDING" | "PAID" | "REFUNDED";
   deliveryMethod: DeliveryMethod;
   deliveryAddress: string | null;
   deliveryPincode: string | null;
@@ -452,4 +455,51 @@ export interface Quote {
   buyerName: string | null;
   sellerName: string | null;
   createdAt: string;
+}
+
+export type PayoutStatus =
+  | "NOT_SET_UP"
+  | "NOT_STARTED"
+  | "CREATED"
+  | "REQUESTED"
+  | "NEEDS_CLARIFICATION"
+  | "UNDER_REVIEW"
+  | "ACTIVATED"
+  | "SUSPENDED"
+  | "FAILED";
+
+export interface PayoutAccount {
+  status: PayoutStatus;
+  bankLast4: string | null;
+  ifscCode: string | null;
+  beneficiaryName: string | null;
+  canTakeOnline: boolean;
+  /** Online payment is switched on for the whole site. */
+  available: boolean;
+}
+
+export const PAYOUT_BUSINESS_TYPES = [
+  "proprietorship",
+  "partnership",
+  "private_limited",
+  "llp",
+  "individual",
+] as const;
+
+/** What the browser needs to open Razorpay's checkout. The key id is public by design. */
+export interface PaymentStart {
+  keyId: string;
+  razorpayOrderId: string;
+  amountPaise: number;
+  currency: string;
+}
+
+export type TransferStatus = "NONE" | "HELD" | "RELEASED" | "REVERSED";
+
+export interface Payment {
+  status: "CREATED" | "CAPTURED" | "REFUNDED";
+  transferStatus: TransferStatus;
+  amountPaise: number;
+  platformFeePaise: number;
+  capturedAt: string | null;
 }

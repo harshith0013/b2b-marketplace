@@ -119,8 +119,11 @@ async function QuoteContent({ params }: { params: Props["params"] }) {
             city={offer.offer.location.city}
             pickupAvailable={offer.delivery.pickupAvailable}
             deliveryAvailable={
-              offer.delivery.ownDelivery && offer.delivery.codAccepted
+              offer.delivery.ownDelivery &&
+              (offer.delivery.codAccepted || offer.delivery.onlineAccepted)
             }
+            codAvailable={offer.delivery.codAccepted}
+            onlineAvailable={offer.delivery.onlineAccepted}
             pincodes={offer.delivery.deliveryPincodes}
             idempotencyKey={crypto.randomUUID()}
             submitLabel={labels.orderQuote}

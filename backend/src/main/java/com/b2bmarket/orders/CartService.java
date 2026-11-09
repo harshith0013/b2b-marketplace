@@ -37,6 +37,7 @@ public class CartService {
   private final OrderService orders;
   private final TransactionTemplate transaction;
   private final Clock clock;
+  private final OnlinePayments onlinePayments;
 
   /** Groups lines by seller without showing the seller's id: a keyed hash, per server run. */
   private final byte[] sellerKeySalt = new byte[16];
@@ -47,7 +48,9 @@ public class CartService {
       OfferSearchService offers,
       OrderService orders,
       PlatformTransactionManager transactions,
-      Clock clock) {
+      Clock clock,
+      OnlinePayments onlinePayments) {
+    this.onlinePayments = onlinePayments;
     this.records = records;
     this.tenants = tenants;
     this.offers = offers;
@@ -92,7 +95,23 @@ public class CartService {
               tenants.enter(caller, buyer, BusinessRole.ANY);
               return records.cart(buyer);
             });
-    return rows.stream().map(row -> line(row, offers.orderable(row.listingId()))).toList();
+    // Online payment is offered only where the seller can be paid out (asked once per seller).
+    Map<UUID, Boolean> sellerOnline = new java.util.HashMap<>();
+    return rows.stream()
+        .map(
+            row -> {
+              Optional<Orderable> found = offers.orderable(row.listingId());
+              boolean online =
+                  found
+                      .filter(o -> o.delivery().onlineAccepted())
+                      .map(
+                          o ->
+                              sellerOnline.computeIfAbsent(
+                                  o.sellerBusinessId(), onlinePayments::canTakeOnline))
+                      .orElse(false);
+              return line(row, found, online);
+            })
+        .toList();
   }
 
   /** Places one order for the chosen cart lines (all from one seller). */
@@ -138,7 +157,7 @@ public class CartService {
         .orElseThrow(() -> ApiException.notFound("This offer is not on sale."));
   }
 
-  private CartLine line(OrderRecords.CartRow row, Optional<Orderable> found) {
+  private CartLine line(OrderRecords.CartRow row, Optional<Orderable> found, boolean online) {
     if (found.isEmpty()) {
       return new CartLine(
           row.listingId(),
@@ -155,6 +174,7 @@ public class CartService {
           false,
           List.of(),
           0,
+          false,
           false);
     }
     Orderable o = found.get();
@@ -179,7 +199,8 @@ public class CartService {
         o.delivery().ownDelivery(),
         o.delivery().deliveryPincodes(),
         o.delivery().deliveryChargePaise(),
-        o.delivery().codAccepted());
+        o.delivery().codAccepted(),
+        online);
   }
 
   String sellerKey(UUID seller) {

@@ -91,6 +91,18 @@ public class TenantScope {
     jdbc.execute("set local role " + ORDERING_ROLE);
   }
 
+  /** Online payments: the payment tables, and only the payment fields of online orders. */
+  static final String PAYMENTS_ROLE = "marketplace_payments";
+
+  /**
+   * Switches to the payments role (see migration V12). For the payments module and the order
+   * methods it calls; callers check the person's membership first, or are system jobs.
+   */
+  public void enterPayments() {
+    requireTransaction();
+    jdbc.execute("set local role " + PAYMENTS_ROLE);
+  }
+
   private static void requireTransaction() {
     if (!TransactionSynchronizationManager.isActualTransactionActive()) {
       // Outside a transaction the settings would apply to one statement and be lost.

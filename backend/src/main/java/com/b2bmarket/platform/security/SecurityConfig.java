@@ -54,6 +54,9 @@ public class SecurityConfig {
                     // The search assistant: public like search, limited per visitor and per day.
                     .requestMatchers(HttpMethod.POST, "/api/v1/offers/interpret")
                     .permitAll()
+                    // Razorpay's webhook: no token, checked by its HMAC signature instead.
+                    .requestMatchers(HttpMethod.POST, "/api/v1/payments/razorpay-webhook")
+                    .permitAll()
                     .requestMatchers("/api/v1/**")
                     .authenticated()
                     .anyRequest()

@@ -89,6 +89,11 @@ export function DeliverySettingsForm({
         label={labels.codOption}
         checked={delivery.codAccepted}
       />
+      <Check
+        name="onlineAccepted"
+        label={labels.onlineOption}
+        checked={delivery.onlineAccepted}
+      />
       <FormMessage
         state={state}
         errors={errors}

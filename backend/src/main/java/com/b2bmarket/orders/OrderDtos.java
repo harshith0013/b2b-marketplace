@@ -38,7 +38,8 @@ public final class OrderDtos {
       boolean ownDelivery,
       List<String> deliveryPincodes,
       long deliveryChargePaise,
-      boolean codAccepted) {}
+      boolean codAccepted,
+      boolean onlineAccepted) {}
 
   /**
    * Checkout of the cart lines of one seller. idempotencyKey: one per checkout attempt (the website

@@ -17,6 +17,7 @@ export interface SellerGroup {
   pickupAvailable: boolean;
   ownDelivery: boolean;
   codAccepted: boolean;
+  onlineAccepted: boolean;
   deliveryChargePaise: number;
   deliveryPincodes: string[];
 }
@@ -45,6 +46,7 @@ export function groupBySeller(lines: readonly CartLine[]): SellerGroup[] {
       ),
       ownDelivery: all((line) => line.ownDelivery),
       codAccepted: all((line) => line.codAccepted),
+      onlineAccepted: all((line) => line.onlineAccepted),
       deliveryChargePaise: Math.max(
         0,
         ...orderable.map((line) => line.deliveryChargePaise),
@@ -56,9 +58,32 @@ export function groupBySeller(lines: readonly CartLine[]): SellerGroup[] {
   });
 }
 
-/** How payment follows from delivery: cash to the delivery person, or at the warehouse. */
+/** How offline payment follows from delivery: cash to the delivery person, or at the warehouse. */
 export function paymentFor(method: DeliveryMethod): PaymentMethod {
   return method === "PICKUP" ? "PAY_ON_PICKUP" : "COD";
+}
+
+/** The buyer's payment choice: online, or the offline way that goes with the delivery. */
+export function paymentChoice(
+  method: DeliveryMethod,
+  payOnline: boolean,
+): PaymentMethod {
+  return payOnline ? "ONLINE" : paymentFor(method);
+}
+
+/** The buyer of an online order that is still waiting to be paid can pay now. */
+export function canPayNow(order: {
+  viewerSide: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus: string;
+  status: string;
+}): boolean {
+  return (
+    order.viewerSide === "BUYER" &&
+    order.paymentMethod === "ONLINE" &&
+    order.paymentStatus === "PENDING" &&
+    order.status === "PLACED"
+  );
 }
 
 const PINCODE = /^[1-9][0-9]{5}$/;

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import {
   ClipboardList,
+  Landmark,
   PackageOpen,
   ShoppingCart,
   Warehouse,
@@ -151,6 +152,12 @@ async function BusinessContent({
             <Link href={`/${lang}/business/${id}/cart`}>
               <ShoppingCart aria-hidden="true" className="size-5" />
               {dict.orders.myCart}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${lang}/business/${id}/payouts`}>
+              <Landmark aria-hidden="true" className="size-5" />
+              {dict.payouts.link}
             </Link>
           </Button>
         </div>

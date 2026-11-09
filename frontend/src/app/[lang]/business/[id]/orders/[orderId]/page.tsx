@@ -14,10 +14,17 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { actOnOrder } from "@/lib/actions/orders";
-import { ORDER_ACTIONS, type Order } from "@/lib/api/types";
+import { PayOnline } from "@/components/orders/pay-online";
+import { format } from "@/i18n/format";
+import { actOnOrder, confirmPayment, startPayment } from "@/lib/actions/orders";
+import { ApiError } from "@/lib/api/backend";
+import { ORDER_ACTIONS, type Order, type Payment } from "@/lib/api/types";
+import { api } from "@/lib/auth/current-user";
+import type { Session } from "@/lib/auth/session";
+import type { Locale } from "@/i18n/config";
+import { formatPaise } from "@/lib/money";
 import { requireSession } from "@/lib/auth/current-user";
-import { NEEDS_DELIVERY_PERSON, needsReason } from "@/lib/orders";
+import { NEEDS_DELIVERY_PERSON, canPayNow, needsReason } from "@/lib/orders";
 import { apiOrNotFound, requireUuids } from "@/lib/pages";
 
 type Props = PageProps<"/[lang]/business/[id]/orders/[orderId]">;
@@ -37,6 +44,15 @@ async function OrderContent({ params }: { params: Props["params"] }) {
     returnTo,
     `/api/v1/businesses/${id}/orders/${orderId}`,
   );
+  const payment =
+    order.paymentMethod === "ONLINE"
+      ? await paymentOf(
+          session,
+          lang,
+          returnTo,
+          `/api/v1/businesses/${id}/orders/${orderId}/payment`,
+        )
+      : null;
   // Show steps in the order they happen, whatever order the API lists them in.
   const steps = ORDER_ACTIONS.filter((a) => order.allowedActions.includes(a));
   const handover: [string, string][] =
@@ -57,7 +73,11 @@ async function OrderContent({ params }: { params: Props["params"] }) {
     [
       labels.payment,
       `${labels.paymentMethods[order.paymentMethod]} · ${
-        order.paymentStatus === "PAID" ? labels.paid : labels.unpaid
+        order.paymentStatus === "PAID"
+          ? labels.paid
+          : order.paymentStatus === "REFUNDED"
+            ? labels.refunded
+            : labels.unpaid
       }`,
     ],
   ];
@@ -85,6 +105,9 @@ async function OrderContent({ params }: { params: Props["params"] }) {
           {order.paymentStatus === "PAID" && (
             <Badge variant="success">{labels.paid}</Badge>
           )}
+          {order.paymentStatus === "REFUNDED" && (
+            <Badge variant="info">{labels.refunded}</Badge>
+          )}
         </div>
       </div>
 
@@ -110,6 +133,30 @@ async function OrderContent({ params }: { params: Props["params"] }) {
           units={dict.labels.stockUnitsShort as Record<string, string>}
         />
       </Card>
+
+      {canPayNow(order) && (
+        <PayOnline
+          amountLabel={format(labels.payNow, {
+            amount: formatPaise(order.totalPaise, lang),
+          })}
+          siteName={dict.meta.title}
+          labels={labels}
+          errors={dict.business.errors}
+          start={startPayment.bind(null, lang, id, orderId)}
+          confirm={confirmPayment.bind(null, lang, id, orderId)}
+        />
+      )}
+      {order.viewerSide === "SELLER" &&
+        order.paymentMethod === "ONLINE" &&
+        order.paymentStatus === "PENDING" &&
+        order.status === "PLACED" && (
+          <p className="text-muted">{labels.waitingForPayment}</p>
+        )}
+      {order.viewerSide === "SELLER" &&
+        payment &&
+        payment.status !== "CREATED" && (
+          <p className="text-muted">{labels.share[payment.transferStatus]}</p>
+        )}
 
       {steps.length > 0 && (
         <section className="flex flex-col gap-6" aria-label={labels.orderTitle}>
@@ -138,4 +185,19 @@ export default function OrderPage({ params }: Props) {
       </Suspense>
     </div>
   );
+}
+
+/** The order's online payment, or null if none was started yet. */
+async function paymentOf(
+  session: Session,
+  lang: Locale,
+  returnTo: string,
+  path: string,
+): Promise<Payment | null> {
+  try {
+    return await api<Payment>(session, lang, returnTo, path);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }

@@ -247,13 +247,15 @@ public class OfferQueries {
       boolean ownDelivery,
       List<String> deliveryPincodes,
       long deliveryChargePaise,
-      boolean codAccepted) {}
+      boolean codAccepted,
+      boolean onlineAccepted) {}
 
   public Optional<OrderableRow> orderable(UUID listingId, LocalDate minExpiry) {
     return jdbc.sql(
             "select l.id, l.business_id, l.batch_id, l.visibility, l.moq, l.quantity_unit,"
                 + " l.gst_rate_bp, b.quantity, w.city, w.state, l.pickup_available, l.own_delivery,"
                 + " l.delivery_pincodes, l.delivery_charge_paise, l.cod_accepted,"
+                + " l.online_accepted,"
                 + " coalesce(s.trade_name, s.legal_name) as seller_name,"
                 + " p.brand || ' ' || p.name || ', ' || trim(trailing '.' from trim(trailing '0' from v.pack_size::text))"
                 + " || ' ' || v.pack_unit as product_line "
@@ -281,7 +283,8 @@ public class OfferQueries {
                   rs.getBoolean(12),
                   pins == null ? List.of() : List.of((String[]) pins.getArray()),
                   rs.getLong(14),
-                  rs.getBoolean(15));
+                  rs.getBoolean(15),
+                  rs.getBoolean("online_accepted"));
             })
         .optional();
   }

@@ -1,5 +1,9 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
+}));
 import en from "@/i18n/dictionaries/en.json";
 import hi from "@/i18n/dictionaries/hi.json";
 import te from "@/i18n/dictionaries/te.json";
@@ -17,6 +21,8 @@ import {
   paymentFor,
 } from "@/lib/orders";
 import { DeliveryChoice } from "./delivery-choice";
+import { PayOnline } from "./pay-online";
+import { canPayNow, paymentChoice } from "@/lib/orders";
 import { OrderStepForm } from "./order-step-form";
 import { OrderTotals, counterparty } from "./order-parts";
 
@@ -41,6 +47,7 @@ function line(overrides: Partial<CartLine>): CartLine {
     deliveryPincodes: ["522001", "522002"],
     deliveryChargePaise: 5000,
     codAccepted: true,
+    onlineAccepted: false,
     ...overrides,
   };
 }
@@ -134,7 +141,15 @@ describe("DeliveryChoice", () => {
   };
 
   it("asks for the address only when the seller delivers", () => {
-    render(<DeliveryChoice {...props} pickupAvailable deliveryAvailable />);
+    render(
+      <DeliveryChoice
+        {...props}
+        pickupAvailable
+        deliveryAvailable
+        codAvailable
+        onlineAvailable={false}
+      />,
+    );
     expect(screen.queryByLabelText(en.orders.address)).toBeNull();
     fireEvent.click(
       screen.getByRole("radio", { name: en.orders.sellerDelivery }),
@@ -149,9 +164,19 @@ describe("DeliveryChoice", () => {
 
   it("shows only the ways this seller offers", () => {
     render(
-      <DeliveryChoice {...props} pickupAvailable={false} deliveryAvailable />,
+      <DeliveryChoice
+        {...props}
+        pickupAvailable={false}
+        deliveryAvailable
+        codAvailable
+        onlineAvailable={false}
+      />,
     );
-    expect(screen.getAllByRole("radio")).toHaveLength(1);
+    expect(
+      screen
+        .getAllByRole("radio")
+        .filter((r) => (r as HTMLInputElement).name === "deliveryMethod"),
+    ).toHaveLength(1);
     expect(
       (
         screen.getByRole("radio", {
@@ -246,5 +271,100 @@ describe("order parts", () => {
     expect(counterparty({ ...order, viewerSide: "SELLER" }, en.orders)).toBe(
       "Corner Kirana",
     );
+  });
+});
+
+describe("paying online", () => {
+  const props = {
+    formId: "f",
+    city: "Guntur",
+    pincodes: ["522001"],
+    idempotencyKey: "0b3c2f4e-4a7d-4c1e-9a55-2f8a7f1c9d10",
+    submitLabel: en.orders.placeOrder,
+    labels: en.orders,
+    errors: en.business.errors,
+    action: noop,
+  };
+
+  it("offers online next to the offline way, and only online where COD is not taken", () => {
+    render(
+      <DeliveryChoice
+        {...props}
+        pickupAvailable
+        deliveryAvailable
+        codAvailable={false}
+        onlineAvailable
+      />,
+    );
+    expect(
+      screen.getByRole("radio", { name: en.orders.payOffline.PICKUP }),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole("radio", { name: en.orders.sellerDelivery }),
+    );
+    expect(
+      screen.queryByRole("radio", {
+        name: en.orders.payOffline.SELLER_DELIVERY,
+      }),
+    ).toBeNull();
+    expect(
+      (
+        screen.getByRole("radio", {
+          name: en.orders.payOnline,
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    expect(screen.getByText(en.orders.payNote)).toBeTruthy();
+  });
+
+  it("works out the payment method and who can pay", () => {
+    expect(paymentChoice("PICKUP", false)).toBe("PAY_ON_PICKUP");
+    expect(paymentChoice("SELLER_DELIVERY", false)).toBe("COD");
+    expect(paymentChoice("PICKUP", true)).toBe("ONLINE");
+    const order = {
+      viewerSide: "BUYER",
+      paymentMethod: "ONLINE" as const,
+      paymentStatus: "PENDING",
+      status: "PLACED",
+    };
+    expect(canPayNow(order)).toBe(true);
+    expect(canPayNow({ ...order, viewerSide: "SELLER" })).toBe(false);
+    expect(canPayNow({ ...order, paymentStatus: "PAID" })).toBe(false);
+    expect(canPayNow({ ...order, paymentMethod: "COD" })).toBe(false);
+  });
+
+  it("says so when payment cannot start, without opening Razorpay", async () => {
+    render(
+      <PayOnline
+        amountLabel="Pay ₹100.00 online"
+        siteName="B2B Marketplace"
+        labels={en.orders}
+        errors={en.business.errors}
+        start={async () => ({ ok: false, error: "paymentUnavailable" })}
+        confirm={noop}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Pay ₹100.00 online" }));
+    expect(
+      await screen.findByText(en.business.errors.paymentUnavailable),
+    ).toBeTruthy();
+    expect(document.querySelector("script[src*='razorpay']")).toBeNull();
+  });
+});
+
+describe("payout wording", () => {
+  it("names every payout status and business type in all three languages", () => {
+    for (const dict of [en, te, hi]) {
+      for (const key of Object.keys(en.payouts.statuses))
+        expect(
+          dict.payouts.statuses[key as keyof typeof en.payouts.statuses],
+          key,
+        ).toBeTruthy();
+      for (const key of Object.keys(en.orders.share))
+        expect(
+          dict.orders.share[key as keyof typeof en.orders.share],
+          key,
+        ).toBeTruthy();
+    }
   });
 });

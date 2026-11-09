@@ -93,6 +93,7 @@ class ListingViews {
         d.ownDelivery(),
         d.deliveryPincodes(),
         d.deliveryChargePaise(),
-        d.codAccepted());
+        d.codAccepted(),
+        d.onlineAccepted());
   }
 }

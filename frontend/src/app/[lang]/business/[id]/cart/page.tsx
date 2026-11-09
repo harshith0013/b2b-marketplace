@@ -137,7 +137,12 @@ async function CartContent({ params }: { params: Props["params"] }) {
                       formId={headingId}
                       city={group.city}
                       pickupAvailable={group.pickupAvailable}
-                      deliveryAvailable={group.ownDelivery && group.codAccepted}
+                      deliveryAvailable={
+                        group.ownDelivery &&
+                        (group.codAccepted || group.onlineAccepted)
+                      }
+                      codAvailable={group.codAccepted}
+                      onlineAvailable={group.onlineAccepted}
                       pincodes={group.deliveryPincodes}
                       idempotencyKey={crypto.randomUUID()}
                       submitLabel={labels.placeOrder}

@@ -9,14 +9,16 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Orders not accepted within 24 hours expire and give their stock back; delivery people's names and
- * phone numbers are removed 30 days after an order completes. Runs as the ordering role.
+ * Orders not accepted within 24 hours (online orders: not paid within an hour) expire and give
+ * their stock back; delivery people's names and phone numbers are removed 30 days after an order
+ * completes. Runs as the ordering role.
  */
 @Component
 public class OrderJobs {
@@ -28,12 +30,15 @@ public class OrderJobs {
   private final TenantScope scope;
   private final TransactionTemplate transaction;
   private final Clock clock;
+  private final ApplicationEventPublisher events;
 
   OrderJobs(
       OrderRecords records,
       TenantScope scope,
       PlatformTransactionManager transactions,
-      Clock clock) {
+      Clock clock,
+      ApplicationEventPublisher events) {
+    this.events = events;
     this.records = records;
     this.scope = scope;
     this.transaction = new TransactionTemplate(transactions);
@@ -47,8 +52,13 @@ public class OrderJobs {
         transaction.execute(
             s -> {
               scope.enterOrderingSweep();
-              List<UUID> expired =
-                  records.expirePlaced(now.minus(OrderService.RESERVATION_HOLD), now);
+              List<UUID> expired = new java.util.ArrayList<>();
+              expired.addAll(
+                  records.expireUnpaidOnline(now.minus(OrderService.ONLINE_PAYMENT_WINDOW), now));
+              expired.addAll(records.expirePlaced(now.minus(OrderService.RESERVATION_HOLD), now));
+              // A paid online order that expired unaccepted is refunded by the payments module.
+              expired.forEach(
+                  id -> events.publishEvent(new OrderEvents.OnlineOrderChanged(id, "EXPIRED")));
               return records.releaseFor(expired);
             });
     if (released > 0) {

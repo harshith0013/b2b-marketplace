@@ -278,7 +278,10 @@
       "labelCheckNeeded": "Tick the box to confirm you compared the label photo yourself.",
       "orderProblem": "This order could not be placed. Check the quantity, delivery and payment.",
       "notEnoughStock": "There is not enough stock left for this quantity.",
-      "orderStepRefused": "This step is not possible for this order now. Refresh the page."
+      "orderStepRefused": "This step is not possible for this order now. Refresh the page.",
+      "paymentUnavailable": "Online payment is not available right now. Try again in a minute.",
+      "payoutRejected": "Razorpay did not accept these details. Check the bank account and IFSC.",
+      "payoutsNotEnabled": "Payouts are not switched on for this site's Razorpay account yet. Please try again later."
     },
     "warehousesLink": "Warehouses",
     "listingsLink": "Listings"
@@ -612,7 +615,8 @@
     "payment": "Payment",
     "paymentMethods": {
       "COD": "Cash on delivery",
-      "PAY_ON_PICKUP": "Pay on pickup"
+      "PAY_ON_PICKUP": "Pay on pickup",
+      "ONLINE": "Paid online (Razorpay)"
     },
     "paid": "Paid",
     "unpaid": "Not paid yet",
@@ -669,6 +673,68 @@
       "DECLINED": "Declined",
       "ORDERED": "Ordered",
       "EXPIRED": "Expired"
-    }
+    },
+    "payOnline": "Pay online now (UPI, card, netbanking)",
+    "payOffline": {
+      "PICKUP": "Pay on pickup",
+      "SELLER_DELIVERY": "Cash on delivery"
+    },
+    "paymentHeading": "How will you pay?",
+    "payNow": "Pay {amount} online",
+    "paying": "Opening the payment window…",
+    "payNote": "You pay through Razorpay. The seller is paid only after you receive the goods; if the order is declined or cancelled you get a full refund.",
+    "payDue": "Pay within an hour, or the order is cancelled and the stock goes back on sale.",
+    "paymentFailed": "The payment did not go through. You have not been charged; try again.",
+    "paymentPending": "We are waiting for Razorpay to confirm your payment. Refresh in a minute.",
+    "refunded": "Refunded",
+    "waitingForPayment": "Waiting for the buyer to pay online",
+    "share": {
+      "NONE": "Your share is being prepared.",
+      "HELD": "Your share is held by Razorpay until the goods are handed over.",
+      "RELEASED": "Your share has been released to your bank account.",
+      "REVERSED": "The order ended, so your share was returned and the buyer refunded."
+    },
+    "onlineOption": "Buyers can pay online (needs your payout account)"
+  },
+  "payouts": {
+    "title": "Payouts",
+    "link": "Payouts",
+    "intro": "To take online payments, add the bank account where Razorpay should send your money. Only the last four digits are kept here.",
+    "off": "Online payment is not switched on for this site yet.",
+    "ownerOnly": "Only the owner can set up payouts.",
+    "statusLabel": "Status",
+    "statuses": {
+      "NOT_SET_UP": "Not set up",
+      "NOT_STARTED": "Not finished",
+      "CREATED": "Not finished",
+      "REQUESTED": "Waiting for Razorpay",
+      "NEEDS_CLARIFICATION": "Razorpay needs more details",
+      "UNDER_REVIEW": "Razorpay is checking your details",
+      "ACTIVATED": "Active: buyers can pay you online",
+      "SUSPENDED": "Suspended by Razorpay",
+      "FAILED": "Set-up failed"
+    },
+    "bank": "Bank account ending {last4} · {ifsc}",
+    "fields": {
+      "email": "Business email",
+      "phone": "Mobile number",
+      "contactName": "Contact person",
+      "businessType": "Type of business",
+      "businessTypes": {
+        "proprietorship": "Proprietorship",
+        "partnership": "Partnership",
+        "private_limited": "Private limited company",
+        "llp": "LLP",
+        "individual": "Individual"
+      },
+      "street": "Registered address (street)",
+      "accountNumber": "Bank account number",
+      "ifsc": "IFSC",
+      "ifscHint": "11 characters, for example HDFC0000317",
+      "beneficiaryName": "Account holder's name",
+      "acceptsTerms": "I agree to Razorpay's terms for receiving payouts"
+    },
+    "save": "Set up payouts",
+    "saved": "Sent to Razorpay"
   }
 }

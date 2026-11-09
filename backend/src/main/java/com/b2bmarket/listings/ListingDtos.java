@@ -111,5 +111,7 @@ public final class ListingDtos {
           List<@jakarta.validation.constraints.Pattern(regexp = "^[1-9][0-9]{5}$") String>
               deliveryPincodes,
       @jakarta.validation.constraints.PositiveOrZero @Max(1_000_000_00L) Long deliveryChargePaise,
-      @jakarta.validation.constraints.NotNull Boolean codAccepted) {}
+      @jakarta.validation.constraints.NotNull Boolean codAccepted,
+      /** Online payment (Razorpay); null keeps it off. Needs an active payout account to use. */
+      Boolean onlineAccepted) {}
 }

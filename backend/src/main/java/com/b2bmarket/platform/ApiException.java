@@ -48,6 +48,11 @@ public class ApiException extends RuntimeException {
     return new ApiException(HttpStatus.CONFLICT, detail);
   }
 
+  /** A provider we depend on (the payment gateway) failed or did not answer; try again later. */
+  public static ApiException unavailable(String detail) {
+    return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, detail);
+  }
+
   /** The request is well-formed but the thing cannot be done yet; properties say why. */
   public static ApiException unprocessable(String detail, Map<String, Object> properties) {
     return new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, detail, properties);

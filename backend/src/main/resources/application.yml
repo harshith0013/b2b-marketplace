@@ -90,6 +90,17 @@ app:
     visitor-per-minute: ${AI_VISITOR_PER_MINUTE:10}
     visitor-per-day: ${AI_VISITOR_PER_DAY:100}
     log-retention-days: ${AI_LOG_RETENTION_DAYS:90}
+  # Online payment (Phase 9b): Razorpay Route. Blank keys turn it off. Only test keys
+  # (rzp_test_...) are accepted unless RAZORPAY_ALLOW_LIVE_KEYS=true.
+  razorpay:
+    base-url: ${RAZORPAY_BASE_URL:https://api.razorpay.com}
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+    timeout: ${RAZORPAY_TIMEOUT:10s}
+    # The platform's share of each online order in basis points (100 = 1%). Pilot: 0.
+    platform-fee-bp: ${PLATFORM_FEE_BP:0}
+    allow-live-keys: ${RAZORPAY_ALLOW_LIVE_KEYS:false}
   admin:
     # Local development only: these emails (comma-separated) become platform admins on sign-in. Never set
     # this in a deployed environment; grant admins there as described in docs/admin-setup.md.

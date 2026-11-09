@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -47,6 +48,18 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class OrderService {
 
   static final Duration RESERVATION_HOLD = Duration.ofHours(24);
+
+  /** An online order not paid within this time expires and gives its stock back. */
+  static final Duration ONLINE_PAYMENT_WINDOW = Duration.ofHours(1);
+
+  static final String ONLINE = "ONLINE";
+
+  /** Order states after which an online payment is refunded. */
+  public static final Set<String> ENDED_UNFULFILLED = Set.of("DECLINED", "CANCELLED", "EXPIRED");
+
+  /** Order states in which the goods have reached the buyer: the seller's share is released. */
+  public static final Set<String> FULFILLED = Set.of("DELIVERED", "PICKED_UP", "COMPLETED");
+
   static final int PAGE_SIZE = 50;
 
   /** Steps that decide about the order (not just fulfil it): owners and managers only. */
@@ -74,6 +87,8 @@ public class OrderService {
   private final AuditService audit;
   private final TransactionTemplate transaction;
   private final Clock clock;
+  private final OnlinePayments onlinePayments;
+  private final ApplicationEventPublisher events;
 
   OrderService(
       OrderRecords records,
@@ -84,7 +99,11 @@ public class OrderService {
       ListingCompliance compliance,
       AuditService audit,
       PlatformTransactionManager transactions,
-      Clock clock) {
+      Clock clock,
+      OnlinePayments onlinePayments,
+      ApplicationEventPublisher events) {
+    this.onlinePayments = onlinePayments;
+    this.events = events;
     this.records = records;
     this.tenants = tenants;
     this.scope = scope;
@@ -112,6 +131,9 @@ public class OrderService {
     transaction.executeWithoutResult(
         s -> tenants.check(caller, buyer, BusinessRole.OWNER_OR_MANAGER));
     Plan plan = plan(buyer, wanted, choice);
+    if (ONLINE.equals(choice.paymentMethod()) && !onlinePayments.canTakeOnline(plan.seller())) {
+      throw ApiException.conflict("This seller cannot take online payment yet.");
+    }
     UUID orderId;
     try {
       orderId =
@@ -165,11 +187,12 @@ public class OrderService {
     if (delivery && (address == null || choice.deliveryPincode() == null)) {
       throw ApiException.badRequest("Give the delivery address and PIN code.");
     }
-    if (pickup && !"PAY_ON_PICKUP".equals(choice.paymentMethod())) {
-      throw ApiException.badRequest("Pickup orders are paid on pickup.");
+    boolean online = ONLINE.equals(choice.paymentMethod());
+    if (pickup && !online && !"PAY_ON_PICKUP".equals(choice.paymentMethod())) {
+      throw ApiException.badRequest("Pickup orders are paid on pickup or online.");
     }
-    if (delivery && !"COD".equals(choice.paymentMethod())) {
-      throw ApiException.badRequest("Delivered orders are paid in cash on delivery for now.");
+    if (delivery && !online && !"COD".equals(choice.paymentMethod())) {
+      throw ApiException.badRequest("Delivered orders are paid in cash on delivery or online.");
     }
 
     List<NewItem> items = new ArrayList<>();
@@ -186,7 +209,11 @@ public class OrderService {
         throw ApiException.badRequest(
             o.productLine() + ": the seller does not deliver to this PIN code.");
       }
-      if (delivery && !o.delivery().codAccepted()) {
+      if (online && !o.delivery().onlineAccepted()) {
+        throw ApiException.badRequest(
+            o.productLine() + ": the seller does not take online payment for this offer.");
+      }
+      if (delivery && !online && !o.delivery().codAccepted()) {
         throw ApiException.badRequest(
             o.productLine() + ": the seller does not accept cash on delivery.");
       }
@@ -318,6 +345,18 @@ public class OrderService {
           }
           Status current = Status.valueOf(order.status());
           Status next = OrderStateMachine.next(current, action, side, order.deliveryMethod());
+          boolean online = ONLINE.equals(order.paymentMethod());
+          if (online && action == Action.PAID) {
+            throw ApiException.badRequest("Online orders are marked paid by the payment itself.");
+          }
+          if (online && action == Action.ACCEPT && !"PAID".equals(order.paymentStatus())) {
+            throw ApiException.conflict("The buyer has not paid yet.");
+          }
+          if (online
+              && "PAID".equals(order.paymentStatus())
+              && (next == Status.DELIVERED || next == Status.PICKED_UP)) {
+            next = Status.COMPLETED; // Already paid: handing over the goods completes the order.
+          }
           String reason = request == null ? null : Text.optional(request.reason());
           if ((action == Action.DECLINE || (action == Action.CANCEL && side == Side.SELLER))
               && reason == null) {
@@ -365,6 +404,9 @@ public class OrderService {
           if (changed == 0) {
             throw ApiException.conflict(
                 "This order was changed at the same time. Refresh and try again.");
+          }
+          if (online) {
+            events.publishEvent(new OrderEvents.OnlineOrderChanged(orderId, next.name()));
           }
           audit.record(
               new AuditEntry(
@@ -451,8 +493,53 @@ public class OrderService {
         o.placedAt(),
         o.updatedAt(),
         o.completedAt(),
-        OrderStateMachine.allowed(status, side, o.deliveryMethod()).stream()
-            .map(Enum::name)
-            .collect(Collectors.toSet()));
+        allowedActions(o, status, side));
+  }
+
+  /** The state machine's steps, less those that online payment takes care of. */
+  private static Set<String> allowedActions(OrderRow o, Status status, Side side) {
+    boolean online = ONLINE.equals(o.paymentMethod());
+    boolean paid = "PAID".equals(o.paymentStatus());
+    return OrderStateMachine.allowed(status, side, o.deliveryMethod()).stream()
+        .filter(a -> !(online && a == Action.PAID))
+        .filter(a -> !(online && !paid && a == Action.ACCEPT))
+        .map(Enum::name)
+        .collect(Collectors.toSet());
+  }
+
+  // --- For the payments module ----------------------------------------------------------------
+
+  /** What a payment needs to know about an online order. */
+  public record PaymentFacts(
+      UUID orderId,
+      UUID buyer,
+      UUID seller,
+      String status,
+      String paymentStatus,
+      long totalPaise,
+      Instant placedAt) {}
+
+  /**
+   * An online order's payment facts, read as the payments role (online orders only). The caller has
+   * checked the person's membership, or is a system job; joins the caller's transaction.
+   */
+  public java.util.Optional<PaymentFacts> paymentFacts(UUID orderId) {
+    return transaction.execute(
+        s -> {
+          scope.enterPayments();
+          return records.paymentFacts(orderId);
+        });
+  }
+
+  /** Records that an online order was paid, or refunded. Joins the caller's transaction. */
+  public void recordOnlinePayment(UUID orderId, String paymentStatus) {
+    if (!Set.of("PAID", "REFUNDED").contains(paymentStatus)) {
+      throw new IllegalArgumentException("paymentStatus must be PAID or REFUNDED");
+    }
+    transaction.executeWithoutResult(
+        s -> {
+          scope.enterPayments();
+          records.setOnlinePaymentStatus(orderId, paymentStatus, clock.instant());
+        });
   }
 }

@@ -421,4 +421,97 @@ class RowLevelSecurityIT extends SellerFixtures {
     assertThat(cartsSeenByBobOrdering).isZero();
     assertThat(batch).isNotNull();
   }
+
+  @Test
+  void
+      paymentsAndPayoutAccountsAreSeenOnlyByTheirBusinessesAndThePaymentsRoleSeesOnlyOnlineOrders() {
+    UUID buyer = UUID.fromString(createBusiness(newPerson("buyer"), "RLS Payer"));
+    UUID seller = alice;
+    UUID online = UUID.randomUUID();
+    UUID cash = UUID.randomUUID();
+    for (UUID[] o : new UUID[][] {{online}, {cash}}) {
+      jdbc.update(
+          "insert into orders (id, buyer_business_id, seller_business_id, status, payment_method,"
+              + " delivery_method, pickup_city, pickup_state, items_total_paise, gst_total_paise,"
+              + " delivery_charge_paise, total_paise, idempotency_key, placed_at, updated_at)"
+              + " values (?, ?, ?, 'PLACED', ?, 'PICKUP', 'Guntur', 'AP', 100, 18, 0, 118, ?,"
+              + " now(), now())",
+          o[0],
+          buyer,
+          seller,
+          o[0].equals(online) ? "ONLINE" : "PAY_ON_PICKUP",
+          o[0].toString());
+    }
+    jdbc.update(
+        "insert into payments (id, order_id, buyer_business_id, seller_business_id, amount_paise,"
+            + " platform_fee_paise, razorpay_order_id, created_at, updated_at)"
+            + " values (?, ?, ?, ?, 118, 0, ?, now(), now())",
+        UUID.randomUUID(),
+        online,
+        buyer,
+        seller,
+        "order_rls_" + online.toString().substring(0, 8));
+    jdbc.update(
+        "insert into payout_accounts (business_id, bank_last4, ifsc_code, beneficiary_name,"
+            + " created_at, updated_at) values (?, '9012', 'HDFC0000317', 'Alice', now(), now())"
+            + " on conflict do nothing",
+        seller);
+
+    for (UUID party : List.of(buyer, seller)) {
+      Integer seen =
+          tx.execute(
+              s -> {
+                tenantScope.enter(party);
+                return jdbc.queryForObject(
+                    "select count(*) from payments where order_id = ?", Integer.class, online);
+              });
+      assertThat(seen).as("party " + party).isEqualTo(1);
+    }
+    // Webhook deliveries are not a business's to see at all.
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enter(bob);
+                      jdbc.queryForObject("select count(*) from payment_events", Integer.class);
+                    }))
+        .isInstanceOf(org.springframework.dao.DataAccessException.class);
+    for (String table : List.of("payments", "payout_accounts")) {
+      Integer seenByBob =
+          tx.execute(
+              s -> {
+                tenantScope.enter(bob);
+                return jdbc.queryForObject("select count(*) from " + table, Integer.class);
+              });
+      assertThat(seenByBob).as(table).isZero();
+    }
+    Integer buyerSeesPayout =
+        tx.execute(
+            s -> {
+              tenantScope.enter(buyer);
+              return jdbc.queryForObject(
+                  "select count(*) from payout_accounts where business_id = ?",
+                  Integer.class,
+                  seller);
+            });
+    assertThat(buyerSeesPayout).as("a seller's payout account is the seller's alone").isZero();
+
+    Integer cashSeenByPayments =
+        tx.execute(
+            s -> {
+              tenantScope.enterPayments();
+              return jdbc.queryForObject(
+                  "select count(*) from orders where id in (?, ?)", Integer.class, online, cash);
+            });
+    assertThat(cashSeenByPayments).as("online orders only").isEqualTo(1);
+    // The payments role cannot touch anything but the payment status.
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () ->
+                tx.executeWithoutResult(
+                    s -> {
+                      tenantScope.enterPayments();
+                      jdbc.update("update orders set status = 'COMPLETED' where id = ?", online);
+                    }))
+        .isInstanceOf(org.springframework.dao.DataAccessException.class);
+  }
 }

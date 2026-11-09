@@ -68,7 +68,8 @@ public final class OfferDtos {
       boolean ownDelivery,
       List<String> deliveryPincodes,
       long deliveryChargePaise,
-      boolean codAccepted) {
+      boolean codAccepted,
+      boolean onlineAccepted) {
 
     public Delivery {
       deliveryPincodes = List.copyOf(deliveryPincodes);

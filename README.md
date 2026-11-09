@@ -207,10 +207,44 @@ Done on 2026-11-09: **cart, quotes, orders and local delivery (cash payments onl
   writes only the buyer's own orders. Orders, quotes and carts have Row-Level Security: only the
   two businesses involved can see them.
 - Repeat submits are safe: every checkout carries an idempotency key.
-- Not yet: online payment (Phase 9b, Razorpay Route in test mode) and long-distance shipping
-  (Phase 9c, a logistics partner).
+- Not yet: long-distance shipping (Phase 9c, a logistics partner). Online payment: Phase 9b.
 - Tests: backend 111 unit and 105 integration; website 169 unit, Playwright and full-stack suites
   (the full-stack journey: quote → order with delivery → accept → deliver → paid).
+
+## Phase 9b status
+Done on 2026-11-09: **online payment with Razorpay Route (test mode).**
+- Buyers can choose **Pay online** (UPI, card, netbanking in Razorpay's own checkout) where the
+  seller allows it on the listing and has an active payout account. Card and UPI details never
+  reach this site. Unpaid online orders expire after one hour and release their stock.
+- **Payouts:** the business owner adds the bank account on the new Payouts page; the backend
+  creates a Razorpay Route linked account (account, stakeholder, Route product, settlement
+  account). Only the last four digits of the account number are stored here. Each step's id is
+  saved, so a set-up that stops part-way resumes without a second account.
+- **Money flow:** the buyer pays the platform. Once captured, the seller's share (total minus the
+  platform fee, `PLATFORM_FEE_BP`, 0 for the pilot) is transferred to the seller's linked account
+  **on hold**, and released when the order is delivered or picked up (which also completes it).
+  If the order is declined, cancelled or expires, the transfer is reversed and the buyer refunded
+  in full. The seller can accept only after payment.
+- **Verification:** the checkout signature is checked (HMAC-SHA256), then the backend asks
+  Razorpay itself for the payment; the browser's word is never enough. Every step looks at
+  Razorpay first (existing transfers, refunds), so retries never charge, transfer or refund twice.
+  A job every 10 minutes finishes anything left open (a closed browser, Razorpay unreachable).
+- **Webhook** at `POST /api/v1/payments/razorpay-webhook`: checked against `RAZORPAY_WEBHOOK_SECRET`,
+  each event handled once, and only used as a nudge to re-check with Razorpay. It needs a public
+  URL, so it is off until a secret is set.
+- Safety: the backend refuses to start with a key that is not `rzp_test_…` (unless
+  `RAZORPAY_ALLOW_LIVE_KEYS=true`); secrets are never logged; a new database role
+  (`marketplace_payments`) may change only the payment status of online orders; payments and
+  payout accounts have Row-Level Security.
+- **To use it:** put `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` (test mode) in `.env`.
+  `cd backend && mvn test -Prazorpay-live` checks the keys against Razorpay's test API (creates a
+  ₹1 test order; no money moves). To pay in test mode, use Razorpay's test card or UPI
+  `success@razorpay` in the checkout window.
+- **Razorpay must enable Route** on the platform's account (Dashboard → Route, or ask Razorpay
+  support), even in test mode. Until then, payout set-up says payouts are not switched on yet,
+  and the full-stack payment test is skipped.
+- Tests: backend 119 unit and 116 integration (with a fake Razorpay); website 173 unit, 52
+  Playwright and 26 full-stack tests (the payment one runs once Route is enabled).
 
 If Homebrew's default JDK is newer than 21, run Maven with
 `JAVA_HOME=$(brew --prefix openjdk@21)`.

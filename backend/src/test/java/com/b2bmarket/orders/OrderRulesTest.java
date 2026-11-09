@@ -72,6 +72,11 @@ class OrderRulesTest {
   }
 
   static Orderable offer(UUID seller, String city, boolean pickup, boolean delivers, boolean cod) {
+    return offer(seller, city, pickup, delivers, cod, false);
+  }
+
+  static Orderable offer(
+      UUID seller, String city, boolean pickup, boolean delivers, boolean cod, boolean online) {
     return new Orderable(
         UUID.randomUUID(),
         seller,
@@ -85,7 +90,7 @@ class OrderRulesTest {
         500,
         city,
         "Andhra Pradesh",
-        new Delivery(pickup, delivers, List.of("522002"), 4_000, cod),
+        new Delivery(pickup, delivers, List.of("522002"), 4_000, cod, online),
         TIERS);
   }
 
@@ -154,5 +159,45 @@ class OrderRulesTest {
             UUID.randomUUID(), List.of(new OrderService.Wanted(soap, 5, 2_500L)), pickup());
     assertThat(plan.items().getFirst().unitPricePaise()).isEqualTo(2_500);
     assertThat(plan.totals().itemsPaise()).isEqualTo(12_500);
+  }
+
+  @Test
+  void onlinePaymentNeedsTheSellersSayOnEveryItem() {
+    UUID buyer = UUID.randomUUID();
+    UUID seller = UUID.randomUUID();
+    Orderable online = offer(seller, "Guntur", true, true, false, true);
+    Orderable offline = offer(seller, "Guntur", true, true, false, false);
+    OrderService.Choice payOnline = new OrderService.Choice("PICKUP", null, null, "ONLINE");
+    OrderService.Choice deliverOnline =
+        new OrderService.Choice("SELLER_DELIVERY", "12 Main Road", "522002", "ONLINE");
+
+    assertThat(
+            OrderService.plan(buyer, List.of(new OrderService.Wanted(online, 10, null)), payOnline)
+                .totals()
+                .itemsPaise())
+        .isEqualTo(30_000);
+    // Delivered and paid online: no cash on delivery needed.
+    assertThat(
+            OrderService.plan(
+                    buyer, List.of(new OrderService.Wanted(online, 10, null)), deliverOnline)
+                .totals()
+                .deliveryPaise())
+        .isEqualTo(4_000);
+    assertThatThrownBy(
+            () ->
+                OrderService.plan(
+                    buyer,
+                    List.of(
+                        new OrderService.Wanted(online, 10, null),
+                        new OrderService.Wanted(offline, 10, null)),
+                    payOnline))
+        .hasMessageContaining("online payment");
+    assertThatThrownBy(
+            () ->
+                OrderService.plan(
+                    buyer,
+                    List.of(new OrderService.Wanted(online, 10, null)),
+                    new OrderService.Choice("PICKUP", null, null, "COD")))
+        .hasMessageContaining("paid on pickup or online");
   }
 }

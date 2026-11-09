@@ -65,6 +65,9 @@ public class ListingEntity {
   @Column(name = "cod_accepted", nullable = false)
   private boolean codAccepted;
 
+  @Column(name = "online_accepted", nullable = false)
+  private boolean onlineAccepted;
+
   @Column(name = "submitted_at")
   private Instant submittedAt;
 
@@ -118,7 +121,8 @@ public class ListingEntity {
       boolean ownDelivery,
       java.util.List<String> deliveryPincodes,
       long deliveryChargePaise,
-      boolean codAccepted) {
+      boolean codAccepted,
+      boolean onlineAccepted) {
 
     public Delivery {
       deliveryPincodes = java.util.List.copyOf(deliveryPincodes);
@@ -131,7 +135,8 @@ public class ListingEntity {
         ownDelivery,
         java.util.List.of(deliveryPincodes),
         deliveryChargePaise,
-        codAccepted);
+        codAccepted,
+        onlineAccepted);
   }
 
   public void setDelivery(Delivery delivery, Instant now) {
@@ -140,6 +145,7 @@ public class ListingEntity {
     deliveryPincodes = delivery.deliveryPincodes().toArray(String[]::new);
     deliveryChargePaise = delivery.deliveryChargePaise();
     codAccepted = delivery.codAccepted();
+    onlineAccepted = delivery.onlineAccepted();
     updatedAt = now;
   }
 

@@ -2,13 +2,22 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import type { CartLine, Order, OrderAction, Quote } from "@/lib/api/types";
-import { ORDER_ACTIONS } from "@/lib/api/types";
+import { ApiError } from "@/lib/api/backend";
+import type {
+  CartLine,
+  Order,
+  OrderAction,
+  Payment,
+  PaymentStart,
+  PayoutAccount,
+  Quote,
+} from "@/lib/api/types";
+import { ORDER_ACTIONS, PAYOUT_BUSINESS_TYPES } from "@/lib/api/types";
 import { api, requireSession } from "@/lib/auth/current-user";
 import { rupeesToPaise } from "@/lib/money";
-import { actionPath, parsePincodes, paymentFor } from "@/lib/orders";
+import { actionPath, parsePincodes, paymentChoice } from "@/lib/orders";
 import { field, toFormState } from "./form-errors";
-import type { FormState } from "./form-state";
+import type { FormErrorKey, FormState } from "./form-state";
 import { checkIds, isUuid } from "./ids";
 
 const MAX_QUANTITY = 10_000_000;
@@ -36,10 +45,11 @@ function deliveryChoice(form: FormData) {
   const method = field(form, "deliveryMethod");
   const idempotencyKey = field(form, "idempotencyKey");
   if (!KEY.test(idempotencyKey)) return null;
+  const payOnline = field(form, "paymentMethod") === "ONLINE";
   if (method === "PICKUP")
     return {
       deliveryMethod: method,
-      paymentMethod: paymentFor(method),
+      paymentMethod: paymentChoice(method, payOnline),
       idempotencyKey,
     } as const;
   if (method !== "SELLER_DELIVERY") return null;
@@ -50,7 +60,7 @@ function deliveryChoice(form: FormData) {
     deliveryMethod: method,
     deliveryAddress,
     deliveryPincode,
-    paymentMethod: paymentFor(method),
+    paymentMethod: paymentChoice(method, payOnline),
     idempotencyKey,
   } as const;
 }
@@ -301,11 +311,151 @@ export async function saveDelivery(
           deliveryPincodes,
           deliveryChargePaise,
           codAccepted: form.get("codAccepted") === "yes",
+          onlineAccepted: form.get("onlineAccepted") === "yes",
         },
       },
     );
   } catch (error) {
     return toFormState(error, "invalid");
+  }
+  refresh();
+  return { ok: true };
+}
+
+// --- Online payment (Razorpay) ------------------------------------------------------------------
+
+/** What the pay button gets back: Razorpay's checkout details, or why not. */
+export type StartResult =
+  { ok: true; start: PaymentStart } | { ok: false; error: FormErrorKey };
+
+const RAZORPAY_ORDER = /^order_[A-Za-z0-9]{1,36}$/;
+const RAZORPAY_PAYMENT = /^pay_[A-Za-z0-9]{1,36}$/;
+const SIGNATURE = /^[0-9a-f]{64}$/;
+
+function paymentError(error: unknown): FormErrorKey {
+  if (error instanceof ApiError && error.status === 503)
+    return "paymentUnavailable";
+  const state = toFormState(error, "orderStepRefused", "orderProblem");
+  return state.error ?? "generic";
+}
+
+export async function startPayment(
+  lang: string,
+  businessId: string,
+  orderId: string,
+): Promise<StartResult> {
+  checkIds(lang, businessId, orderId);
+  const returnTo = `${businessPath(lang, businessId)}/orders/${orderId}`;
+  const session = await requireSession(lang, returnTo);
+  try {
+    const start = await api<PaymentStart>(
+      session,
+      lang,
+      returnTo,
+      `/api/v1/businesses/${businessId}/orders/${orderId}/payment`,
+      { method: "POST" },
+    );
+    return { ok: true, start };
+  } catch (error) {
+    return { ok: false, error: paymentError(error) };
+  }
+}
+
+/** Razorpay's checkout result; the backend checks the signature and asks Razorpay itself. */
+export async function confirmPayment(
+  lang: string,
+  businessId: string,
+  orderId: string,
+  result: {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+  },
+): Promise<FormState> {
+  checkIds(lang, businessId, orderId);
+  if (
+    typeof result !== "object" ||
+    !RAZORPAY_ORDER.test(String(result.razorpayOrderId)) ||
+    !RAZORPAY_PAYMENT.test(String(result.razorpayPaymentId)) ||
+    !SIGNATURE.test(String(result.razorpaySignature))
+  )
+    return { error: "invalid" };
+  const returnTo = `${businessPath(lang, businessId)}/orders/${orderId}`;
+  const session = await requireSession(lang, returnTo);
+  try {
+    await api<Payment>(
+      session,
+      lang,
+      returnTo,
+      `/api/v1/businesses/${businessId}/orders/${orderId}/payment/confirm`,
+      {
+        method: "POST",
+        body: {
+          razorpayOrderId: result.razorpayOrderId,
+          razorpayPaymentId: result.razorpayPaymentId,
+          razorpaySignature: result.razorpaySignature,
+        },
+      },
+    );
+  } catch (error) {
+    return { error: paymentError(error) };
+  }
+  refresh();
+  return { ok: true };
+}
+
+const BUSINESS_TYPES: readonly string[] = PAYOUT_BUSINESS_TYPES;
+
+export async function setUpPayouts(
+  lang: string,
+  businessId: string,
+  _previous: FormState,
+  form: FormData,
+): Promise<FormState> {
+  checkIds(lang, businessId);
+  const businessType = field(form, "businessType");
+  const ifsc = field(form, "ifsc").toUpperCase();
+  const accountNumber = field(form, "accountNumber").replaceAll(" ", "");
+  if (
+    !BUSINESS_TYPES.includes(businessType) ||
+    !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc) ||
+    !/^[0-9]{9,18}$/.test(accountNumber) ||
+    form.get("acceptsTerms") !== "yes"
+  )
+    return { error: "invalid" };
+  const returnTo = `${businessPath(lang, businessId)}/payouts`;
+  const session = await requireSession(lang, returnTo);
+  try {
+    await api<PayoutAccount>(
+      session,
+      lang,
+      returnTo,
+      `/api/v1/businesses/${businessId}/payout-account`,
+      {
+        method: "PUT",
+        body: {
+          email: field(form, "email"),
+          phone: field(form, "phone"),
+          contactName: field(form, "contactName"),
+          businessType,
+          street: field(form, "street"),
+          accountNumber,
+          ifsc,
+          beneficiaryName: field(form, "beneficiaryName"),
+          acceptsTerms: true,
+        },
+      },
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 503)
+      return { error: "paymentUnavailable" };
+    if (
+      error instanceof ApiError &&
+      error.status === 422 &&
+      error.problems.includes("ROUTE_NOT_ENABLED")
+    )
+      return { error: "payoutsNotEnabled" };
+    return toFormState(error, "orderStepRefused", "payoutRejected");
   }
   refresh();
   return { ok: true };

@@ -369,6 +369,49 @@ public class OrderRecords {
         .list();
   }
 
+  /** Online orders still unpaid after the payment window. */
+  public List<UUID> expireUnpaidOnline(Instant cutoff, Instant now) {
+    return jdbc.sql(
+            "update orders set status = 'EXPIRED', updated_at = :now"
+                + " where status = 'PLACED' and payment_method = 'ONLINE'"
+                + " and payment_status = 'PENDING' and placed_at < :cutoff returning id")
+        .param("now", ts(now))
+        .param("cutoff", ts(cutoff))
+        .query(UUID.class)
+        .list();
+  }
+
+  // --- Payments role: online orders only, payment columns only ------------------------------
+
+  public java.util.Optional<com.b2bmarket.orders.OrderService.PaymentFacts> paymentFacts(
+      UUID orderId) {
+    return jdbc.sql(
+            "select id, buyer_business_id, seller_business_id, status, payment_status,"
+                + " total_paise, placed_at from orders where id = :id")
+        .param("id", orderId)
+        .query(
+            (rs, i) ->
+                new com.b2bmarket.orders.OrderService.PaymentFacts(
+                    rs.getObject("id", UUID.class),
+                    rs.getObject("buyer_business_id", UUID.class),
+                    rs.getObject("seller_business_id", UUID.class),
+                    rs.getString("status"),
+                    rs.getString("payment_status"),
+                    rs.getLong("total_paise"),
+                    rs.getTimestamp("placed_at").toInstant()))
+        .optional();
+  }
+
+  public int setOnlinePaymentStatus(UUID orderId, String paymentStatus, Instant now) {
+    return jdbc.sql(
+            "update orders set payment_status = :status, updated_at = :now"
+                + " where id = :id and payment_method = 'ONLINE'")
+        .param("status", paymentStatus)
+        .param("now", ts(now))
+        .param("id", orderId)
+        .update();
+  }
+
   public int releaseFor(Collection<UUID> orderIds) {
     if (orderIds.isEmpty()) {
       return 0;

@@ -231,7 +231,7 @@ price_tiers (Phase 4). The rest is still a proposal, created incrementally. All 
 | price_tiers | listing_id, min quantity, unit price (paise, bigint), GST rate |
 | cart_items, quotes, orders, order_items | Phase 9a (done); prices, GST and delivery captured at order time; order status as a state machine; RLS for both parties; written through the `marketplace_ordering` role |
 | inventory_reservations | listing_id, batch_id, order_id, quantity, status, expires_at (24 h; released on expiry, decline or cancel, consumed at dispatch) |
-| payments, settlements, invoices | Phase 9b; idempotency keys unique; provider references only, never card data |
+| payments, payout_accounts, payment_events | Phase 9b (done): Razorpay Route; seller share held until handover; written through the `marketplace_payments` role; RLS for both parties. Invoices: later; | idempotency keys unique; provider references only, never card data |
 | shipments, disputes | Phase 9c (logistics partner) to Phase 11 |
 | ai_search_requests, recommendations | Phase 7; queries retained per privacy policy, scoped to business |
 | notifications | channel, template, recipient, status |

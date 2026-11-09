@@ -117,7 +117,8 @@ public class OfferSearchService {
                         r.ownDelivery(),
                         r.deliveryPincodes(),
                         r.deliveryChargePaise(),
-                        r.codAccepted()),
+                        r.codAccepted(),
+                        r.onlineAccepted()),
                     queries.priceTiers(listingId).stream()
                         .map(t -> new PriceTier(t[0], t[1]))
                         .toList()));

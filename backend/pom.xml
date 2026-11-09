@@ -35,7 +35,7 @@
     <!-- Released 2026-10-21; S3 client for stock photos (SeaweedFS locally, AWS S3 later). -->
     <aws-sdk.version>2.57.2</aws-sdk.version>
     <seaweedfs.image>chrislusf/seaweedfs:4.48</seaweedfs.image>
-    <surefire.excludedGroups>ai-eval</surefire.excludedGroups>
+    <surefire.excludedGroups>ai-eval,razorpay-live</surefire.excludedGroups>
     <surefire.groups></surefire.groups>
   </properties>
 
@@ -155,8 +155,8 @@
 
   <build>
     <plugins>
-      <!-- Unit tests. The live AI evaluation (tag ai-eval) calls a real provider, so it runs only
-           with -Pai-eval. -->
+      <!-- Unit tests. The live AI evaluation (tag ai-eval) and the Razorpay check (tag
+           razorpay-live) call real providers, so they run only with -Pai-eval / -Prazorpay-live. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -257,6 +257,15 @@
       <properties>
         <surefire.excludedGroups></surefire.excludedGroups>
         <surefire.groups>ai-eval</surefire.groups>
+      </properties>
+    </profile>
+    <!-- mvn test -Prazorpay-live: checks the Razorpay test keys against the real test API (needs
+         RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET; test mode only, no money moves). -->
+    <profile>
+      <id>razorpay-live</id>
+      <properties>
+        <surefire.excludedGroups></surefire.excludedGroups>
+        <surefire.groups>razorpay-live</surefire.groups>
       </properties>
     </profile>
   </profiles>

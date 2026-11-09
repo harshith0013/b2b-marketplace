@@ -214,7 +214,8 @@ public class ListingService {
             request.ownDelivery() && request.deliveryChargePaise() != null
                 ? request.deliveryChargePaise()
                 : 0,
-            request.codAccepted());
+            request.codAccepted(),
+            Boolean.TRUE.equals(request.onlineAccepted()));
     listing.setDelivery(delivery, Instant.now(clock));
     audit.record(
         new AuditEntry(
@@ -223,7 +224,13 @@ public class ListingService {
             businessId,
             TARGET_TYPE,
             listingId,
-            Map.of("ownDelivery", delivery.ownDelivery(), "cod", delivery.codAccepted())));
+            Map.of(
+                "ownDelivery",
+                delivery.ownDelivery(),
+                "cod",
+                delivery.codAccepted(),
+                "online",
+                delivery.onlineAccepted())));
     return views.view(listing);
   }
 

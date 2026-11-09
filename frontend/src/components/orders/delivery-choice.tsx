@@ -14,8 +14,12 @@ interface DeliveryChoiceProps {
   formId: string;
   city: string;
   pickupAvailable: boolean;
-  /** Seller delivery is offered (own delivery and cash on delivery). */
+  /** The seller delivers to listed PIN codes. */
   deliveryAvailable: boolean;
+  /** Cash on delivery is accepted (seller delivery paid offline). */
+  codAvailable: boolean;
+  /** Buyers may pay online (the seller's payout account is active). */
+  onlineAvailable: boolean;
   /** Shown as a hint under the PIN code. */
   pincodes: string[];
   /** One fresh key per form: a resubmit never places a second order. */
@@ -32,6 +36,8 @@ export function DeliveryChoice({
   city,
   pickupAvailable,
   deliveryAvailable,
+  codAvailable,
+  onlineAvailable,
   pincodes,
   idempotencyKey,
   submitLabel,
@@ -42,6 +48,9 @@ export function DeliveryChoice({
   const [method, setMethod] = useState<DeliveryMethod>(
     pickupAvailable ? "PICKUP" : "SELLER_DELIVERY",
   );
+  const offlineAvailable = method === "PICKUP" || codAvailable;
+  const [choseOnline, setChoseOnline] = useState(false);
+  const payOnline = onlineAvailable && (choseOnline || !offlineAvailable);
   const [state, formAction, pending] = useActionState(
     action,
     INITIAL_FORM_STATE,
@@ -71,6 +80,36 @@ export function DeliveryChoice({
               {label}
             </label>
           ))}
+      </fieldset>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 font-semibold">{labels.paymentHeading}</legend>
+        {offlineAvailable && (
+          <label className="flex items-center gap-3">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="OFFLINE"
+              checked={!payOnline}
+              onChange={() => setChoseOnline(false)}
+              className="size-5"
+            />
+            {labels.payOffline[method]}
+          </label>
+        )}
+        {onlineAvailable && (
+          <label className="flex items-center gap-3">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="ONLINE"
+              checked={payOnline}
+              onChange={() => setChoseOnline(true)}
+              className="size-5"
+            />
+            {labels.payOnline}
+          </label>
+        )}
+        {payOnline && <p className="text-sm text-muted">{labels.payNote}</p>}
       </fieldset>
       {method === "SELLER_DELIVERY" && (
         <>
